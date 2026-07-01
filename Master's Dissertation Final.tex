@@ -1,0 +1,516 @@
+\documentclass[12pt,oneside]{report}
+
+\usepackage[a4paper,margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{bm}
+\usepackage{physics}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{csquotes}
+\usepackage{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{appendix}
+\usepackage{listings}
+\usepackage{courier}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{empheq}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    citecolor=blue!50!black,
+    urlcolor=blue!60!black,
+    pdftitle={Bayesian Gaussian Process Inference for Implied Volatility Surfaces},
+    pdfauthor={Mikhail Semenov}
+}
+
+\onehalfspacing
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\setlength{\headheight}{15pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\Large}
+  {\chaptertitlename\ \thechapter}
+  {0.5em}
+  {\Huge}
+
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\lstdefinestyle{pythonstyle}{
+    language=Python,
+    basicstyle=\footnotesize\ttfamily,
+    keywordstyle=\color{blue!70!black}\bfseries,
+    commentstyle=\color{green!40!black},
+    stringstyle=\color{red!60!black},
+    numbers=left,
+    numberstyle=\tiny\color{gray},
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    rulecolor=\color{black!20},
+    backgroundcolor=\color{black!2}
+}
+\lstset{style=pythonstyle}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\GP}{\mathcal{GP}}
+\newcommand{\LML}{\mathcal{L}}
+\newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\Revised}[1]{\textcolor{red}{[Revised up to here]}}
+
+
+\title{Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces}
+\author{Mikhail Semenov}
+\date{August 2026}
+
+\begin{document}
+
+%title
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Large University of St Andrews\par}
+    \vspace{1.5cm}
+    {\Huge \bfseries Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces\par}
+    \vspace{1.5cm}
+    \vspace{2cm}
+    {\Large Mikhail Semenov\par}
+    \vfill
+    {\large School of Mathematics and Statistics\par}
+    {\large August 2026\par}
+\end{titlepage}
+
+\pagenumbering{roman}
+
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+
+\chapter*{Declaration}
+\addcontentsline{toc}{chapter}{Declaration}
+I declare that this dissertation is my own work and that it has not been submitted, in whole or in part, for any other degree or diploma. All sources used have been acknowledged appropriately.
+
+\chapter*{Acknowledgements}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+I would like to thank my supervisor, the School of Mathematics and Statistics, and those who supported me throughout this project. \TODO{Basic}
+\newpage
+\tableofcontents
+\listoffigures
+\listoftables
+
+\clearpage
+\pagenumbering{arabic}
+
+% ------------------------------------------------- chapter 1
+\chapter{Introduction}
+
+\section{Context and Motivation}
+Accurate modelling of the implied volatility surface is central to modern quantitative finance. Volatility surfaces are required for pricing, hedging, calibration, and risk management, particularly in index option markets such as SPX. At the same time, nonparametric machine learning methods, and Gaussian Processes in particular, offer a flexible framework for modelling nonlinear structure with uncertainty quantification.
+
+This dissertation is motivated by a tension between flexibility and reliability. Gaussian Processes are attractive because they can interpolate sparse and noisy volatility data smoothly, but their practical performance depends heavily on the estimation of kernel hyperparameters. In financial settings, the optimisation landscape for these hyperparameters may be weakly identifiable, creating instability that is often hidden behind apparently successful optimisation output. 
+
+\section{Problem Statement}
+The problem considered in this dissertation is the failure of deterministic point estimation in flat or weakly identifiable objective landscapes for Gaussian Process volatility surface models. In such settings, different hyperparameter configurations can yield near-equivalent log-marginal likelihood values while inducing materially different predictive surfaces and pricing outputs. 
+
+\section{Research Objectives and Hypothesis}
+\textbf{The main research question is:}
+\begin{quote}
+How does the weak identifiability of Gaussian Process hyperparameters impact the out-of-sample predictive accuracy of the implied volatility surface, and can Bayesian inference via Hamiltonian Monte Carlo (HMC/NUTS) resolve this instability to improve pricing performance while maintaining arbitrage-free constraints?
+\end{quote}
+This dissertation adopts the central hypothesis that flat ridges in the log-marginal likelihood topology cause deterministic optimisers to fail, and that replacing point estimation with a full posterior distribution over hyperparameters will improve out-of-sample prediction accuracy with only a minimal and acceptable trade-off in localised butterfly arbitrage violations. 
+
+\section{Dissertation Structure}
+The dissertation is organised into eight chapters. Chapter 2 introduces the financial and arbitrage foundations of the implied volatility surface. Chapter 3 develops the Gaussian Process framework and point-estimation approach. Chapter 4 empirically identifies the weak-identifiability pathology. Chapter 5 introduces Bayesian hyperparameter inference using HMC/NUTS. Chapter 6 describes the data and empirical design. Chapter 7 presents the results, and Chapter 8 concludes with implications, limitations, and future work.
+
+% ------------------------------------------------- chapter 2
+\chapter{Financial Foundations and Constraints}
+
+\section{The Implied Volatility Surface}
+Before discussing the financial constraints, the text should introduce the object to which they will apply: the implied volatility surface. The surface is a three-dimensional graph that maps the volatility of option contracts across several maturities and strikes for a single asset. Specifically, a function mapping of an option's strike $K$ and time to maturity $T$ can be defined as $(K, T) \mapsto \sigma_{\mathrm{imp}}(K,T)$ across available strikes and maturities. The annualised volatility figure is derived from the inverted Black-Scholes-Merton formula to standardise absolute option prices. This standardisation enables comparison of an option across different strikes and maturities.
+
+Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) is the unique volatility parameter that, when used in the B-S model, yields the option's exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. 
+
+This expected risk is difficult to gauge by only looking at absolute metrics such as spot and option prices. A more efficient approach is to use log-moneyness, defined as $k = \log(K/F_0)$, where $F_0$ denotes the asset's forward price at time zero. This transformation produces a stable and normalised representation of the volatility surface, independent of the underlying asset's price dynamics.
+
+\paragraph{The Role of SPX Options.}
+For practical purposes, the underlying asset for this empirical evaluation is the S\&P 500 Index (SPX), which tracks the performance of the largest U.S. Fortune 500 companies. The SPX derivatives serve as the primary benchmark for global equity derivative markets. This is due to a couple of reasons: the SPX being exceptionally liquid across many strikes and maturities, possessing a European-style contract type without the option of early exercise, and abundant documentation. Additionally, the SPX surface possesses a highly pronounced structural downside skew. This extreme asymmetry makes SPX options a highly interesting testing ground for evaluating Bayesian hyperparameter inference and surface modelling.
+
+\section{Static Arbitrage Constraints}
+\label{subsec:static-arbitrage}
+Before introducing the Gaussian Process model, we must specify the constraints that will ensure the implied volatility surface is not only mathematically, but also financially and legally sound. The two static arbitrage constraints that are of most importance for this purpose are the \emph{calendar arbitrage} and the \emph{butterfly arbitrage}. 
+
+These constraints are important because a volatility surface may fit the data well yet lack a valid risk-neutral probability density function. In turn, this makes it financially impossible if it implies the existence of a portfolio with a non-negative payoff and a negative cost. Hence, a mathematically smooth and stable interpolant is not sufficient; it must also be economically admissible.
+
+\paragraph{Risk-neutral pricing framework.}
+Another important topic of discussion that formalises the aforementioned is a framework central to asset pricing: the risk-neutral principle. Strictly, if $X_T$ is a payoff at maturity $T$, then its time-$0$ value is
+
+\[X_0 = e^{-rT}\mathbb{E}^{\mathbb{Q}}[X_T],\]
+
+where $r$ is the continuously compounded risk-free rate and $\mathbb{Q}$ is the risk-neutral measure. For a European call option with strike $K$, the payoff is
+
+\[(S_T - K)^+ = \max(S_T - K, 0),\]
+
+so its arbitrage-free price is
+
+\[C(K,T) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(S_T - K)^+].\]
+
+This pricing identity is the starting point for both static-arbitrage conditions: calendar arbitrage is linked to the option price rising over time, while butterfly arbitrage is linked to the payoff profile having a non-negative probability density. 
+
+However, these conditions are difficult to implement through pure implied volatility (\(\sigma _{BS}\)), which makes static arbitrage constraints highly non-linear and mathematically intractable. A paper on SVI Surfaces (\citet{gatheral2014arbitrage}) pioneered the idea of shifting to total variance space \(w(k, \tau)\), which linearises the no-arbitrage conditions, making them far easier to enforce mathematically. The relationship of implied volatility to total variance is straightforward:
+
+\[w(k,T) = \sigma_{\mathrm{imp}}^2(k,T)\,T\]
+
+where $k = \log(K/S_0)$ is log-moneyness. We prefer the total variance space for two reasons. Firstly, it removes the trivial $\sqrt{T}$ scaling present in implied volatility, thereby making IV surfaces across different maturities comparable on a uniform scale. The trivial proof will not be discussed here. Secondly, the calendar arbitrage conditions can be naturally expressed as monotonicity conditions on $w(k,T)$, while butterfly arbitrage conditions can be checked after converting the fitted surface back into call prices.
+
+In other words, the total variance space serves as a smooth framework that allows us to conveniently assert the financial constraints, which we will discuss further.
+
+%--------------------------------------------------------- calendar arb
+\subsection{Calendar Arbitrage}
+\label{subsubsec:calendar-arbitrage}
+
+As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month contract overpriced, which in turn could be shorted, and the far-month contract underpriced. It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity \(T\).\citep{gatheral2006volatility}
+
+\paragraph{Link to total variance.}
+In total variance terms, the calendar arbitrage constraint becomes a monotonicity condition in maturity:
+\[\frac{\partial w}{\partial T}(k,T) \geq 0.\]
+The $w(k,T)$ represents the cumulative variance up to time $T$, the constraint implies that with every step, the variance should not decrease. In other words, the uncertainty should accumulate over time and never decrease; otherwise, it would create an arbitrage opportunity.
+
+\paragraph{Numerical implementation.}
+Numerically implementing the constraint in total variance space is also easier; the condition is checked on the discrete maturity grid $T_1, \dots, T_n$ using first differences. 
+
+\[\frac{w(k_i,T_{j+1}) - w(k_i,T_j)}{T_{j+1} - T_j} < 0\]
+
+This provides a simple, transparent numerical proxy for the continuous condition $\partial w/\partial T \geq 0$.
+
+\begin{proposition}[Calendar monotonicity]
+For each fixed strike \(K\), the map \(T\mapsto C(K,T)\) is nondecreasing. Consequently, the total implied variance
+
+\[w(k,T)=\sigma_{\mathrm{imp}}^2(k,T)\,T\]
+
+is nondecreasing in \(T\) for each fixed log-moneyness \(k\); in particular, if \(w\) is differentiable,
+\[\frac{\partial w}{\partial T}(k,T) \geq 0.\]
+\end{proposition}
+
+\begin{proof}
+Let \(0<T_1<T_2\). No-arbitrage implies \(C(K,T_2)\ge C(K,T_1)\). Since the Black--Scholes call price is strictly increasing in total variance, the result is as follows.
+\end{proof}
+
+%--------------------------------------------------------- butterfly arb
+\subsection{Butterfly Arbitrage}
+\label{subsubsec:butterfly-arbitrage}
+
+Butterfly arbitrage originates from the butterfly spread option strategy, which involves three options with staggered strike prices. It entails purchasing a call at a low strike price $K_1$, selling two calls at a middle strike price $K_2$, and buying a call at a high strike price $K_3$ (where $K_3 - K_2 = K_2 - K_1$). This arbitrage indicates that the implied probability distribution of the asset is negative and invalid, often due to an overly steep or improperly smoothed IV surface during interpolation. Consequently, the position's cost can become negative, meaning the trader profits risk-free without owning the underlying asset.
+
+\paragraph{Intuition.}
+A natural way to test this constraint is to examine the local curvature; the curve should always be convex, so the middle strike should not lie above the average of the neighbouring strikes. In other words, if the middle option price is too high relative to the neighbouring points, an arbitrage opportunity exists. The connection to the fundamental Breeden--Litzenberger theorem is that a sufficiently tight butterfly spread is a finite-difference estimate of the second derivative of the call price curve with respect to strike $K$.
+
+As derived by Breeden and Litzenberger (1978, p. 627)\citep{breeden1978prices}, the pricing function $P(M,T)$ is “analogous to a density function,” and in Section II, page 627, the authors derive: 
+
+\[ \lim_{\Delta M \to 0}\frac{P(M,T;\Delta M)}{\Delta M} = \left.\frac{\partial^2 c(X,T)}{\partial X^2}\right|_{X=M}, \]
+
+This step is crucial for understanding the link between the Breeden--Litzenberger density extraction and butterfly convexity. Finally, convexity serves as the bridge between observable option prices and a market-implied distribution. 
+
+\paragraph{Relationship to total variance.}
+As we just proved, butterfly arbitrage can be naturally stated in terms of call prices, unlike calendar arbitrage, which is inherently a monotonicity condition on the total variance across maturities. However, since the fitted model is expressed in the total-variance space, the implied total variance space must be converted back to call prices before assessing the convexity condition. Simply, this is done using the Black--Scholes formula:
+
+\[ C_{\mathrm{BS}}(S,K,T,r,\sigma) = S\,N(d_1) - K e^{-rT}N(d_2),\]
+
+where
+
+\[d_1 = \frac{\log(S/K) + (r + \tfrac12\sigma^2)T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}. \]
+
+\paragraph{Numerical implementation.}
+The numerical implementation mirrors the mathematical definition. We use the Breeden-Litzenberger condition, where the risk-neutral probability equals the second partial derivative with respect to strike $\partial^2 C/\partial K^2\geq 0$. This is done by implementing the central finite-difference approximation of option prices across a grid to detect negative probabilities, which would then be counted as a butterfly arbitrage. 
+
+\paragraph{Derivation.}
+The derivation comes from the proven Breeden--Litzenberger result \citep{breeden1978prices}. Starting from the risk-neutral pricing formula for a European call, which can be written in the expanded form of the Expected Value $\E$.
+\[ C(K,T) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(S_T-K)^+] = e^{-rT}\int_K^\infty (s-K)f_{S_T}(s)\,ds.\]
+Differentiating once with respect to strike leaves us with the discounted survival function up to a discount factor under $\Q$
+
+\[-\frac{\partial C}{\partial K}(K,T)= e^{-rT}\int_K^\infty f_{S_T}(s)\,ds, \]
+Differentiating the function again yields the Breeden--Litzenberger result \citep{breeden1978prices}:
+
+
+\[\frac{\partial^2 C}{\partial K^2}(K,T) = e^{-rT}f_{S_T}(K),\]
+
+so that
+
+\[f_{S_T}(K) = e^{rT}\frac{\partial^2 C}{\partial K^2}.\]
+
+Because a density must be non-negative, the call price must satisfy
+
+\[\frac{\partial^2 C}{\partial K^2}(K,T) \geq 0.\]
+
+This is the continuous convexity condition underlying butterfly arbitrage. A violation means that the implied density is negative somewhere, which is not financially admissible.
+
+\section{The Parametric Prior}
+In nonparametric machine learning models like Gaussian Processes, setting a mean function lets us include financial knowledge before seeing any data. Rather than making the Gaussian Process learn the overall shape of the implied volatility surface from nothing, we use a parametric prior.
+We define the prior distribution as:
+
+\begin{equation}
+w(K,T) = T\left(|a| + |b|(\log K)^2 + c \log K\right).
+\label{parametric_prior}
+\end{equation}
+
+The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation \citep{gatheral2014arbitrage}. By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
+
+Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and crash the pricing engine. By incorporating |a| and |b|, a differentiable barrier is created where the optimiser can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
+
+Finally, this setup also works well with the tail behaviour suggested by the moment-based constraints model. In other words, deep OTM options encode the tails of the risk-neutral distribution; their prices must remain consistent with that distribution. The prior is not just smoothing the data, but it also encodes a theoretically allowed tail growth rate for the implied variance, based on which moments of the underlying asset are finite. The far OTM smile should match the asymptotic limits set by Roger Lee’s moment formula bounds \citep{lee2004moment}. Even though there is little real-option data far out of the money, this structured prior keeps the extrapolated total variance within economic bounds and follows the theoretical maximum growth rates of the volatility smile at extreme strikes.
+
+% ------------------------------------------------- chapter 3
+\chapter{Gaussian Processes in Financial Modelling}
+
+\section{GP Regression Framework}
+We can formally define the Gaussian Process (GP) as a collection of random variables, any of which possesses a joint Gaussian distribution. This way, it provides a non-parametric Bayesian framework for inferring other functions. A GP is specified by its mean function $m(\mathbf{x})$ and its covariance function, or kernel, $k(\mathbf{x}, \mathbf{x}')$. We denote the Gaussian Process prior as:
+
+\[f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}'))\]
+
+The mean function, defined as $m(\mathbf{x}) = \mathbb{E}[f(\mathbf{x})]$, gives the GP the global topology of the function space. More casually, it represents the prior belief or an assumption about the distribution of an unknown function. It is set to dictate the overall smoothness, behaviour and interpolation of the unknown function. 
+In standard machine learning literature, the mean function $m(\mathbf{x})$ is often set to zero for algebraic convenience; however, a financial surface is inherently structurally asymmetrical. This asymmetry can be observed in features such as the persistent equity skew. Hence, the mean function needs careful tuning in order to safely extrapolate quotes in the sparsely populated deep out-of-the-money tails. To address this, the framework explicitly defines $m(\mathbf{x})$ using the parametric prior formulated in Equation \ref{parametric_prior}:
+
+\[m(\mathbf{x}) = T(|a| + |b|k^2 + c k)\]
+
+By substituting this SVI-inspired formulation into the GP mean function, the global structural constraints and theoretical asymptotic tail bounds are embedded directly in the prior distribution. Consequently, the learning burden shifts: the GP is no longer required to infer the macroeconomic shape of the smile from raw data. Instead, it is solely tasked with modelling the residuals. The residuals represent the localised, non-parametric deviations of the observed market data from the parametric mean. These residuals are governed by the covariance kernel, $k(\mathbf{x}, \mathbf{x}') = \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))]$. Essentially, this is the covariance between the process values at $\mathbf{x}$ and $\mathbf{x'}$, and $k(\mathbf{x}, \mathbf{x'})$ measures how these residuals vary together. The kernel describes how points on the volatility surface are related. It controls how smooth the surface is and how quickly the effect of one data point fades as you move across strike and term.
+
+To formalise the regression model, assume a dataset of $n$ noisy total variance observations $\mathbf{y} = \{y_1, \dots, y_n\}^{\top}$ evaluated at input locations $X = \{\mathbf{x}_1, \dots, \mathbf{x}_n\}$. The observation model is given by:
+
+\[y_i = f(\mathbf{x}_i) + \epsilon_i\]
+
+where $\epsilon_i \sim \mathcal{N}(0, \sigma_n^2)$ represents independent, identically distributed Gaussian noise. In finance, the noise variance term ($\sigma_n^2$) is essential for accounting for market microstructure noise, discrete tick sizes, and the effects of the bid-ask spread.
+
+Given a set of test inputs $X_*$, the joint distribution of the training targets $\mathbf{y}$ and the predictive function values $\mathbf{f}_*$ under the GP prior is multivariate Gaussian:
+
+\begin{equation}
+\begin{bmatrix} \mathbf{y} \\ \mathbf{f}_* \end{bmatrix} \sim \mathcal{N} \left( \begin{bmatrix} m(X) \\ m(X_*) \end{bmatrix}, \begin{bmatrix} K(X, X) + \sigma_n^2 I & K(X, X_*) \\ K(X_*, X) & K(X_*, X_*) \end{bmatrix} \right)
+\label{joint_gaussian}
+\end{equation}
+
+where $K(X, X)$ is the $n \times n$ Gram matrix evaluated on the training inputs, $K(X, X_*)$ is the $n \times n_*$ cross-covariance matrix between the training $X$ and test $X_*$ inputs, and $I$ is the identity matrix. The statement \ref{joint_gaussian} asserts that by combining the observed training inputs and unknown test inputs together, the resulting joint distribution is Gaussian under the GP model. Importantly, the left block is the covariance between observed training inputs, plus the noise $\sigma^2I$ term, which indicates that the observed training targets $\mathbf{y}$ are noisy versions of the underlying function values. In this case, the model allows for noise rather than treating the observed data as exact realisations of the latent function. 
+
+By conditioning this joint prior on the observed market data $\mathbf{y}$, we derive the predictive posterior distribution $\mathbf{f}_* | X, \mathbf{y}, X_* \sim \mathcal{N}(\boldsymbol{\mu}_*, \Sigma_*)$. Equivalently, the above expression states that once we know the training outputs, we can update the joint Gaussian to get a new Gaussian distribution for the unknown test outputs. This is a standard conditioning step in GP regression. The exact matrix equations for the predictive mean and predictive covariance are:
+
+\[\boldsymbol{\mu}_* = m(X_*) + K(X_*, X)[K(X, X) + \sigma_n^2 I]^{-1}(\mathbf{y} - m(X))\]
+
+The predictive mean equation states that the forecast at the new points is the sum of the prior mean and a correction term, which is the covariance between the test and training inputs, weighted by the inverse of the covariance between training inputs, multiplied by the GP deviations from the mean function.
+
+\[\boldsymbol{\Sigma}_* = K(X_*, X_*) - K(X_*, X)[K(X, X) + \sigma_n^2 I]^{-1}K(X, X_*)\]
+
+The predictive covariance formula provides the model with the uncertainty after observing the data, where $K(X_*, X_*)$ is the prior uncertainty at the test points minus the part explained by the training data. In practical terms, uncertainty is minimised in dense regions and remains higher where the model must extrapolate.
+
+\section{The Mat\'ern 5/2 Kernel}
+While the mean function determines the overall shape of the volatility surface, the covariance kernel governs the local shape at discrete points and the interpolative behaviour of the residuals. The choice of kernel cannot be arbitrary; in financial applications, a covariance function should satisfy strict structural requirements dictated by arbitrage pricing theory. In this work, we adopt an anisotropic Matérn 5/2 kernel; other common kernels (RBF, Matérn 3/2, Rational Quadratic) are viable in general-purpose modelling but have features that are discussed briefly below, which make them less suitable for the present arbitrage-constrained framework. \TODO{add a brief explanation to why other kernels are not suitable}
+
+The covariance kernel is a function of two inputs, $\mathbf{x}$ and $\mathbf{x}'$. We define two distinct input vectors: $\mathbf{x} = (k, T)^{\top}$ and $\mathbf{x}' = (k', T')^{\top}$. Furthermore, to account for the fundamentally different dynamics along the strike and term-structure dimensions, we define the anisotropic Mahalanobis distance $r$ using independent length-scales $\ell_k$ and $\ell_T$:
+
+$$r(\mathbf{x}, \mathbf{x}') = \sqrt{\frac{(k - k')^2}{\ell_k^2} + \frac{(T - T')^2}{\ell_T^2}}$$
+\TODO{Should I explain whats happening inside?}
+
+The Matérn $5/2$ covariance function is then formally defined as:
+
+$$k_{5/2}(r) = \sigma_f^2 \left( 1 + \sqrt{5}r + \frac{5}{3}r^2 \right) \exp(-\sqrt{5}r)$$
+
+where $\sigma_f^2$ represents the signal variance, controlling the vertical amplitude of the latent Gaussian Process.
+\paragraph{Justification and Differentiability Constraints}
+
+The Matérn class of covariance functions is characterised by its versatility and smoothness parameter $\nu$, which allows for explicit control of the underlying random field. This is especially useful for Implied Volatility surfaces, as they require a twice-differentiable kernel to extract arbitrage-free risk-neutral probabilities from the surface. As established in standard Gaussian Process literature (\citet{rasmussen2006gp}), the sample paths of a GP with a Matérn kernel are $m$ times mean-square differentiable if and only if $\nu > m$. Consequently, setting $\nu = 5/2$ guarantees that the resulting latent function space is exactly twice mean-square differentiable ($\mathcal{C}^2$).
+
+This exact $\mathcal{C}^2$ regularity is almost a requirement when modelling implied volatility surfaces. The popular Squared Exponential (or Gaussian) kernel, which is the case when $\nu$ approaches infinity, gives sample paths that are infinitely smooth and analytic. However, this level of smoothness does not match real financial markets, since it over-smooths local volatility spikes and misses the small-scale frictions seen in options trading. The surface becomes silky-smooth, which is great for extrapolating for far OTM options, but pricing in between quotes is too restrictive. On the other hand, if $\nu = 3/2$ or $\nu = 1/2$, the resulting functions are only once differentiable or not differentiable at all, as in the Ornstein-Uhlenbeck process.
+
+As mentioned before, the reason for exactly twice-differentiable sample paths is linked to the extraction of the market-implied risk-neutral density. As derived from the Breeden-Litzenberger theorem (\citet{breeden1978prices}), the risk-neutral probability density $p(K,T)$ is strictly proportional to the second partial derivative of the call price with respect to the strike:
+
+$$p(K,T) = e^{rT} \frac{\partial^2 C}{\partial K^2}$$
+
+The total variance surface $w(k,T)$, mapped by the GP, needs to be inverted using the Black-Scholes formula to calculate call prices. The Black-Scholes model needs a volatility input to produce call prices. Once we know $w(k,T)$, we convert it to IV and price the option. For this to be an arbitration-free, the underlying interpolant must allow stable second-order differentiation. On the other hand, if the sample paths are not twice differentiable, the finite-difference methods used for computing $\frac{\partial^2 C}{\partial K^2}$ can become unstable, undefined or show singularities, which could falsely indicate butterfly arbitrage violations.
+
+In brief, the Matérn kernel with $\nu = 5/2$ specification offers an ideal balance between smoothness and restriction. It creates smooth curves while still giving the algorithm enough flexibility to accommodate localised peaks and valleys. Additionally, because $\nu$ is a fraction, it involves simpler polynomial and exponential terms that reduce cost complexity and prevent mathematical instability.
+
+\section{The Standard Approach: Point Estimation}
+\TODO{write up a short introduction}
+
+The standard paradigm for training a Gaussian Process in applied machine learning is to select the hyperparameters $\theta$ that maximise the probability of the observed data. This is achieved by maximising the log-marginal likelihood (LML). Conditioning the joint Gaussian prior on the observed target vector $\mathbf{y}$, we define the log-marginal likelihood as:
+
+$$\log p(\mathbf{y} | X, \theta) = -\frac{1}{2}\mathbf{y}^\top K_y^{-1}\mathbf{y} - \frac{1}{2}\log|K_y| - \frac{n}{2}\log(2\pi)$$ where
+$$K_y = K_\theta + \sigma_n^2 I$$ represents the noisy covariance matrix. 
+
+To understand why hyperparameter optimisation often fails in the financial setting, we need to deconstruct the LML function. The kernel hyperparameters are estimated by maximising the Logarithm of Marginal Likelihood (LML), which balances data fit and model complexity. In practical terms, the LML balances model flexibility against data interpolation. This can be seen by decomposing the formula into three distinct theoretical components:
+
+$$\log p(\mathbf{y} | X, \theta) = \underbrace{-\frac{1}{2}\mathbf{y}^\top K_y^{-1}\mathbf{y}}_{\text{Data Fit}} - \underbrace{\frac{1}{2}\log|K_y|}_{\text{Complexity Penalty}} - \underbrace{\frac{n}{2}\log(2\pi)}_{\text{Normalization Constant}}$$
+
+The fundamental geometry of LML is a balance between the first two terms:
+\begin{enumerate}
+	\item \textbf{The Data Fit (Mahalanobis Distance):} The term $-\frac{1}{2}\mathbf{y}^\top K_y^{-1}\mathbf{y}$ measures how well do the observed outputs align with the covariance structure, calculated via the Mahalanobis distance between the observed data and the GP prior mean (which is zeroed out here for the residuals). Additionally, $K_y^{-1}$ reweights the data based on what points should co-vary, not just when the residuals are small but also when those residuals fit the prior's structure. This term strongly prefers highly complex, flexible models. If we allow the Matérn length-scales ($\ell_K$ and $\ell_T$) to shrink toward zero, the covariance between distinct points vanishes, $K_y$ approaches a scaled identity matrix, and the GP essentially memorises the training data. Consequently, the model loses all of its extrapolation capabilities. A model that perfectly interpolates every noisy observation will drive this data fit penalty toward zero, pushing the LML higher.
+
+	\item \textbf{The Complexity Penalty (Log-Determinant):} The term $-\frac{1}{2}\log|K_y|$ acts as an inherent regularisation mechanism. When the length-scales are small, the points one unit apart become weakly correlated. Hence, the kernel matrix is nearly diagonal, changing the log-determinant term. In other words, when the model allows the function to vary widely from point to point, the penalty becomes more negative, reducing the marginal likelihood.
+\end{enumerate}
+\Revised{}
+\paragraph{The Origin of Weak Identifiability (Flat Ridges):}
+In an ideal scenario, the competition between the Data Fit and the Complexity penalty results in a convex, unimodal peak in the LML landscape. In this case, the algorithm can easily identify a single optimal parameter set $\hat{\theta}$. On the other hand, financial data exhibit characteristic noise and friction (e.g., bid-ask spread noise). Where the LML may exhibit weak identifiability when different hyperparameter combinations yield nearly the same covariance matrix $K_\theta$. This is because the option market data can be successfully interpolated using multiple combinations of strike and maturity length-scales (e.g.,\TODO{find a convincing but complex example}). Mathematically, at a local optimum $\hat{\theta}$, the Hessian of the negative LML measures local curvature. If the Hessian has a very small eigenvalue, then the LML changes slowly in the corresponding direction. Geometrically, this produces a plateau or flat ridges with weakly identifiable hyperparameters.
+
+\TODO{Add some graphs}
+
+\paragraph{Standard Software Implementation and the Mathematical Failure of Quasi-Newton Optimisation:} Standard Gaussian Process libraries (such as scikit-learn) navigate this objective landscape using L-BFGS-B (Limited-memory Broyden-Fletcher-Goldfarb-Shanno with Bounds), a deterministic Quasi-Newton optimisation algorithm. 
+
+Let $(\mathcal{L}(\theta) = \log p(\mathbf{y} | X, \theta)$. L-BFGS-B seeks to maximise the LML by iteratively solving a local quadratic approximation centred at the current hyperparameter estimate $\theta_k$:
+
+$$\mathcal{L}(\theta_k + p) \approx \mathcal{L}(\theta_k) + \nabla \mathcal{L}(\theta_k)^\top p + \frac{1}{2} p^\top \mathcal{H}_k p,$$
+
+where $\mathcal{H}_k = \nabla^2 \mathcal{L}(\theta_k)$ is the Hessian. The Taylor expansion is used because the LML is a complicated nonlinear function of $\theta$ with no closed-form optimal step, but locally around $\theta_k$, any smooth function looks quadratic, as Taylor's theorem guarantees.
+
+However, $\mathcal{H}_k$ is never computed exactly. Computing it analytically requires differentiating through the kernel matrix, involving terms of the form $\operatorname{tr}\!\left(K_y^{-1} \frac{\partial K_y}{\partial \theta_i}\right)$, which are expensive when $N$ is large. Moreover, the Hessian can become nearly singular, for instance, when hyperparameters are weakly identifiable or approach a boundary, making direct inversion numerically unstable. L-BFGS-B addresses both issues by building a low-rank approximation $B_k^{-1} \approx \mathcal{H}_k^{-1}$ from the last $m$ gradient difference pairs $(s_j, r_j)$ and determining the search direction as $p_k = -B_k^{-1} \nabla \mathcal{L}(\theta_k)$.
+
+
+
+While computationally efficient in strictly convex regimes, this quasi-Newton approach fundamentally breaks down in the presence of weak identifiability. If we examine the spectral decomposition of the true Hessian $\mathcal{H}$ on a flat ridge, it will possess at least one eigenvalue $\lambda_{min} \approx 0$ corresponding to the eigenvector $v_{ridge}$ running parallel to the plateau, causing the condition number to diverge:
+
+$$\kappa(\mathcal{H}) = \frac{|\lambda_{max}|}{|\lambda_{min}|} \to \infty$$
+
+This extreme ill-conditioning paralyses the L-BFGS-B mechanics in two ways. First, in the search direction update $p_k = -\mathcal{H}^{-1} \nabla \mathcal{L}$, the inverse eigenvalue $1/\lambda_{min} \to \infty$ artificially amplifies infinitesimal numerical noise in the gradient along the ridge direction. To satisfy the Wolfe conditions and prevent the step size from exploding, the line search algorithm compensates by heavily truncating the step length $\alpha_k$, causing the optimizer to stall.Second, the standard L-BFGS-B termination criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$Because the objective surface is mathematically flat along the ridge, the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$). The optimizer falsely interprets this negligible gradient norm as the discovery of a true stationary point. It prematurely terminates the line search, declaring convergence at an arbitrary, suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initializations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
+
+% ------------------------------------------------- chapter 4
+\chapter{The Pathology of Weak Identifiability}
+
+\section{Mapping the LML Topology}
+
+\section{Restart Instability}
+
+\section{Conclusion of the Pathology}
+
+% ------------------------------------------------- chapter 5
+\chapter{Bayesian Hyperparameter Inference via HMC}
+
+\section{From Optimisation to Integration}
+
+\section{Markov Chain Monte Carlo}
+
+\section{Hamiltonian Monte Carlo}
+
+\section{The No-U-Turn Sampler (NUTS)}
+
+% ------------------------------------------------- chapter 6
+\chapter{Empirical Methodology and Experimental Design}
+
+\section{Data Ingestion and Preprocessing}
+
+\section{Market Regimes}
+
+\section{Evaluation Metrics}
+
+% ------------------------------------------------- chapter 7
+\chapter{Results and Discussion}
+
+\section{Predictive Accuracy: The Global Fit}
+
+\section{Visualising the Posterior}
+
+\section{The Arbitrage Trade-off: The Local Fit}
+
+% ------------------------------------------------- chapter 8
+\chapter{Conclusion}
+
+\section{Summary of Findings}
+
+\section{Implications for Quantitative Finance}
+
+\section{Limitations and Future Work}
+
+% ------------------------------------------------- appendices
+\appendix
+
+\chapter{Pipeline Architecture}
+\begin{itemize}[leftmargin=2em]
+    \item \texttt{01\_ingest\_spx.py}: data ingestion,
+    \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
+    \item \texttt{03\_prior\_model.py}: parametric prior,
+    \item \texttt{04\_gp\_point\_estimation.py}: point-estimated GP,
+    \item \texttt{05\_topology\_scan.py}: LML topology analysis,
+    \item \texttt{06\_restart\_sensitivity.py}: restart instability diagnostics,
+    \item \texttt{07\_gp\_hmc.py}: Bayesian inference with HMC/NUTS,
+    \item \texttt{08\_compare\_results.py}: comparative evaluation,
+    \item \texttt{09\_plots.py}: figures and posterior visualisation.
+\end{itemize}
+
+\chapter{Mathematical Proofs and Extended Derivations}
+
+% ------------------------------------------------- bib
+\begin{thebibliography}{99}
+
+\bibitem[Breeden and Litzenberger(1978)]{breeden1978prices}
+Breeden, D. T., and Litzenberger, R. H. (1978).
+Prices of State-Contingent Claims Implicit in Option Prices.
+\textit{Journal of Business}, 51(4), 621--651.
+
+\bibitem[Gatheral(2004)]{gatheral2004svi}
+Gatheral, J. (2004).
+A Parsimonious Arbitrage-Free Implied Volatility Parameterization with Application to the Valuation of Volatility Derivatives.
+\textit{Global Derivatives \& Risk Management}.
+
+\bibitem[Gatheral(2006)]{gatheral2006volatility}
+Gatheral, J. (2006).
+\textit{The Volatility Surface: A Practitioner's Guide}.
+Wiley.
+
+\bibitem[Gatheral and Jacquier(2014)]{gatheral2014arbitrage}
+Gatheral, J., and Jacquier, A. (2014).
+Arbitrage-free SVI volatility surfaces.
+\textit{Quantitative Finance}, 14(1), 59--71.
+
+\bibitem[Harrison and Kreps(1979)]{harrison1979martingales}
+Harrison, J. M., and Kreps, D. M. (1979).
+Martingales and Arbitrage in Multiperiod Securities Markets.
+\textit{Journal of Economic Theory}, 20(3), 381--408.
+
+\bibitem[Hoffman and Gelman(2014)]{hoffman2014nuts}
+Hoffman, M. D., and Gelman, A. (2014).
+The No-U-Turn Sampler: Adaptively Setting Path Lengths in Hamiltonian Monte Carlo.
+\textit{Journal of Machine Learning Research}, 15, 1593--1623.
+
+\bibitem[Lee(2004)]{lee2004moment}
+Lee, R. W. (2004).
+The Moment Formula for Implied Volatility at Extreme Strikes.
+\textit{Mathematical Finance}, 14(3), 469--480.
+
+\bibitem[Rasmussen and Williams(2006)]{rasmussen2006gp}
+Rasmussen, C. E., and Williams, C. K. I. (2006).
+\textit{Gaussian Processes for Machine Learning}.
+MIT Press.
+
+\end{thebibliography}
+
+\end{document}
