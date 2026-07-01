@@ -401,6 +401,10 @@ $$\kappa(\mathcal{H}) = \frac{|\lambda_{max}|}{|\lambda_{min}|} \to \infty$$
 
 The divergence breaks the algorithm's mechanics in two ways. 
 
+First, in the search direction update $p_k = -\mathcal{H}^{-1} \nabla \mathcal{L}$, the inverse eigenvalue $1/\lambda_{min} \to \infty$ artificially amplifies infinitesimal numerical noise in the gradient along the ridge direction. The optimiser overreacts to very small numerical errors in the direction of the plateau. To satisfy the Wolfe conditions and prevent the step size from exploding, the line search algorithm compensates by heavily truncating the step length $\alpha_k$, even though the actual signal is basically flat. The algorithm ends up making tiny moves or getting stuck and thinks it has converged.
+
+Second, the standard L-BFGS-B termination uses a stopping rule, the criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$ On a flat ridge, the algorithm thinks it has converged because the gradient is below that threshold. In reality, the surface is nearly flat along that direction. As the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$), the optimiser mistakenly interprets this flat gradient as evidence of a true stationary point. It prematurely terminates the line search, declaring convergence at a suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge and actually looking for a better one. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initialisations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
+
 % ------------------------------------------------- chapter 4
 \chapter{The Pathology of Weak Identifiability}
 
