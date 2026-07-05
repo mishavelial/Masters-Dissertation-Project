@@ -422,7 +422,10 @@ In the previous chapter, we demonstrated that the topology of the log-marginal s
 
 To address this structural fragility, this thesis examines the problem through the lens of integration rather than optimisation. Instead of attempting to find a single optimal estimate, we will adopt a fully Bayesian framework. This seeks to keep the full probability distribution over what those potential parameters could be, given the data. By applying Bayes' theorem to the GP hyperparameters, we define the posterior distribution as:
 
-$$p(\theta \mid \mathbf{y}, X) = \frac{p(\mathbf{y} \mid X, \theta) p(\theta)}{\int p(\mathbf{y} \mid X, \theta^\prime) p(\theta^\prime) d\theta^\prime}$$
+\begin{equation}
+p(\theta \mid \mathbf{y}, X) = \frac{p(\mathbf{y} \mid X, \theta) p(\theta)}{\int p(\mathbf{y} \mid X, \theta^\prime) p(\theta^\prime) d\theta^\prime}
+\label{eq:bayesian_theorem}
+\end{equation}
 
 Where $p(\mathbf{y} \mid X, \theta)$ is the exact marginal likelihood defined in Chapter 3, and $p(\theta)$ is a joint prior distribution placed over the hyperparameters (such as the Matérn length-scales and noise variance) to constrain them to strictly positive, financially sensible bounds.
 
@@ -430,7 +433,9 @@ The advantage of this shift can be observed through forecasting. The standard po
 
 $$p(\mathbf{f}_* \mid X_*, X, \mathbf{y}) = \int p(\mathbf{f}_* \mid X_*, X, \mathbf{y}, \theta) p(\theta \mid \mathbf{y}, X) d\theta$$
 
+In practical terms, this integral represents a continuous ensemble of Gaussian Processes. Rather than just picking one of them, which can lead to unstable extrapolation if the optimiser lands on a bad spot. The Bayesian integral avoids this by hedging across all plausible explanations of the data. More specifically, the integral averages the predictive surfaces over all possible hyperparameter combinations, weighting them by their posterior probabilities. This approach handles cases where the data weakly identify whether a local market movement is driven by a short strike length scale ($\ell_K$) or elevated signal variance ($\sigma_f^2$); the Bayesian predictive surface hedges between these competing scenarios. This structural averaging naturally avoids extreme localised extrapolations. Consequently, lowering the out-of-sample pricing error.
 
+It is important to note that computing the exact Bayesian predictive distribution is practically impossible for a Gaussian Process regression. The primary reason for that is the denominator in the \eqref{eq:bayesian_theorem}, which lacks a closed-form analytical solution due to the highly nonlinear relationship between the hyperparameters and the inverted Matérn covariance matrix. As a consequence, this integral cannot be computed directly. Instead, we must approximate it using stochastic numerical methods. Hence, justifying the transition of analytical calculus to Markov Chain Monte Carlo (MCMC) simulation.
 
 \section{Markov Chain Monte Carlo}
 
