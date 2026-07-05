@@ -438,6 +438,14 @@ In practical terms, this integral represents a continuous ensemble of Gaussian P
 It is important to note that computing the exact Bayesian predictive distribution is practically impossible for a Gaussian Process regression. The primary reason for that is the denominator in the \eqref{eq:bayesian_theorem}, which lacks a closed-form analytical solution due to the highly nonlinear relationship between the hyperparameters and the inverted Matérn covariance matrix. As a consequence, this integral cannot be computed directly. Instead, we must approximate it using stochastic numerical methods. Hence, justifying the transition of analytical calculus to Markov Chain Monte Carlo (MCMC) simulation.
 
 \section{Markov Chain Monte Carlo}
+Having established that the computation of the Bayesian predictive integral exactly is analytically infeasible, we take the approach of Markov Chain Monte Carlo (MCMC) methods to construct an approximation of the posterior. The objective is to generate a range of dependent samples $\{\theta^{(1)}, \theta^{(2)}, \dots, \theta^{(S)}\}$ such that, as $S \to \infty$, the empirical distribution converges to the exact target prior $p(\theta \mid \mathbf{y}, X)$.
+
+The standard approach to this approximation problem is the Random Walk Metropolis (RWM) algorithm. Which takes the current parameter value and at each iteration step $s$, the algorithm suggests a nearby candidate $\theta^\prime$ by adding isotropic Gaussian noise:
+
+$$\theta^\prime \sim \mathcal{N}(\theta^{(s)}, \Sigma_{prop})$$
+
+
+where $\Sigma_{prop} = \sigma^2 I$ is the isotropic variance and controls the step size. The proposal is then accepted or rejected based on the Metropolis acceptance probability $\alpha$.
 
 \section{Hamiltonian Monte Carlo}
 
