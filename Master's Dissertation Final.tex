@@ -416,6 +416,7 @@ Second, the standard L-BFGS-B termination uses a stopping rule, the criterion tr
 
 % ------------------------------------------------- chapter 5
 \chapter{Bayesian Hyperparameter Inference via HMC}
+In the previous chapter, we demonstrated that the topology of the log-marginal space for the financial volatility surfaces is quite ill-posed and features weak hyperparameter identifiability. This is because deterministic optimisation algorithms (e.g., L-BFGS-B) seek to maximise this objective function without accounting for the fact that the hyperparameter space cannot be collapsed to a single point estimate, which is not a definitive optimum. On the other hand, it is an arbitrary coordinate dictated by the optimiser's initialisation and line-search termination criteria. 
 
 \section{From Optimisation to Integration}
 
