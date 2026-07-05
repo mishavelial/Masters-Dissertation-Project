@@ -420,9 +420,17 @@ Second, the standard L-BFGS-B termination uses a stopping rule, the criterion tr
 \section{From Optimisation to Integration}
 In the previous chapter, we demonstrated that the topology of the log-marginal space for the financial volatility surfaces is quite ill-posed and features weak hyperparameter identifiability. This is because deterministic optimisation algorithms (e.g., L-BFGS-B) seek to maximise this objective function without accounting for the fact that the hyperparameter space cannot be collapsed to a single point estimate, which is not a definitive optimum. On the other hand, it is an arbitrary coordinate dictated by the optimiser's initialisation and line-search termination criteria. 
 
-To address this structural fragility, this thesis examines the problem through the prism of integration rather than optimisation. Instead of attempting to find a single optimal estimate, we will adopt a fully Bayesian framework. This seeks to keep the full probability distribution over what those potential parameters could be, given the data. By applying Bayes' theorem to the GP hyperparameters, we define the posterior distribution as:
+To address this structural fragility, this thesis examines the problem through the lens of integration rather than optimisation. Instead of attempting to find a single optimal estimate, we will adopt a fully Bayesian framework. This seeks to keep the full probability distribution over what those potential parameters could be, given the data. By applying Bayes' theorem to the GP hyperparameters, we define the posterior distribution as:
 
 $$p(\theta \mid \mathbf{y}, X) = \frac{p(\mathbf{y} \mid X, \theta) p(\theta)}{\int p(\mathbf{y} \mid X, \theta^\prime) p(\theta^\prime) d\theta^\prime}$$
+
+Where $p(\mathbf{y} \mid X, \theta)$ is the exact marginal likelihood defined in Chapter 3, and $p(\theta)$ is a joint prior distribution placed over the hyperparameters (such as the Matérn length-scales and noise variance) to constrain them to strictly positive, financially sensible bounds.
+
+The advantage of this shift can be observed through forecasting. The standard point estimation methods rely on the rigid assumption that $\theta^*$ represents the absolute truth for predictions at unseen test inputs. Resulting in the condition predictive distribution $p(\mathbf{f}_* \mid X_*, X, \mathbf{y}, \theta^*)$. In contrast, the fully Bayesian predictive distribution marginalises out the hyperparameter uncertainty entirely by integrating the conditional predictions over the full posterior:
+
+$$p(\mathbf{f}_* \mid X_*, X, \mathbf{y}) = \int p(\mathbf{f}_* \mid X_*, X, \mathbf{y}, \theta) p(\theta \mid \mathbf{y}, X) d\theta$$
+
+
 
 \section{Markov Chain Monte Carlo}
 
