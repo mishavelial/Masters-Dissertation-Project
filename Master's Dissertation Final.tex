@@ -455,6 +455,8 @@ More specifically, the RWM relies on a gradient-free proposal distribution, in t
 
 Conversely, if the steps taken by the algorithm are large. The isotropic candidate state will often be outside the narrow bounds of the typical set. Where the target density $p(\theta^\prime \mid \mathbf{y}, X) \to 0$. Consequently, the acceptance probability $\alpha$ plummets, thereby paralysing the chain. Mathematically, for the acceptance probability ratio $\alpha$ to be nonzero, the size step must be scaled down by a factor of $\mathcal{O}(d^{-1/2})$ at the cost of stagnating the exploration of the surface in higher dimensions.
 
+To avoid this diffusive, random-walk behaviour, we replace the isotropic, gradient-free candidate state model with a gradient-informed MCMC algorithm based on $\nabla_\theta \log p(\theta \mid \mathbf{y}, X)$. Which will actively steer the Markov chain along the contours of the typical set.
+
 \section{Hamiltonian Monte Carlo}
 
 \section{The No-U-Turn Sampler (NUTS)}
