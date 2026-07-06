@@ -451,6 +451,10 @@ $$\alpha = \min\left(1, \frac{p(\theta^\prime \mid \mathbf{y}, X)}{p(\theta^{(s)
 
 The RWM algorithm is guaranteed to asymptotically converge to the true posterior in the limit of infinite iterations, but becomes very inefficient in $d$-dimensional space. Its mixing time increases substantially because, by the \textbf{concentration of measure} principle, most of the posterior mass lies in a thin \textbf{typical set} rather than near the mode. Hence, isotropic proposals either have low acceptance rates or slow convergence.
 
+More specifically, the RWM relies on a gradient-free proposal distribution, in turn leading to a structural trade-off between the step size $\sigma$ and the acceptance rate $\alpha$. If the step size $\sigma$ is chosen to be small, the candidate state remains within the typical set ($\alpha \approx 1$), and the exploration degrades into a diffusive random walk. After $N$ steps, the distance scales like $\mathcal{O}(\sqrt{N})$, so the algorithm takes a long time to explore the full ridge geometry.
+
+Conversely, if the steps taken by the algorithm are large. The isotropic candidate state will often be outside the narrow bounds of the typical set. Where the target density $p(\theta^\prime \mid \mathbf{y}, X) \to 0$. Consequently, the acceptance probability $\alpha$ plummets, thereby paralysing the chain. Mathematically, for the acceptance probability ratio $\alpha$ to be nonzero, the size step must be scaled down by a factor of $\mathcal{O}(d^{-1/2})$ at the cost of stagnating the exploration of the surface in higher dimensions.
+
 \section{Hamiltonian Monte Carlo}
 
 \section{The No-U-Turn Sampler (NUTS)}
