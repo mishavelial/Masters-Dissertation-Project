@@ -445,7 +445,11 @@ The standard approach to this approximation problem is the Random Walk Metropoli
 $$\theta^\prime \sim \mathcal{N}(\theta^{(s)}, \Sigma_{prop})$$
 
 
-where $\Sigma_{prop} = \sigma^2 I$ is the isotropic variance and controls the step size. The proposal is then accepted or rejected based on the Metropolis acceptance probability $\alpha$.
+where $\Sigma_{prop} = \sigma^2 I$ is the isotropic variance and controls the step size. The proposal is then accepted or rejected based on the Metropolis acceptance probability $\alpha$: (\TODO{should I explain how the Metropolis sampling works?})
+
+$$\alpha = \min\left(1, \frac{p(\theta^\prime \mid \mathbf{y}, X)}{p(\theta^{(s)} \mid \mathbf{y}, X)}\right)$$
+
+The RWM algorithm is guaranteed to asymptotically converge to the true posterior in the limit of infinite iterations, but becomes very inefficient in $d$-dimensional space. Its mixing time increases substantially because, by the \textbf{concentration of measure} principle, most of the posterior mass lies in a thin \textbf{typical set} rather than near the mode. Hence, isotropic proposals either have low acceptance rates or slow convergence.
 
 \section{Hamiltonian Monte Carlo}
 
