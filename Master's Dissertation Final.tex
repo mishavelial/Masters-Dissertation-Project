@@ -458,6 +458,11 @@ Conversely, if the steps taken by the algorithm are large. The isotropic candida
 To avoid this diffusive, random-walk behaviour, we replace the isotropic, gradient-free candidate state model with a gradient-informed MCMC algorithm based on $\nabla_\theta \log p(\theta \mid \mathbf{y}, X)$. Which will actively steer the Markov chain along the contours of the typical set.
 
 \section{Hamiltonian Monte Carlo}
+A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC), which reformulates the statistical sampling problem as a deterministic simulation of classical mechanics. The algorithm is able to explore the high-dimensional typical set by introducing an auxiliary momentum variable and using information from the gradient of the target density to construct a vector field. 
+
+\subsection{Phase Space and the Hamiltonian}
+
+
 
 \section{The No-U-Turn Sampler (NUTS)}
 
