@@ -462,7 +462,11 @@ A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC
 
 \subsection{Phase Space and the Hamiltonian}
 
+Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$.
 
+The joint distribution of the target variables and the auxiliary momentum is statistically independent: $p(q, p) = p(q)p(p)$, and the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
+
+$$p(q, p) = \frac{1}{Z} \exp(-H(q, p))$$
 
 \section{The No-U-Turn Sampler (NUTS)}
 
