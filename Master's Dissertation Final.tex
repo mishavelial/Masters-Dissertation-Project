@@ -462,11 +462,21 @@ A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC
 
 \subsection{Phase Space and the Hamiltonian}
 
-Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$.
-
-The joint distribution of the target variables and the auxiliary momentum is statistically independent: $p(q, p) = p(q)p(p)$, and the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
+Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$. This approach allows us to treat the hyperparameters as a point moving in the mathematical space. Essentially, we are artificially expanding the space so the sampling method can behave more like a physical system. Intuitively, we are applying a concept that serves as a computational helper, because we do not want the momentum variable to alter the target posterior over the original parameters. We explicitly define the joint distribution of the target variables and the auxiliary momentum as statistically independent: $p(q, p) = p(q)p(p)$. Where the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
 
 $$p(q, p) = \frac{1}{Z} \exp(-H(q, p))$$
+
+where $Z$ is the partition function. Hence, the joint distribution can be defined up to a constant. Because we defined the position and momentum to be independent, the Hamiltonian can be separated into Potential Energy $U(q)$ and Kinetic Energy $K(p)$:
+
+$$H(q, p) = U(q) + K(p)$$
+
+In the context of the Gaussian Process framework, the potential energy $U(q)$ is defined as the negative logarithm of the unnormalized target posterior density:
+
+$$U(q) = -\log p(\mathbf{y} \mid X, q) - \log p(q)$$
+
+The first term is the exact negative log-marginal likelihood of the Matérn $5/2$ covariance structure (as defined in Chapter 3). The second term, $-\log p(q)$, incorporates the prior. To ensure the HMC particle traverses a smooth, unconstrained geometry, the strictly positive Matérn parameters $\theta = \{\ell_K, \ell_T, \sigma_f, \sigma_n\}$ are mapped to the real line via $q = \log(\theta)$. Weakly informative Gaussian priors are placed on these log-parameters, ensuring the data fit dominates the target density while the priors prevent the simulated particle from diverging into numerical singularities during integration. \TODO{Needs revision}
+
+\subsection{Hamiltonian Dynamics}
 
 \section{The No-U-Turn Sampler (NUTS)}
 
