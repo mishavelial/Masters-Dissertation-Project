@@ -477,6 +477,34 @@ $$U(q) = -\log p(\mathbf{y} \mid X, q) - \log p(q)$$
 The first term corresponds to the negative log-marginal likelihood of the Matérn $5/2$ covariance structure that we defined in Chapter 3. The second term, $-\log p(q)$, accounts for the prior of the hyperparameters. Furthermore, the strictly positive Matérn parameters $\theta = \{\ell_K, \ell_T, \sigma_f, \sigma_n\}$ are mapped to the real line $q = \log(\theta)$ to ensure that the HMC particle traverses a smooth plane and doesn't diverge into numerical singularities during integration.
 
 \subsection{Hamiltonian Dynamics}
+The evolution of the system through phase space follows the rules of motion given by Hamilton's equations. They constitute a system of $2d$ coupled first-order ordinary differential equations that tell us how the state evolves over time.
+
+
+$$\frac{dq_i}{dt} = \frac{\partial H}{\partial p_i} = [M^{-1} p]_i$$
+
+$$\frac{dp_i}{dt} = -\frac{\partial H}{\partial q_i} = -\frac{\partial U}{\partial q_i}$$
+
+In practical terms, the first equation says that the position changes at a rate determined by the momentum. Hence, if momentum is larger in some direction, the parameter moves faster in that direction. While the other equation describes how the momentum changes according to the negative slope of the potential energy landscape. So, as the negative log-posterior increases, the particle drifts in some direction; the negative gradient pushes the particle back towards more probable regions, allowing it to rapidly traverse the flat ridges rather than wandering blindly through phase space.
+
+\subsection{Theoretical Guarantees: Conservation, Volume, and Reversibility}
+
+In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov chain, the continuous-time evolution must satisfy three strict conditions: energy conservation, volume preservation, and time reversibility. In other words, for the HMC to efficiently explore the surface's geometry, it must obey the three laws so it doesn't change the posterior distribution it samples from.
+
+\begin{enumerate}
+	\item \textbf{Energy Conservation}
+The Energy Conservation rule keeps the Hamiltonian invariant, conserving energy over time. \textbf{Proof:} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
+
+\begin{equation}
+\frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{dq_i}{dt} + \frac{\partial H}{\partial p_i} \frac{dp_i}{dt} \right)
+\label{energy_conservation}
+\end{equation}
+
+$$\frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{\partial H}{\partial p_i} - \frac{\partial H}{\partial p_i} \frac{\partial H}{\partial q_i} \right) = 0$$
+
+
+Because $\frac{dH}{dt} = 0$, the particle glides along isocontours of the joint density $p(q, p)$. Hence, the trajectory does not move toward higher or lower Hamiltonian values and remains at the same probability level rather than exploring them. If simulated perfectly, every proposed state would be accepted with probability 1.
+
+\end{enumerate}
 
 \section{The No-U-Turn Sampler (NUTS)}
 
