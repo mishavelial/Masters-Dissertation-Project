@@ -470,11 +470,11 @@ where $Z$ is the partition function. Hence, the joint distribution can be define
 
 $$H(q, p) = U(q) + K(p)$$
 
-In the context of the Gaussian Process framework, the potential energy $U(q)$ is defined as the negative logarithm of the unnormalized target posterior density:
+The potential energy $U(q)$ is defined as the negative logarithm of the unnormalized target posterior density under the Gaussian Process framework:
 
 $$U(q) = -\log p(\mathbf{y} \mid X, q) - \log p(q)$$
 
-The first term is the exact negative log-marginal likelihood of the Matérn $5/2$ covariance structure (as defined in Chapter 3). The second term, $-\log p(q)$, incorporates the prior. To ensure the HMC particle traverses a smooth, unconstrained geometry, the strictly positive Matérn parameters $\theta = \{\ell_K, \ell_T, \sigma_f, \sigma_n\}$ are mapped to the real line via $q = \log(\theta)$. Weakly informative Gaussian priors are placed on these log-parameters, ensuring the data fit dominates the target density while the priors prevent the simulated particle from diverging into numerical singularities during integration. \TODO{Needs revision}
+The first term corresponds to the negative log-marginal likelihood of the Matérn $5/2$ covariance structure that we defined in Chapter 3. The second term, $-\log p(q)$, accounts for the prior of the hyperparameters. Furthermore, the strictly positive Matérn parameters $\theta = \{\ell_K, \ell_T, \sigma_f, \sigma_n\}$ are mapped to the real line $q = \log(\theta)$ to ensure that the HMC particle traverses a smooth plane and doesn't diverge into numerical singularities during integration.
 
 \subsection{Hamiltonian Dynamics}
 
