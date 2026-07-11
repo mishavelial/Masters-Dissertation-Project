@@ -411,8 +411,15 @@ Second, the standard L-BFGS-B termination uses a stopping rule; the criterion tr
 \section{Mapping the LML Topology}
 To empirically assess why the quasi-Newton optimiser fails due to weak identifiability, we must conduct a holistic evaluation and map the exact objective landscape the algorithm navigates. For the target dates, we evaluate the Log-Marginal Likelihood (LML) function across a uniform mesh grid of the length-scale hyperparameters $\ell_K$ and $\ell_T$. The signal and noise variances ($\sigma_f^2$, $\sigma_n^2$) were held constant near their optimal values.
 
-\TODO{Here goes the ridge image from 03/03/2020, but I dont have the data yet.}
+\TODO{I've included an example since I don't have the actual CBOE data.}
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Figures/topology_2026-06-12.png}
+    \caption{Topology on 12 June 2026.}
+    \label{fig:topology-2026-06-12}
+\end{figure}
 
+The resulting contour in the figure \ref{fig:topology-2026-06-12} shows a pronounced lack of convexity. This gets even worse in higher stress regimes, like during the 2020 COVID pandemic. The unique feature of these regimes is the absence of a unimodal peak; the LML topography is dominated by an elongated plateau at the shorter length scale $\ell_K$ across the hyperparameter space. A key consideration is the behaviour of the LML function at the lower bounds of the parameter space. A naive interpretation might suggest that the optimal choice of hyperparameters occurs at the strike length scale $\ell_K \to 0$. However, a near-zero length-scale implies that the correlation between two neighbouring points tends to zero, and extrapolation vanishes entirely. This constitutes extreme overfitting, in which the model simply memorises microstructural noise, thereby losing its ability to generalise. 
 
 % ------------------------------------------------- chapter 5
 \chapter{Bayesian Hyperparameter Inference via HMC}
