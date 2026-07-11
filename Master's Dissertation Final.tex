@@ -379,7 +379,7 @@ The fundamental geometry of LML is a balance between the first two terms:
 
 	\item \textbf{The Complexity Penalty (Log-Determinant):} The term $-\frac{1}{2}\log|K_y|$ acts as an inherent regularisation mechanism. When the length-scales are small, the points one unit apart become weakly correlated. Hence, the kernel matrix is nearly diagonal, changing the log-determinant term. In other words, when the model allows the function to vary widely from point to point, the penalty becomes more negative, reducing the marginal likelihood.
 \end{enumerate}
-\Revised{}
+
 \paragraph{The Origin of Weak Identifiability (Flat Ridges):}
 In an ideal scenario, the competition between the Data Fit and the Complexity penalty results in a convex, unimodal peak in the LML landscape. In this case, the algorithm can easily identify a single optimal parameter set $\hat{\theta}$. On the other hand, financial data exhibit characteristic noise and friction (e.g., bid-ask spread noise). Where the LML may exhibit weak identifiability when different hyperparameter combinations yield nearly the same covariance matrix $K_\theta$. This is because the option market data can be successfully interpolated using multiple combinations of strike and maturity length-scales (e.g.,\TODO{find a convincing but complex example}). Mathematically, at a local optimum $\hat{\theta}$, the Hessian of the negative LML measures local curvature. If the Hessian has a very small eigenvalue, then the LML changes slowly in the corresponding direction. Geometrically, this produces a plateau or flat ridges with weakly identifiable hyperparameters.
 
@@ -403,16 +403,16 @@ The divergence breaks the algorithm's mechanics in two ways.
 
 First, in the search direction update $p_k = -\mathcal{H}^{-1} \nabla \mathcal{L}$, the inverse eigenvalue $1/\lambda_{min} \to \infty$ artificially amplifies infinitesimal numerical noise in the gradient along the ridge direction. The optimiser overreacts to very small numerical errors in the direction of the plateau. To satisfy the Wolfe conditions and prevent the step size from exploding, the line search algorithm compensates by heavily truncating the step length $\alpha_k$, even though the actual signal is basically flat. The algorithm ends up making tiny moves or getting stuck and thinks it has converged.
 
-Second, the standard L-BFGS-B termination uses a stopping rule, the criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$ On a flat ridge, the algorithm thinks it has converged because the gradient is below that threshold. In reality, the surface is nearly flat along that direction. As the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$), the optimiser mistakenly interprets this flat gradient as evidence of a true stationary point. It prematurely terminates the line search, declaring convergence at a suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge and actually looking for a better one. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initialisations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
+Second, the standard L-BFGS-B termination uses a stopping rule; the criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$ On a flat ridge, the algorithm thinks it has converged because the gradient is below that threshold. In reality, the surface is nearly flat along that direction. As the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$), the optimiser mistakenly interprets this flat gradient as evidence of a true stationary point. It prematurely terminates the line search, declaring convergence at a suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge and actually looking for a better one. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initialisations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
 
 % ------------------------------------------------- chapter 4
 \chapter{The Pathology of Weak Identifiability}
 
 \section{Mapping the LML Topology}
+To empirically assess why the quasi-Newton optimiser fails due to weak identifiability, we must conduct a holistic evaluation and map the exact objective landscape the algorithm navigates. For the target dates, we evaluate the Log-Marginal Likelihood (LML) function across a uniform mesh grid of the length-scale hyperparameters $\ell_K$ and $\ell_T$. The signal and noise variances ($\sigma_f^2$, $\sigma_n^2$) were held constant near their optimal values.
 
-\section{Restart Instability}
+\TODO{Here goes the ridge image from 03/03/2020, but I dont have the data yet.}
 
-\section{Conclusion of the Pathology}
 
 % ------------------------------------------------- chapter 5
 \chapter{Bayesian Hyperparameter Inference via HMC}
@@ -492,7 +492,7 @@ In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov ch
 
 \begin{enumerate}
 	\item \textbf{Energy Conservation}
-The Energy Conservation rule keeps the Hamiltonian invariant, conserving energy over time. \textbf{Proof:} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
+The energy conservation rule keeps the Hamiltonian invariant, conserving energy over time. \textbf{Proof:} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
 
 \begin{equation}
 \frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{dq_i}{dt} + \frac{\partial H}{\partial p_i} \frac{dp_i}{dt} \right)
@@ -502,10 +502,14 @@ The Energy Conservation rule keeps the Hamiltonian invariant, conserving energy 
 $$\frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{\partial H}{\partial p_i} - \frac{\partial H}{\partial p_i} \frac{\partial H}{\partial q_i} \right) = 0$$
 
 
-Because $\frac{dH}{dt} = 0$, the particle glides along isocontours of the joint density $p(q, p)$. Hence, the trajectory does not move toward higher or lower Hamiltonian values and remains at the same probability level rather than exploring them. If simulated perfectly, every proposed state would be accepted with probability 1.
+Because $\frac{dH}{dt} = 0$, the particle glides along isocontours of the joint density $p(q, p)$. Hence, the trajectory does not move toward higher or lower Hamiltonian values and remains at the same probability level rather than exploring them. In practice, we cannot integrate Hamilton's equations analytically, so we approximate the continuous dynamics using the Leapfrog method reviewed in Chapter 5.4.
+
+\Revised{}
+	\item \textbf{Volume Preservation (Liouville's Theorem)}
+Volume preservation 
+
 
 \end{enumerate}
-
 \section{The No-U-Turn Sampler (NUTS)}
 
 % ------------------------------------------------- chapter 6
