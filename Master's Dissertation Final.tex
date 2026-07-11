@@ -421,6 +421,13 @@ To empirically assess why the quasi-Newton optimiser fails due to weak identifia
 
 The resulting contour in the figure \ref{fig:topology-2026-06-12} shows a pronounced lack of convexity. This gets even worse in higher stress regimes, like during the 2020 COVID pandemic. The unique feature of these regimes is the absence of a unimodal peak; the LML topography is dominated by an elongated plateau at the shorter length scale $\ell_K$ across the hyperparameter space. A key consideration is the behaviour of the LML function at the lower bounds of the parameter space. A naive interpretation might suggest that the optimal choice of hyperparameters occurs at the strike length scale $\ell_K \to 0$. However, a near-zero length-scale implies that the correlation between two neighbouring points tends to zero, and extrapolation vanishes entirely. This constitutes extreme overfitting, in which the model simply memorises microstructural noise, thereby losing its ability to generalise. 
 
+Furthermore, the landscape is flat along the ridge. Mathematically, the exact Hessian $\mathcal{H}$ of the objective function is ill-conditioned, and the gradient along the ridge is virtually zero. In turn, the corresponding eigenvalue $\lambda_{\text{ridge}} \approx 0$. As derived in Section 3.3, this causes the condition number to diverge, making the optimiser blind to the true global structure of the probability space. 
+
+\section{Restart Instability}
+The ultimate choice of hyperparameters is heavily dependent on the initial position of the optimiser. The issue of the optimiser's sensitivity to initialisation coordinates is made especially clear when navigating a flat ridge, as in figure \ref{fig:topology-2026-06-12}. The standard practice in Gaussian Process regression is to run the L-BFGS-B algorithm from multiple random starting points (restarts) and select the hyperparameter configuration that yields the highest LML. 
+
+
+
 % ------------------------------------------------- chapter 5
 \chapter{Bayesian Hyperparameter Inference via HMC}
 
