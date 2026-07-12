@@ -426,7 +426,7 @@ Furthermore, the landscape is flat along the ridge. Mathematically, the exact He
 \section{Restart Instability}
 The ultimate choice of hyperparameters is heavily dependent on the initial position of the optimiser. The issue of the optimiser's sensitivity to initialisation coordinates is made especially clear when navigating a flat ridge, as in figure \ref{fig:topology-2026-06-12}. The standard practice in Gaussian Process regression is to run the L-BFGS-B algorithm from multiple random starting points (restarts) and select the hyperparameter configuration that yields the highest LML. 
 
-
+During the empirical evaluation for 2026-06-11, the pipeline made 20 restarts. The process repeatedly triggered the \texttt{ConvergenceWarning} flag, explicitly indicating that the optimal value was outside the specified lower length-scale bounds. Importantly, the restarts did not converge to a single consensus estimate. Additionally, the standard deviation of the final LML values across the restarts was high at 90.02.
 
 % ------------------------------------------------- chapter 5
 \chapter{Bayesian Hyperparameter Inference via HMC}
