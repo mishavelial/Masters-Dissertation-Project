@@ -538,6 +538,10 @@ Volume preservation
 % ------------------------------------------------- chapter 6
 \chapter{Empirical Methodology and Experimental Design}
 
+The empirical analysis utilises European-style option chains on the S\&P 500 Index (SPX). Due to the sheer density of the SPX options market, evaluating the entire continuous surface simultaneously is computationally expensive and mathematically unnecessary for the sake of hyperparameter inference. Therefore, the data ingestion pipeline is designed to construct a representative discrete term structure.
+
+The market data was extracted via the Yahoo Finance API. A number of regimes were selected to test the HMC sampler, ranging from high-distress volatility to sustained-volatility regimes. The pipeline extracts a stratified cross-section of maturities, specifically targeting near-term (2 weeks), medium-term (5 and 12 weeks), and long-term (20 weeks) expirations. This provides the Gaussian Process with enough data to model a vast topological space that captures both steep, convex skew of short-dated options and the flatter, asymptotic behaviour of long-dated contracts. 
+
 \section{Data Ingestion and Preprocessing}
 
 \section{Market Regimes}
