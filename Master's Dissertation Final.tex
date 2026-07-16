@@ -366,8 +366,18 @@ In brief, the Matérn kernel with $\nu = 5/2$ specification offers an ideal bala
 
 The standard paradigm for training a Gaussian Process in applied machine learning is to select the hyperparameters $\theta$ that maximise the probability of the observed data. This is achieved by maximising the log-marginal likelihood (LML). Conditioning the joint Gaussian prior on the observed target vector $\mathbf{y}$, we define the log-marginal likelihood as:
 
-$$\log p(\mathbf{y} | X, \theta) = -\frac{1}{2}\mathbf{y}^\top K_y^{-1}\mathbf{y} - \frac{1}{2}\log|K_y| - \frac{n}{2}\log(2\pi)$$ where
-$$K_y = K_\theta + \sigma_n^2 I$$ represents the noisy covariance matrix. 
+\begin{equation}
+\log p(\mathbf{y} | X, \theta) = -\frac{1}{2}\mathbf{y}^\top K_y^{-1}\mathbf{y} - \frac{1}{2}\log|K_y| - \frac{n}{2}\log(2\pi)
+\label{lml_conditioning}
+\end{equation}
+where
+\begin{equation}
+K_y = K_\theta + \sigma_n^2 I
+\label{noise_covariance_matrix}
+\end{equation}
+
+represents the noisy covariance matrix. 
+
 
 To understand why hyperparameter optimisation often fails in the financial setting, we need to deconstruct the LML function. The kernel hyperparameters are estimated by maximising the Logarithm of Marginal Likelihood (LML), which balances data fit and model complexity. In practical terms, the LML balances model flexibility against data interpolation. This can be seen by decomposing the formula into three distinct theoretical components:
 
@@ -541,6 +551,16 @@ Volume preservation
 The empirical analysis utilises European-style option chains on the S\&P 500 Index (SPX). Due to the sheer density of the SPX options market, evaluating the entire continuous surface simultaneously is computationally expensive and mathematically unnecessary for the sake of hyperparameter inference. Therefore, the data ingestion pipeline is designed to construct a representative discrete term structure.
 
 The market data was extracted via the Yahoo Finance API. A number of regimes were selected to test the HMC sampler, ranging from high-distress volatility to sustained-volatility regimes. The pipeline extracts a stratified cross-section of maturities, specifically targeting near-term (2 weeks), medium-term (5 and 12 weeks), and long-term (20 weeks) expirations. This provides the Gaussian Process with enough data to model a vast topological space that captures both steep, convex skew of short-dated options and the flatter, asymptotic behaviour of long-dated contracts. 
+
+For each maturity, the raw option chains are filtered using a strict preprocessing protocol to remove erroneous quotes and microstructure noise that will interfere with the construction of the Log-Marginal Likelihood landscape:
+\begin{enumerate}
+    \item \textbf{Liquidity and Validity Constraints:} 
+    The market exhibits microstructure noise for various reasons, including, but not limited to, stale quotes and widening bid-ask spreads for OTM options. The noise changes the covariance matrix by adding a noise component (equation \ref{noise_covariance_matrix}). Thereby, altering conditioning, effective weighting, and hyperparameter estimation. To prevent instability, we strictly filter the dataset. Any option with a trading volume of zero, or missing bid/ask quotes ($Bid \le 0$ or $Ask \le 0$), is discarded. Furthermore, quotes with extreme implied volatilities ($\sigma_{\text{imp}} \le 0.01$ or $\sigma_{\text{imp}} \ge 2.5$) are removed, as these often are pricing errors or highly illiquid strikes.
+    \item \textbf{Coordinate Transformation:} 
+    A more natural coordinate system than the regular $(K,T)$ is the $k = \log(K/S_0)$. The log-moneyness represents a relative coordinate space that puts the strike price $K$ into perspective with respect to the spot price $S_0$. To ensure the Matérn kernel operates on a stable, scale-invariant domain, the strikes are mapped to log-moneyness $k = \log(K/S_0)$. Simultaneously, the expiration dates are converted into an annualised time-to-maturity metric $T$.
+    \item \textbf{Target Variable Construction:} 
+    As mentioned in Section \ref{subsec:static-arbitrage}, the target variable for the Gaussian Process is not the raw implied volatility, but rather the total implied variance. Following Gatheral's SVI framework, the filtered implied volatilities are squared and scaled by maturity: $w(k,T) = \sigma_{\text{imp}}^2(k,T) \, T$. This ensures the calendar arbitrage monotonicity constraints detailed in Section \ref{subsubsec:calendar-arbitrage} can be accurately evaluated.
+\end{enumerate}
 
 \section{Data Ingestion and Preprocessing}
 
