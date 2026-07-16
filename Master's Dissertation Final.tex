@@ -581,6 +581,35 @@ To ensure that the observed reduction in predictive error is attributable to the
 \end{itemize}
 
 \section{Evaluation Metrics}
+To measure the performance of the competing inference methodologies, we must separate the evaluation framework into global predictive accuracy and local financial consistency. As established in Section \ref{subsec:static-arbitrage}, a mathematically smooth interpolant is financially invalid if it permits arbitrage. Therefore, the models are evaluated across the following three numerical metrics:
+
+\begin{enumerate}
+	\item \textbf{Out-of-Sample Predictive Accuracy (RMSE):}
+	The Root Mean Square Error (RMSE) measures the out-of-sample accuracy to determine the global fit of the model, which is strictly evaluated on the testing set. Let $N_{\text{test}}$ be the number of unseen option quotes, $y_i$ be the observed total implied variance, and $\hat{y}_i$ be the model's predictive mean. The out-of-sample RMSE is defined as:
+
+\begin{equation}
+    \text{RMSE}_{\text{OOS}} = \sqrt{\frac{1}{N_{\text{test}}} \sum_{i=1}^{N_{\text{test}}} (y_i - \hat{y}_i)^2}
+\end{equation}
+
+This metric penalises models that overfit the training data's microstructural noise by measuring their generalisation error on unseen coordinates.
+
+	\item \textbf{Calendar Arbitrage Violations:}
+	While Section \ref{subsec:static-arbitrage} defines the calendar arbitrage as a continuous monotonicity condition ($\partial w / \partial T \geq 0$), the numerical implementation is done using forward finite differences. Let $\mathbf{T} = \{T_1, T_2, \dots, T_m\}$ represent the sorted unique maturities. For each strike coordinate, the discrete derivative is computed and formally recorded as calendar arbitrage. Later summed whenever the discrete variance increment is negative:
+\begin{equation}
+    \sum_{j=1}^{m-1} \mathbb{I} \left( \frac{w(k, T_{j+1}) - w(k, T_j)}{T_{j+1} - T_j} < 0 \right)
+\end{equation}
+where $\mathbb{I}(\cdot)$ is the indicator function.
+
+	\item \textbf{Butterfly Arbitrage Violations:}
+	Similarly, the theoretical condition for the absence of butterfly arbitrage requires the risk-neutral probability density to remain non-negative, corresponding to a strictly convex call price curve ($\partial^2 C / \partial K^2 \geq 0$). To calculate it, we invert the predictive surface $w(k, T)$ to obtain European call prices $C(K, T)$ using the standard Black-Scholes pricing formula because the GP interpolates in total variance space. We evaluate the second derivative using a numerical approximation at the midpoint. Given a sorted grid of unique strike prices $\mathbf{K} = \{K_1, K_2, \dots, K_p\}$, let $\Delta C_i = C(K_{i+1}, T) - C(K_i, T)$ and $\Delta K_i = K_{i+1} - K_i$. The evaluation becomes:
+
+\begin{equation}
+    \frac{\partial^2 C}{\partial K^2} \approx \frac{\frac{\Delta C_{i+1}}{\Delta K_{i+1}} - \frac{\Delta C_i}{\Delta K_i}}{\Delta K_i}
+\end{equation}
+
+The pipeline aggregates total butterfly violations by applying this finite-difference array operation and counting every instance in which the discrete second derivative falls below zero across all evaluated maturities.
+\end{enumerate}
+
 
 % ------------------------------------------------- chapter 7
 \chapter{Results and Discussion}
