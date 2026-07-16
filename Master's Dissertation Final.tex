@@ -548,6 +548,8 @@ Volume preservation
 % ------------------------------------------------- chapter 6
 \chapter{Empirical Methodology and Experimental Design}
 
+\section{Data Ingestion and Preprocessing}
+
 The empirical analysis utilises European-style option chains on the S\&P 500 Index (SPX). Due to the sheer density of the SPX options market, evaluating the entire continuous surface simultaneously is computationally expensive and mathematically unnecessary for the sake of hyperparameter inference. Therefore, the data ingestion pipeline is designed to construct a representative discrete term structure.
 
 The market data was extracted via the Yahoo Finance API. A number of regimes were selected to test the HMC sampler, ranging from high-distress volatility to sustained-volatility regimes. The pipeline extracts a stratified cross-section of maturities, specifically targeting near-term (2 weeks), medium-term (5 and 12 weeks), and long-term (20 weeks) expirations. This provides the Gaussian Process with enough data to model a vast topological space that captures both steep, convex skew of short-dated options and the flatter, asymptotic behaviour of long-dated contracts. 
@@ -562,9 +564,21 @@ For each maturity, the raw option chains are filtered using a strict preprocessi
     As mentioned in Section \ref{subsec:static-arbitrage}, the target variable for the Gaussian Process is not the raw implied volatility, but rather the total implied variance. Following Gatheral's SVI framework, the filtered implied volatilities are squared and scaled by maturity: $w(k,T) = \sigma_{\text{imp}}^2(k,T) \, T$. This ensures the calendar arbitrage monotonicity constraints detailed in Section \ref{subsubsec:calendar-arbitrage} can be accurately evaluated.
 \end{enumerate}
 
-\section{Data Ingestion and Preprocessing}
-
 \section{Market Regimes}
+To ensure that the observed reduction in predictive error is attributable to the probabilistic methodology rather than to a particular feature of the market state, we evaluate both the deterministic point-estimate algorithm L-BFGS-B and the Bayesian HMC approaches across different environments. 30 dates spanning different market regimes were selected. Each regime was selected to stress-test a specific structural vulnerability in the surface fitting process:
+
+\begin{itemize}
+    \item \textbf{High Volatility Shock (March 2020):} 
+    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. Because this month's volatility surface is heavily backwardated and chaotic, it is the perfect environment to test the HMC sampler in difficult conditions. \textit{Selected dates: 3, 6, 10, 13, 17, 19, 23, and 25 March 2020.}
+    
+    \item \textbf{Grinding Bear \& Rate Shock (September -- October 2022):} 	During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 13, 16, 21, 26, 30 September and 5, 11 October 2022.}
+    
+    \item \textbf{Steady, Low-Vol Bull (Summer 2023):} 
+    The summer of 2023 serves as the baseline regime with low volatility and a standard volatility smile. This tests whether the GP model correctly relies on the parametric prior without overfitting the microstructural noise.\textit{Selected dates: 2, 7, 13, 21, 26, 30 June and 6, 11 July 2023.}
+    
+    \item \textbf{High Momentum Expansion (January -- February 2024):} 
+    Driven by aggressive, continuous market rallies. This regime specifically tests the pipeline's ability to map right-tail asymmetry and the pronounced call skew that emerges during rapid expansions. \textit{Selected dates: 18, 24, 30 January and 5, 9, 15, 22 February 2024.}
+\end{itemize}
 
 \section{Evaluation Metrics}
 
