@@ -143,10 +143,11 @@ I would like to thank my supervisor, the School of Mathematics and Statistics, a
 \section{Context and Motivation}
 Accurate modelling of the implied volatility surface is central to modern quantitative finance. Volatility surfaces are required for pricing, hedging, calibration, and risk management, particularly in index option markets such as SPX. At the same time, nonparametric machine learning methods, and Gaussian Processes in particular, offer a flexible framework for modelling nonlinear structure with uncertainty quantification.
 
-This dissertation is motivated by a tension between flexibility and reliability. Gaussian Processes are attractive because they can interpolate sparse and noisy volatility data smoothly, but their practical performance depends heavily on the estimation of kernel hyperparameters. In financial settings, the optimisation landscape for these hyperparameters may be weakly identifiable, creating instability that is often hidden behind apparently successful optimisation output. 
+This dissertation is motivated by the need for a reliable implied-volatility surface for pricing and risk management. As financial data is naturally messy, Gaussian Process regression is a flexible yet reliable solution that has the potential to interpolate this sparse and noisy volatility data smoothly. However, the practical performance of the regression is heavily dependent on the estimation of unstable kernel hyperparameters. This paper studies whether the Bayesian approach to those hyperparameters gives a more reliable surface.
 
 \section{Problem Statement}
-The problem considered in this dissertation is the failure of deterministic point estimation in flat or weakly identifiable objective landscapes for Gaussian Process volatility surface models. In such settings, different hyperparameter configurations can yield near-equivalent log-marginal likelihood values while inducing materially different predictive surfaces and pricing outputs. 
+
+The problem considered in this dissertation is the failure of the deterministic point estimation algorithm in weakly identifiable topological landscapes of the Log-Marginal Likelihood for Gaussian Process volatility surface models. Under noisy and chaotic market data, the L-BFGS-B algorithm suffers from arbitrary hyperparameter configurations, depending on the initialisation coordinate. Because the ridge at the bottom of the LML surface is flat, any point yields near-equivalent log-marginal likelihood values but results in different predictive surfaces and pricing outputs.
 
 \section{Research Objectives and Hypothesis}
 \textbf{The main research question is:}
@@ -613,10 +614,12 @@ The pipeline aggregates total butterfly violations by applying this finite-diffe
 
 
 % ------------------------------------------------- chapter 7
-\chapter{Empirical Results and Discussion}
-Previously, we established the theoretical foundations of deterministic point estimation in Chapter 4 and formalised the Bayesian Hamiltonian Monte Carlo methodology in Chapter 5. This chapter will present the empirical findings in the evaluation, conducted across varying market regimes defined in Section \ref{sec:market-regimes}. 
+\chapter{Empirical Results and Diagnostics}
+
+Previously, we established the theoretical foundations of deterministic point estimation in Chapter 4 and formalised the Bayesian Hamiltonian Monte Carlo methodology in Chapter 5. This chapter will present the empirical findings from the evaluation conducted across the varying market regimes defined in Section \ref{sec:market-regimes}.
 
 \section{Predictive Accuracy: The Global Fit}
+
 The primary objective of any volatility surface interpolant is to accurately generalise to new market coordinates. The out-of-sample Root Mean Square Error (RMSE) is used to gauge the performance of this generalisation. 
 
 As established in Chapter 4, the deterministic optimiser exhibits weak identifiability on flat, non-convex ridges in the LML topological landscapes. The L-BFGS-B algorithm often stops prematurely at an arbitrary coordinate, subject to its initialisation point. Thereby, constraining the predictions of the GP and leads to severe overfitting of the model. Conversely, the Bayesian HMC framework integrates over the entire weakly identifiable ridge. By drawing samples from the full posterior distribution and generating a predictive mean that is an expectation over the hyperparameter space, the HMC approach acts as a structural regulariser. 
@@ -644,6 +647,97 @@ In stark contrast, the Bayesian HMC GP was able to contain the flat topological 
 This severe reduction confirms that acknowledging and integrating over hyperparameter uncertainty actively prevents the kernel from collapsing into local optima. While the deterministic model aggressively fits the noisy, chaotic market data of a shifting regime, the probabilistic model maintains a mathematically sound global topology.
 
 \section{Visualising the Posterior Diagnostics}
+To understand how the Hamiltonian Monte Carlo sampler achieved the said error reductions, we must dig deeper and examine the empirical posterior distributions of the hyperparameter. As mentioned in Chapter 4, the LML space for financial volatility surfaces often features weakly identifiable, flat ridges. Instead of being perfectly convex, the optima is a plateau. 
+
+Figure \ref{fig:posterior_2020_03_03} illustrates the posterior distributions for the strike ($\ell_K$) and maturity ($\ell_T$) length-scales on 3 March 2020, a period of extreme market distress.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Figures/hmc_posterior_2020-03-03.png}
+    \caption{Posterior distributions of the Matérn length-scales during the High Volatility Shock (3 March 2020). Note the distinct bimodal structure at the boundaries, indicative of navigation along a flat LML ridge.}
+    \label{fig:posterior_2020_03_03}
+\end{figure}
+
+Rather than forming a standard, unimodal Gaussian curve, the posterior exhibits a rigid bimodal structure, accumulating heavily at the boundaries of the typical set. This is a direct physical manifestation of the Hamiltonian dynamics interacting with the flat ridge topology mapped in Section 4.1. As the simulated particle traverses the phase space, the gradient of the potential energy along the ridge approaches zero ($\nabla U(q) \approx 0$). When reversing, the particle spends some time at the boundary position, leading the HMC Leapfrog integrator to sum over those coordinates more than at the bottom of the ridge. Without a gradient to continuously redirect the momentum, the HMC particle slides along the ridge until it intercepts the bounds of the weakly identifiable region, accumulating sample mass at the extremities before reversing direction. 
+
+While a deterministic optimiser prematurely terminates upon encountering these flat gradients, causing the restart instability documented in Section 4.2, the HMC algorithm successfully maps the entire ridge. Furthermore, the empirical data reveal that the location of this ridge is highly non-stationary across market regimes. During the high-momentum regime in early 2024, the boundary constraints shifted dynamically. The posterior mass for $\log(\ell_K)$ migrated from the high-correlation range of $[2.3, 3.1]$ observed in 2020, down to a highly localised range of $[0.6, 0.7]$. 
+
+By using structural averaging, the model can weed out extreme behaviours of specific length scales. In other words, it effectively hedges between the mathematical extremes of a weakly identifiable region. This prevents the kernel from memorising microstructural noise or making the surface too rigid.
+
+\section{Financial Consistency and the Arbitrage Trade-off}
+\label{sec:consistency_tradeoff}
+
+While the out-of-sample RMSE measures how well the model extrapolates across the macroscopic surface, it does not guarantee economic validity. As mentioned in Section 2.2, a mathematically smooth interpolant is financially inadmissible if it permits arbitrage. Both frameworks were evaluated for financial consistency with respect to the calendar and butterfly arbitrage constraints defined in Section 2.2.1. 
+
+The empirical results, aggregated in Appendix C, reveal the mostly consistent structural flaw in the deterministic point-estimation framework across regimes. By aggressively maximising the log-marginal likelihood, the L-BFGS-B optimiser frequently overfits the microstructural noise of the bid-ask spreads. This is especially evident during the 2024 regime, mentioned in Section 7.1. As the algorithm tries to overfit the noisy data, it creates infinitesimal "kinks" in the predictive surface. When inverted to call prices, these kinks violate the strict convexity condition ($\partial^2 C / \partial K^2 \ge 0$) required by the Breeden-Litzenberger theorem, resulting in negative risk-neutral probabilities. 
+
+An analysis of the 27 unique historical trading days (excluding duplicate API dates) reveals that the Point-Estimated GP generated butterfly arbitrage violations on $\mathbf{100\%}$ of the evaluated dates. More critically, the model regularly suffered from simultaneous, systemic collapses of both static arbitrage conditions:
+
+\begin{itemize}
+    \item Across the four market regimes, the deterministic point estimator simultaneously violated \emph{both} calendar and butterfly constraints on $37.0\%$ of the evaluated days.
+    \item During periods of extreme volatility and momentum (March 2020 and Q1 2024), this joint-failure rate escalated to $66.7\%$ (8 out of 12 unique high-stress days).
+    \item Within the High-Momentum Expansion regime of early 2024, the dual-violation rate peaked at a remarkable $85.7\%$ (6 out of 7 unique days), with simultaneous violations spiking as high as 175 calendar and 266 butterfly errors on 18 January 2024.
+\end{itemize}
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{lccc}
+        \toprule
+        \textbf{Metric} & \textbf{Point-Estimated GP} & \textbf{Bayesian HMC GP} \\
+        \midrule
+        Clean Calendar Days & 77.8\% (21/27) & \textbf{100.0\% (27/27)}\\
+        Clean Butterfly Days & 0.0\% (0/27) & \textbf{66.7\% (18/27)}\\
+        Dual-Violation Days & 37.0\% (10/27) & \textbf{0.0\% (0/27)}\\
+        2024 Dual-Failure Rate & 85.7\% (6/7) & \textbf{0.0\% (0/7)}\\
+        \bottomrule
+    \end{tabular}
+    \caption{Aggregate Arbitrage Failure Rates across the 27 unique historical trading days.}
+    \label{tab:arbitrage_summary}
+\end{table}
+\TODO{review this table, the data is a bit off and adjust the description}
+
+Table \ref{tab:arbitrage_summary} illustrates that during rapid regime shifts and volatile environments, the point estimator shortens the length scales and memorises the entire surface, nominally beating the HMC GP on certain days, but trading financial validity for accuracy. The mechanics of this dangerous accuracy-consistency trade-off will be explicitly examined in the following section.
+
+The Bayesian HMC framework changes the perspective on the problem entirely, instead of finding the “best” single hyperparameter. The NUTS sampler integrates across the full posterior distribution, while exploring the entire weakly identifiable ridge surrounding the LML optimum. This process acts as an automated, structural regulariser. As the algorithm averages the predictive surfaces generated by varying length-scales, the random, chaotic microstructural noise cancels itself out. What survives the expectation integral is the true, macroeconomic shape of the volatility skew. 
+
+To summarise, the Bayesian HMC framework demonstrated strong financial validity and overall robustness with respect to structural regularisation. The NUTS sampler eradicated $\approx 99\%$ of calendar arbitrage and $\approx 60\%$ of butterfly arbitrage. During the severe out-of-distribution coordinate expansion of early 2024, while the model could not completely overcome the extreme structural contradictions present in the raw breakout quotes, it drastically reduced absolute butterfly violations by an average of $80\%$ to $90\%$ (e.g., dropping violations from 127 down to 14 on 24 January).
+
+\section{The Accuracy-Consistency Trade-off}
+\label{sec:accuracy_consistency_tradeoff}
+
+During highly liquid, low-volatility market environments, the deterministic point estimator frequently achieves a nominally superior out-of-sample RMSE compared to the Bayesian ensemble. However, this performance can be deceiving if we do not consider the overall picture.
+
+\subsection{The Illusion of Deterministic Superiority}
+
+To understand the mechanics of this illusion, we must examine the behaviour of the quasi-Newton optimiser on a highly identifiable Log-Marginal Likelihood (LML) landscape. During a steady, rate-shock bear market of September 2022, the volatility surface is generally smooth and structurally stable. Because the broader shape of the surface is simple, the residual data is largely dominated by microstructural market friction and not necessarily by economic patterns. In which case, the held-out points may contain very similar quote noise, so a model that partly memorises that noise can still score a very low RMSE but be economically incorrect.
+
+\subsection{Empirical Case Studies: The 2022 Grinding Bear Regime}
+
+To explicitly outline this behaviour of the deterministic point estimator, we will consider the SPX options market on \textbf{16 September 2022} and \textbf{21 September 2022} for empirical evaluation. On both dates, the out-of-sample RMSEs were lower than their Bayesian counterparts, a direct result of the point estimator successfully locking onto the exact coordinates of the noisy training data.
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}{llccc}
+        \toprule
+        \textbf{Date} & \textbf{Method} & \textbf{OOS RMSE (IV)} & \textbf{Calendar Viol.} & \textbf{Butterfly Viol.} \\
+        \midrule
+        \multirow{2}{*}{2022-09-16} & Point-Estimated GP & \textbf{0.002148} & 12 & 31 \\
+                                    & Bayesian HMC GP    & 0.002294 & \textbf{0}  & \textbf{0}  \\
+        \midrule
+        \multirow{2}{*}{2022-09-21} & Point-Estimated GP & \textbf{0.000877} & 0  & 66 \\
+                                    & Bayesian HMC GP    & 0.001154 & \textbf{0}  & \textbf{0}  \\
+        \bottomrule
+    \end{tabular}
+    \caption{The Accuracy-Consistency Trade-off during the September 2022 regime. The Point-Estimated GP achieves a slightly lower RMSE by overfitting microstructural noise, generating dozens of arbitrage violations.}
+    \label{tab:accuracy_consistency_tradeoff}
+\end{table}
+
+As detailed in Table \ref{tab:accuracy_consistency_tradeoff}, on 21 September 2022, the Point-Estimated GP achieved an RMSE of just $0.000877$. However, it achieved this low score at the expense of the surface's financial stability, resulting in \textbf{66 butterfly arbitrage violations}. Similarly, on 16 September 2022, the deterministic model outperformed the Bayesian approach by $0.00014$ in RMSE. But it had to compromise on financial arbitrage, leading to 12 calendar violations and 31 butterfly violations.
+
+This smoothing effect explains the HMC results on 21 September 2022. By refusing to overfit the local microstructural noise, the Bayesian surface slightly "detuned" itself from the exact coordinates of the test set, resulting in a microscopic increase in generalisation error (RMSE of $0.001154$). However, this marginal RMSE penalty ($\approx 0.00027$) was the mathematical price required to completely iron out the jagged kinks, dropping the butterfly violations from 66 down to exactly 0.
+
+The empirical evidence therefore confirms the central hypothesis of this dissertation. Evaluating non-parametric volatility models only on OOS RMSE creates a financial illusion of superiority. By replacing point estimation with Bayesian hyperparameter inference, we impose a mandatory regularisation mechanism that explicitly prioritises risk-neutral probability constraints over the memorisation of market friction.
+
 
 % ------------------------------------------------- chapter 8
 \chapter{Conclusion}
@@ -671,10 +765,10 @@ This severe reduction confirms that acknowledging and integrating over hyperpara
 \end{itemize}
 
 \chapter{Mathematical Proofs and Extended Derivations}
-
+\TODO{i have some in my notebook, but they just need to be written out}
 \chapter{Comprehensive Empirical Results}
 
-This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes. The dataset excludes dates corrupted by API ingestion failures.
+This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes. The dataset excludes dates corrupted by API ingestion failures. \TODO{although I will probably include them as they are valuable for further work}
 
 \begin{table}[htbp]
     \centering
