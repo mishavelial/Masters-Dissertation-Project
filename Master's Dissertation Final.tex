@@ -747,6 +747,18 @@ This dissertation set out to resolve the structural instability present in non-p
 
 Most importantly, this topological mapping reveals a structural flaw, not in the deterministic L-BFGS-B optimiser, but within the Maximum Likelihood Estimation (MLE) objective it is instructed to solve. The L-BFGS-B algorithm is a highly efficient quasi-Newton method; it mathematically succeeds in finding the exact coordinates that maximise the probability of the observed training data. However, in the context of chaotic financial markets, the idea of absolute optimum is a mathematical trap. The absolute optimum corresponds to shorter length scales, where the LML score is highest because it aggressively memorises in-sample microstructural friction, such as bid-ask spreads and asynchronous tick sizes. Consequently, this achieves a nominally lower OOS RMSE in certain regimes.
 
+Therefore, by restricting the model to collapse its hyperparameter uncertainty into a single noise-fitting coordinate on a flat ridge, point estimation transforms the Gaussian Process from generalisable, out-of-sample forecasting into a highly brittle, overfitted function. Directly contradicting the fundamental goal of MLE.
+
+\section{The Accuracy-Consistency Trade-off}
+
+The consequence of this overfitting introduces a dangerous paradigm into quantitative trading: the financial illusion of predictive accuracy. A low generalisation error becomes meaningless unless accompanied by strict arbitrage constraints.
+
+The empirical findings of this research highlight the instability of the deterministic point estimation approach under these economic constraints. Across the evaluated historical data, the point estimator achieved a 100\% butterfly arbitrage failure rate. Additionally, during the aggressive momentum expansion of Q1 2024, this instability escalated into an 85.7\% systemic dual-violation rate, simultaneously failing both calendar and butterfly conditions. Thereby supporting the claim that the pursuit of the absolute maximum likelihood mathematically guaranteed negative risk-neutral probabilities.
+
+Conversely, the Bayesian framework adopts a role of a structural regulariser; the No-U-Turn Sampler (NUTS) integrates across the entire weakly identifiable posterior ridge, generating an ensemble of predictive surfaces. By averaging them, the fatal structural flaw of the point estimator is resolved. Furthermore, by replacing point estimation with Hamiltonian Monte Carlo (HMC) inference, the chaotic microstructural noise cancels itself out due to the marginalisation process of the framework.
+
+Ultimately, this regularisation exposes an accuracy-consistency trade-off between out-of-sample error and financial validity. This compromise is especially noticeable during the highly liquid, low-volatility regimes such as September 2022. The Bayesian model accepts a small penalty in generalisation error compared to the deterministic optimiser. However, this marginal reduction in accuracy is the mandatory price for an economically admissible surface, which guarantees the eradication of structural arbitrage.
+
 % ------------------------------------------------- appendices
 \appendix
 
