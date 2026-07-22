@@ -738,7 +738,6 @@ This smoothing effect explains the HMC results on 21 September 2022. By refusing
 
 The empirical evidence therefore confirms the central hypothesis of this dissertation. Evaluating non-parametric volatility models only on OOS RMSE creates a financial illusion of superiority. By replacing point estimation with Bayesian hyperparameter inference, we impose a mandatory regularisation mechanism that explicitly prioritises risk-neutral probability constraints over the memorisation of market friction.
 
-
 % ------------------------------------------------- chapter 8
 \chapter{Conclusion}
 \section{The Pathology of Point Estimation}
@@ -759,6 +758,16 @@ Conversely, the Bayesian framework adopts a role of a structural regulariser; th
 
 Ultimately, this regularisation exposes an accuracy-consistency trade-off between out-of-sample error and financial validity. This compromise is especially noticeable during the highly liquid, low-volatility regimes such as September 2022. The Bayesian model accepts a small penalty in generalisation error compared to the deterministic optimiser. However, this marginal reduction in accuracy is the mandatory price for an economically admissible surface, which guarantees the eradication of structural arbitrage.
 
+\section{Computational Limitations and Future Work}
+
+While the Bayesian Hamiltonian Monte Carlo framework decisively outperforms the deterministic point estimation approach in preserving economic admissibility, its deployment and upkeep during live trading sessions are heavily constrained by computational complexity. Although the time complexity of both algorithms is $\mathcal{O}(N^3)$, the fundamental mathematical bottleneck is the computationally expensive Cholesky decomposition of the covariance matrix. The paramount difference between them comes from the constant factor, which represents the number of times the algorithms have to execute this expensive $\mathcal{O}(N^3)$ decomposition. Based on the hyperparameter configurations used in this study, evaluating the full posterior via Hamiltonian Monte Carlo requires roughly 1,000 times more computational overhead than deterministic point estimation.
+
+It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing, risk management, and portfolio margin calculations. In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
+
+The logical progression for future quantitative research is to bridge this computational gap by exploring Variational Inference (VI) or Sparse Gaussian Processes. By framing Bayesian inference as an optimisation problem rather than a stochastic sampling problem, VI has the potential to approximate the true Bayesian posterior in a fraction of the time. Successfully implementing a Variational Gaussian Process could theoretically maintain the powerful regularising benefits of hyperparameter ensembling while achieving the near-deterministic execution speeds required for high-frequency trading floors. 
+
+\TODO{I have some more ideas on how to improve future work, like amortized inference and hardware-level acceleration. not sure if i should include it or not. basically speaking, the amortised inference takes the entire pipeline offline which could be run overnight, then we train a dnn and have complexity of $\mathcal{O}(1)$ by just passing the live bid-ask spread to the trained neural network. and the hardware-level acceleration would involve writing custom cuda kernels which would execute the cholesky decomp directly on the high end gpu which would be done in c++ as python still caries overhead.}
+
 % ------------------------------------------------- appendices
 \appendix
 
@@ -776,6 +785,9 @@ Ultimately, this regularisation exposes an accuracy-consistency trade-off betwee
 \end{itemize}
 
 \chapter{Mathematical Proofs and Extended Derivations}
+
+
+
 \TODO{i have them in my notebook, but they just need to be written out}
 \chapter{Comprehensive Empirical Results}
 
