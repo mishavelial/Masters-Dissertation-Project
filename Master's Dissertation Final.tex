@@ -731,7 +731,7 @@ To explicitly outline this behaviour of the deterministic point estimator, we wi
     \caption{The Accuracy-Consistency Trade-off during the September 2022 regime. The Point-Estimated GP achieves a slightly lower RMSE by overfitting microstructural noise, generating dozens of arbitrage violations.}
     \label{tab:accuracy_consistency_tradeoff}
 \end{table}
-
+\TODO{The table spills over the paragraph, fix this somehow}
 As detailed in Table \ref{tab:accuracy_consistency_tradeoff}, on 21 September 2022, the Point-Estimated GP achieved an RMSE of just $0.000877$. However, it achieved this low score at the expense of the surface's financial stability, resulting in \textbf{66 butterfly arbitrage violations}. Similarly, on 16 September 2022, the deterministic model outperformed the Bayesian approach by $0.00014$ in RMSE. But it had to compromise on financial arbitrage, leading to 12 calendar violations and 31 butterfly violations.
 
 This smoothing effect explains the HMC results on 21 September 2022. By refusing to overfit the local microstructural noise, the Bayesian surface slightly "detuned" itself from the exact coordinates of the test set, resulting in a microscopic increase in generalisation error (RMSE of $0.001154$). However, this marginal RMSE penalty ($\approx 0.00027$) was the mathematical price required to completely iron out the jagged kinks, dropping the butterfly violations from 66 down to exactly 0.
@@ -741,12 +741,11 @@ The empirical evidence therefore confirms the central hypothesis of this dissert
 
 % ------------------------------------------------- chapter 8
 \chapter{Conclusion}
+\section{The Pathology of Point Estimation}
 
-\section{Summary of Findings}
+This dissertation set out to resolve the structural instability present in non-parametric volatility surface models, specifically addressing the failure of the deterministic point estimation approach to Gaussian Processes during market turmoil. The core mathematical discovery of this research is that Log-Marginal Likelihood (LML) for options is often non-convex, featuring a weakly identifiable hyperparameter space. This directly undermines the standard assumption that a single, optimal set of hyperparameters can be isolated from the market data.
 
-\section{Implications for Quantitative Finance}
-
-\section{Limitations and Future Work}
+Most importantly, this topological mapping reveals a structural flaw, not in the deterministic L-BFGS-B optimiser, but within the Maximum Likelihood Estimation (MLE) objective it is instructed to solve. The L-BFGS-B algorithm is a highly efficient quasi-Newton method; it mathematically succeeds in finding the exact coordinates that maximise the probability of the observed training data. However, in the context of chaotic financial markets, the idea of absolute optimum is a mathematical trap. The absolute optimum corresponds to shorter length scales, where the LML score is highest because it aggressively memorises in-sample microstructural friction, such as bid-ask spreads and asynchronous tick sizes. Consequently, this achieves a nominally lower OOS RMSE in certain regimes.
 
 % ------------------------------------------------- appendices
 \appendix
@@ -765,7 +764,7 @@ The empirical evidence therefore confirms the central hypothesis of this dissert
 \end{itemize}
 
 \chapter{Mathematical Proofs and Extended Derivations}
-\TODO{i have some in my notebook, but they just need to be written out}
+\TODO{i have them in my notebook, but they just need to be written out}
 \chapter{Comprehensive Empirical Results}
 
 This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes. The dataset excludes dates corrupted by API ingestion failures. \TODO{although I will probably include them as they are valuable for further work}
