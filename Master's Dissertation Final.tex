@@ -321,7 +321,7 @@ Given a set of test inputs $X_*$, the joint distribution of the training targets
 
 where $K(X, X)$ is the $n \times n$ Gram matrix evaluated on the training inputs, $K(X, X_*)$ is the $n \times n_*$ cross-covariance matrix between the training $X$ and test $X_*$ inputs, and $I$ is the identity matrix. The statement \ref{joint_gaussian} asserts that by combining the observed training inputs and unknown test inputs together, the resulting joint distribution is Gaussian under the GP model. Importantly, the left block is the covariance between observed training inputs, plus the noise $\sigma^2I$ term, which indicates that the observed training targets $\mathbf{y}$ are noisy versions of the underlying function values. In this case, the model allows for noise rather than treating the observed data as exact realisations of the latent function. 
 
-By conditioning this joint prior on the observed market data $\mathbf{y}$, we derive the predictive posterior distribution $\mathbf{f}_* | X, \mathbf{y}, X_* \sim \mathcal{N}(\boldsymbol{\mu}_*, \Sigma_*)$. Equivalently, the above expression states that once we know the training outputs, we can update the joint Gaussian to get a new Gaussian distribution for the unknown test outputs. This is a standard conditioning step in GP regression. The exact matrix equations for the predictive mean and predictive covariance are:
+By conditioning this joint prior on the observed market data $\mathbf{y}$, we derive the predictive posterior distribution $\mathbf{f}_* | X, \mathbf{y}, X_* \sim \mathcal{N}(\boldsymbol{\mu}_*, \Sigma_*)$ as shown in the \ref{sec:schur_complement} derivation. (\TODO{Is this wording fine for pointing the reader to a formal proof?})Equivalently, the above expression states that once we know the training outputs, we can update the joint Gaussian to get a new Gaussian distribution for the unknown test outputs. This is a standard conditioning step in GP regression. The exact matrix equations for the predictive mean and predictive covariance are:
 
 \[\boldsymbol{\mu}_* = m(X_*) + K(X_*, X)[K(X, X) + \sigma_n^2 I]^{-1}(\mathbf{y} - m(X))\]
 
@@ -332,7 +332,7 @@ The predictive mean equation states that the forecast at the new points is the s
 The predictive covariance formula provides the model with the uncertainty after observing the data, where $K(X_*, X_*)$ is the prior uncertainty at the test points minus the part explained by the training data. In practical terms, uncertainty is minimised in dense regions and remains higher where the model must extrapolate.
 
 \section{The Mat\'ern 5/2 Kernel}
-While the mean function determines the overall shape of the volatility surface, the covariance kernel governs the local shape at discrete points and the interpolative behaviour of the residuals. The choice of kernel cannot be arbitrary; in financial applications, a covariance function should satisfy strict structural requirements dictated by arbitrage pricing theory. In this work, we adopt an anisotropic Matérn 5/2 kernel; other common kernels (RBF, Matérn 3/2, Rational Quadratic) are viable in general-purpose modelling but have features that are discussed briefly below, which make them less suitable for the present arbitrage-constrained framework. \TODO{add a brief explanation to why other kernels are not suitable}
+While the mean function determines the overall shape of the volatility surface, the covariance kernel governs the local shape at discrete points and the interpolative behaviour of the residuals. The choice of kernel cannot be arbitrary; in financial applications, a covariance function should satisfy strict structural requirements dictated by arbitrage pricing theory. In this work, we adopt an anisotropic Matérn 5/2 kernel; other common kernels (RBF, Matérn 3/2, Rational Quadratic) are viable in general-purpose modelling but have features that are discussed briefly below, which make them less suitable for the present arbitrage-constrained framework. \TODO{Should I add a brief explanation as to why other kernels are not suitable?}
 
 The covariance kernel is a function of two inputs, $\mathbf{x}$ and $\mathbf{x}'$. We define two distinct input vectors: $\mathbf{x} = (k, T)^{\top}$ and $\mathbf{x}' = (k', T')^{\top}$. Furthermore, to account for the fundamentally different dynamics along the strike and term-structure dimensions, we define the anisotropic Mahalanobis distance $r$ using independent length-scales $\ell_k$ and $\ell_T$:
 
@@ -359,8 +359,6 @@ The total variance surface $w(k,T)$, mapped by the GP, needs to be inverted usin
 In brief, the Matérn kernel with $\nu = 5/2$ specification offers an ideal balance between smoothness and restriction. It creates smooth curves while still giving the algorithm enough flexibility to accommodate localised peaks and valleys. Additionally, because $\nu$ is a fraction, it involves simpler polynomial and exponential terms that reduce cost complexity and prevent mathematical instability.
 
 \section{The Standard Approach: Point Estimation}
-\TODO{write up a short introduction}
-
 The standard paradigm for training a Gaussian Process in applied machine learning is to select the hyperparameters $\theta$ that maximise the probability of the observed data. This is achieved by maximising the log-marginal likelihood (LML). Conditioning the joint Gaussian prior on the observed target vector $\mathbf{y}$, we define the log-marginal likelihood as:
 
 \begin{equation}
@@ -388,9 +386,7 @@ The fundamental geometry of LML is a balance between the first two terms:
 \end{enumerate}
 
 \paragraph{The Origin of Weak Identifiability (Flat Ridges):}
-In an ideal scenario, the competition between the Data Fit and the Complexity penalty results in a convex, unimodal peak in the LML landscape. In this case, the algorithm can easily identify a single optimal parameter set $\hat{\theta}$. On the other hand, financial data exhibit characteristic noise and friction (e.g., bid-ask spread noise). Where the LML may exhibit weak identifiability when different hyperparameter combinations yield nearly the same covariance matrix $K_\theta$. This is because the option market data can be successfully interpolated using multiple combinations of strike and maturity length-scales (e.g.,\TODO{find a convincing but complex example}). Mathematically, at a local optimum $\hat{\theta}$, the Hessian of the negative LML measures local curvature. If the Hessian has a very small eigenvalue, then the LML changes slowly in the corresponding direction. Geometrically, this produces a plateau or flat ridges with weakly identifiable hyperparameters.
-
-\TODO{Add some graphs}
+In an ideal scenario, the competition between the Data Fit and the Complexity penalty results in a convex, unimodal peak in the LML landscape. In this case, the algorithm can easily identify a single optimal parameter set $\hat{\theta}$. On the other hand, financial data exhibit characteristic noise and friction (e.g., bid-ask spread noise). Where the LML may exhibit weak identifiability when different hyperparameter combinations yield nearly the same covariance matrix $K_\theta$. This is because the option market data can be successfully interpolated using multiple combinations of strike and maturity length-scales. Mathematically, at a local optimum $\hat{\theta}$, the Hessian of the negative LML measures local curvature. If the Hessian has a very small eigenvalue, then the LML changes slowly in the corresponding direction. Geometrically, this produces a plateau or flat ridges with weakly identifiable hyperparameters.
 
 \paragraph{Standard Software Implementation and the Mathematical Failure of Quasi-Newton Optimisation:} Standard Gaussian Process libraries (such as scikit-learn) navigate this objective landscape using L-BFGS-B (Limited-memory Broyden-Fletcher-Goldfarb-Shanno with Bounds), a deterministic Quasi-Newton optimisation algorithm. 
 
@@ -400,7 +396,7 @@ $$\mathcal{L}(\theta_k + p) \approx \mathcal{L}(\theta_k) + \nabla \mathcal{L}(\
 
 where $\mathcal{H}_k = \nabla^2 \mathcal{L}(\theta_k)$ is the Hessian. The Taylor expansion is used because the LML is a complicated nonlinear function of $\theta$ with no closed-form optimal step, but locally around $\theta_k$, any smooth function looks quadratic, as Taylor's theorem guarantees.
 
-However, $\mathcal{H}_k$ is never computed exactly. Computing it analytically requires differentiating through the kernel matrix, involving terms of the form $\operatorname{tr}\!\left(K_y^{-1} \frac{\partial K_y}{\partial \theta_i}\right)$, which are expensive when $N$ is large. Moreover, the Hessian can become nearly singular, for instance, when hyperparameters are weakly identifiable or approach a boundary, making direct inversion numerically unstable. L-BFGS-B addresses both issues by building a low-rank approximation $B_k^{-1} \approx \mathcal{H}_k^{-1}$ from the last $m$ gradient difference pairs $(s_j, r_j)$ and determining the search direction as $p_k = -B_k^{-1} \nabla \mathcal{L}(\theta_k)$.
+However, $\mathcal{H}_k$ is computationally prohibitive to compute exactly. This is due to the extensive differentiation sequences of the kernel matrix, which involve terms of the form $\operatorname{tr}!\left(K_y^{-1} \frac{\partial K_y}{\partial \theta_i}\right)$. These are expensive when $N$ is large. Moreover, the Hessian can become nearly singular, for instance, when hyperparameters are weakly identifiable or approach a boundary, making direct inversion numerically unstable. L-BFGS-B addresses both issues by building a low-rank approximation $B_k^{-1} \approx \mathcal{H}_k^{-1}$ from the last $m$ gradient difference pairs $(s_j, r_j)$ and determining the search direction as $p_k = -B_k^{-1} \nabla \mathcal{L}(\theta_k)$.
 
 The Quasi-Newton approach is computationally efficient in strictly convex regimes, but it can fail in the presence of weak invertibility. To prove this, we must decompose the curvature matrix ($\mathcal{H}$) into its principal directions and magnitudes. We rewrite the Hessian as a sum of eigen-directions, each with an eigenvalue attached. The Hessian $\mathcal{H}$ at a point on a plateau admits an eigenpair ($\lambda_{ridge},v_{ridge}$) with $|\lambda_{ridge}| \approx 0$, where $v_{ridge}$ goes along the tangent direction of the simple curvature, causing the condition number to diverge:
 
@@ -418,13 +414,14 @@ Second, the standard L-BFGS-B termination uses a stopping rule; the criterion tr
 \section{Mapping the LML Topology}
 To empirically assess why the quasi-Newton optimiser fails due to weak identifiability, we must conduct a holistic evaluation and map the exact objective landscape the algorithm navigates. For the target dates, we evaluate the Log-Marginal Likelihood (LML) function across a uniform mesh grid of the length-scale hyperparameters $\ell_K$ and $\ell_T$. The signal and noise variances ($\sigma_f^2$, $\sigma_n^2$) were held constant near their optimal values.
 
-\TODO{I've included an example since I don't have the actual CBOE data.}
 \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.45\textwidth]{Figures/topology_2026-06-12.png}
+    \includegraphics[width=0.55\textwidth]{Figures/topology_2026-06-12.png}
     \caption{Topology on 12 June 2026.}
     \label{fig:topology-2026-06-12}
 \end{figure}
+
+\TODO{Should I present a small collage of 3-4 LML surfaces side-by-side to show the reader? Or is that too much?}
 
 The resulting contour in the Figure \ref{fig:topology-2026-06-12} shows a pronounced lack of convexity. This gets even worse in higher stress regimes, like during the 2020 COVID pandemic. The unique feature of these regimes is the absence of a unimodal peak; the LML topography is dominated by an elongated plateau at the shorter length scale $\ell_K$ across the hyperparameter space. A key consideration is the behaviour of the LML function at the lower bounds of the parameter space. A naive interpretation might suggest that the optimal choice of hyperparameters occurs at the strike length scale $\ell_K \to 0$. However, a near-zero length-scale implies that the correlation between two neighbouring points tends to zero, and extrapolation vanishes entirely. This constitutes extreme overfitting, in which the model simply memorises microstructural noise, thereby losing its ability to generalise. 
 
@@ -522,7 +519,9 @@ In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov ch
 
 \begin{enumerate}
 	\item \textbf{Energy Conservation}
-The energy conservation rule keeps the Hamiltonian invariant, conserving energy over time. \textbf{Proof:} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
+The energy conservation rule keeps the Hamiltonian invariant, conserving energy over time. 
+
+\textit{Proof.} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
 
 \begin{equation}
 \frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{dq_i}{dt} + \frac{\partial H}{\partial p_i} \frac{dp_i}{dt} \right)
@@ -534,10 +533,48 @@ $$\frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{\par
 
 Because $\frac{dH}{dt} = 0$, the particle glides along isocontours of the joint density $p(q, p)$. Hence, the trajectory does not move toward higher or lower Hamiltonian values and remains at the same probability level rather than exploring them. In practice, we cannot integrate Hamilton's equations analytically, so we approximate the continuous dynamics using the Leapfrog method reviewed in Chapter 5.4.
 
-\Revised{}
 	\item \textbf{Volume Preservation (Liouville's Theorem)}
-Volume preservation 
+Another fundamental condition is that Hamiltonian dynamics must preserve volume in phase space. Mathematically, this implies that a region of phase space mapped forward in time will retain its original volume. 
 
+\textit{Proof.} Consider the vector field $\mathbf{V}$ governing the flow in phase space, defined as $\mathbf{V} = \left( \frac{dq}{dt}, \frac{dp}{dt} \right)$. The divergence of this vector field is:
+
+
+\begin{equation}
+    \nabla \cdot \mathbf{V} = \sum_{i=1}^d \left( \frac{\partial}{\partial q_i} \frac{dq_i}{dt} + \frac{\partial}{\partial p_i} \frac{dp_i}{dt} \right)
+\end{equation}
+
+
+Substituting Hamilton's equations yields:
+
+
+\begin{align*}
+    \nabla \cdot \mathbf{V} &= \sum_{i=1}^d \left( \frac{\partial}{\partial q_i} \left( \frac{\partial H}{\partial p_i} \right) + \frac{\partial}{\partial p_i} \left( -\frac{\partial H}{\partial q_i} \right) \right) \\
+    &= \sum_{i=1}^d \left( \frac{\partial^2 H}{\partial q_i \partial p_i} - \frac{\partial^2 H}{\partial p_i \partial q_i} \right) = 0
+\end{align*}
+
+
+By Clairaut's theorem, the second partial derivatives of $H$ are equal if $H$ is smooth and continuous. Thereby, the two terms cancel, and the divergence becomes zero. This symplectic property is vital because it implies that the determinant of the Jacobian of the Hamiltonian flow is strictly equal to 1, completely bypassing the need to compute complex Jacobian determinants during the Metropolis acceptance step.
+
+	\item \textbf{Time Reversibility} 
+The mapping is invariant under time reversal. If the system is simulated forward for time $t$, negating the momentum and simulating forward for time $t$ returns the system to its exact initial state. This symmetry is mandatory for ensuring detailed balance in the resulting Markov chain.
+
+\textit{Proof.} Let the state of the system be defined by the coordinates $(q, p)$ evolving under continuous time $t$. Consider the time-reversal transformation defined by mapping time $t \mapsto \tau = -t$ and simultaneously negating the auxiliary momentum $p \mapsto \tilde{p} = -p$, while position remains unchanged $q \mapsto \tilde{q} = q$. 
+
+Because the kinetic energy $K(p) = \frac{1}{2} p^\top M^{-1} p$ is a quadratic form, the Hamiltonian $H(q, p) = U(q) + K(p)$ is strictly symmetric with respect to momentum, ensuring that $H(q, p) = H(\tilde{q}, \tilde{p})$. 
+
+Evaluating Hamilton's equations of motion under this transformation via the chain rule yields the position derivative:
+$$ \frac{d\tilde{q}}{d\tau} = \frac{dq}{d(-t)} = -\frac{dq}{dt} = -\frac{\partial H(q, p)}{\partial p} $$
+
+Because the partial derivative of an even quadratic function is an odd function, evaluating $\frac{\partial H}{\partial p}$ at $-p$ yields $-\frac{\partial H}{\partial \tilde{p}}$. Substituting this into the previous equation results in:
+$$ \frac{d\tilde{q}}{d\tau} = -\left( -\frac{\partial H(\tilde{q}, \tilde{p})}{\partial \tilde{p}} \right) = \frac{\partial H(\tilde{q}, \tilde{p})}{\partial \tilde{p}} $$
+
+Similarly, evaluating the evolution of the transformed momentum yields:
+$$ \frac{d\tilde{p}}{d\tau} = \frac{d(-p)}{d(-t)} = \frac{dp}{dt} = -\frac{\partial H(q, p)}{\partial q} $$
+
+Because the potential energy $U(q)$ is independent of momentum, the spatial gradient remains completely unaffected by the sign of $p$:
+$$ \frac{d\tilde{p}}{d\tau} = -\frac{\partial H(\tilde{q}, \tilde{p})}{\partial \tilde{q}} $$
+
+The transformed phase-space variables $(\tilde{q}, \tilde{p})$ perfectly satisfy the exact original Hamiltonian equations of motion with respect to reversed time $\tau$. Therefore, the continuous-time Hamiltonian dynamics are strictly reversible, allowing the Metropolis-Hastings acceptance step to maintain detailed balance. \hfill $\blacksquare$
 
 \end{enumerate}
 \section{The No-U-Turn Sampler (NUTS)}
@@ -768,6 +805,7 @@ The logical progression for future quantitative research is to bridge this compu
 \appendix
 
 \chapter{Pipeline Architecture}
+\TODO{Should I inlude all of the code?}
 \begin{itemize}[leftmargin=2em]
     \item \texttt{01\_ingest\_spx.py}: data ingestion,
     \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
@@ -780,11 +818,95 @@ The logical progression for future quantitative research is to bridge this compu
     \item \texttt{09\_plots.py}: figures and posterior visualisation.
 \end{itemize}
 
+% ------------------------- mathematical proof b.1
+
 \chapter{Mathematical Proofs and Extended Derivations}
+\section{The Schur Complement and the GP Predictive Distribution}
+\label{sec:schur_complement}
+This derivation provides the formal proof for how a Gaussian Process conditions its predictions based on observed market data. By applying the Schur complement to a partitioned block covariance matrix, we isolate the exact conditional mean and covariance for unseen test coordinates.
+
+\subsection{The Setup: The Joint Multivariate Gaussian}
+
+We begin by defining the joint probability distribution of our observed, noisy market targets (Total Implied Variance, denoted as $y$) and our unobserved, noise-free predictive targets denoted as $f_*$. The joint distribution becomes multivariate Gaussian, assuming the data has been scaled or the parametric prior has been subtracted:
+
+$$\begin{bmatrix} y \\ f_* \end{bmatrix} \sim \mathcal{N} \left( \begin{bmatrix} \mathbf{0} \\ \mathbf{0} \end{bmatrix}, \begin{bmatrix} K(X, X) + \alpha I & K(X, X_*) \\ K(X_*, X) & K(X_*, X_*) \end{bmatrix} \right)$$
+
+For algebraic clarity, we will denote the covariance matrix into blocks as follows:
+
+\begin{itemize}
+	\item $K_{yy} = K(X, X) + \alpha I$ (The $n \times n$ training covariance with the regularization nugget $\alpha$)
+	\item $K_{y*} = K(X, X_*)$ (The $n \times n_*$ cross-covariance between training and test inputs)
+	\item $K_{*y} = K(X_*, X)$ (The $n_* \times n$ cross-covariance, which is $K_{y*}^T$)
+	\item $K_{} = K(X_*, X_*)$ (The $n_* \times n_*$ prior test covariance)
+\end{itemize}
+
+Thus, the joint covariance matrix is $\Sigma = \begin{bmatrix} K_{yy} & K_{y*} \\ K_{*y} & K_{} \end{bmatrix}$.
+
+\subsection{The Derivation: Affine Transformation and the Schur Complement}
+
+To find the conditional distribution $P(f_* \mid y)$, we must mathematically isolate $f_*$ from $y$. We achieve this by applying a linear affine transformation to decorrelate the variables.
+
+We define a transformation matrix $M$ designed to eliminate the cross-covariance terms:
+
+$$M = \begin{bmatrix} I & \mathbf{0} \\ -K_{*y}K_{yy}^{-1} & I \end{bmatrix}, Z=\begin{bmatrix} y \\ f_* \end{bmatrix}$$
+
+We apply this transformation matrix to our joint random vector $Z$:
+
+$$MZ = M \begin{bmatrix} y \\ f_* \end{bmatrix} = \begin{bmatrix} y \\ f_* - K_{*y}K_{yy}^{-1}y \end{bmatrix}$$
+
+To calculate the new covariance after a linear transformation of a random vector $Z$ which follows a multivariate Gaussian distribution with Covariance $\Sigma$. We compute the covariance of this new transformed system using the property $\operatorname{Cov}(MZ) = M \Sigma M^T$:
+
+\begin{equation}
+M \Sigma M^T = \begin{bmatrix} I & \mathbf{0} \\ -K_{*y}K_{yy}^{-1} & I \end{bmatrix} \begin{bmatrix} K_{yy} & K_{y*} \\ K_{*y} & K_{**} \end{bmatrix} \begin{bmatrix} I & -K_{yy}^{-1}K_{y*} \\ \mathbf{0} & I \end{bmatrix}
+\label{eq:z_linear_transform}
+\end{equation}
+
+Expanding the matrix multiplication step-by-step, we multiply $M$ by $\Sigma$:
+
+$$M \Sigma = \begin{bmatrix} K_{yy} & K_{y*} \\ -K_{*y}K_{yy}^{-1}K_{yy} + K_{*y} & -K_{*y}K_{yy}^{-1}K_{y*} + K_{**} \end{bmatrix} = \begin{bmatrix} K_{yy} & K_{y*} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix}$$
+
+Next, multiply by $M^T$:
 
 
+$$M \Sigma M^T = \begin{bmatrix} K_{yy} & K_{y*} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix} \begin{bmatrix} I & -K_{yy}^{-1}K_{y*} \\ \mathbf{0} & I \end{bmatrix}$$
 
-\TODO{i have them in my notebook, but they just need to be written out}
+\begin{equation}
+M \Sigma M^T = \begin{bmatrix} K_{yy} & -K_{yy}K_{yy}^{-1}K_{y*} + K_{y*} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix} = \begin{bmatrix} K_{yy} & \mathbf{0} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix}
+\label{eq:decorrelated_covariance}
+\end{equation}
+
+\subsection{Decorrelation and Independence}
+
+The resulting $M \Sigma M^T$ block from the \ref{eq:z_linear_transform} linear transformation gives exactly $\mathbf{0}$ in the off-diagonal covariance blocks. Since $y$ and $(f_* - K_{*y}K_{yy}^{-1}y)$ are jointly Gaussian, they become strictly statistically independent and stripped of any correlation. 
+
+The term in the bottom right block is formally known as the \textbf{Schur Complement} of $K_{yy}$ in the joint matrix $\Sigma$:
+
+
+$$S = K_{**} - K_{*y}K_{yy}^{-1}K_{y*}$$
+
+Because $f_* - K_{*y}K_{yy}^{-1}y$ is independent of $y$, its conditional distribution given $y$ is identical to its marginal distribution:
+
+
+$$f_* - K_{*y}K_{yy}^{-1}y \mid y \sim \mathcal{N}(\mathbf{0}, S)$$
+
+\subsection{The Result: The Conditional Predictive Distribution}
+
+To find the distribution of our target predictive variable $f_*$ conditioned on the observed market data $y$, we simply rearrange the isolated term. Since $y$ is treated as a known constant when conditioning:
+
+$$f_* \mid y \sim \mathcal{N}\left(K_{*y}K_{yy}^{-1}y, \ S \right)$$
+
+Substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$): \TODO{How trivial does the derivation need to be? Do I have to the intermediate steps fro this substitution or no?}
+
+\subsubsection{Predictive Mean:}
+$$\bar{f}_* = K(X_*, X) [K(X, X) + \alpha I]^{-1} y$$
+
+\subsubsection{Predictive Covariance:}
+$$\Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)$$
+
+% ------------------------- mathematical proof b.2
+
+\TODO{i have more in my notebook, but they just need to be written out}
+
 \chapter{Comprehensive Empirical Results}
 
 This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes. The dataset excludes dates corrupted by API ingestion failures. \TODO{although I will probably include them as they are valuable for further work}
