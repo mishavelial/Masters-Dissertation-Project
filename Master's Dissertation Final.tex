@@ -28,6 +28,7 @@
 \usepackage{appendix}
 \usepackage{listings}
 \usepackage{courier}
+\usepackage{nameref}
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{empheq}
 
@@ -120,6 +121,11 @@
 
 \chapter*{Abstract}
 \addcontentsline{toc}{chapter}{Abstract}
+Many financial quantitative risk valuation methods rely on accurate interpolation of implied volatility surfaces, yet traditional non-parametric models often struggle to provide this precision due to the microstructure noise inherent to financial data. While Gaussian Process regression offers a highly flexible modelling solution, standard deterministic point estimation techniques are highly susceptible to this noise contamination, resulting in weakly identifiable log-marginal likelihood landscapes. In response, the model overfits the microstructural market frictions (such as bid-ask spreads) by learning the surface and artificially inflating the OOS RMSE indicator. The result is a jagged implied volatility surface that violates strict static arbitrage constraints, including calendar and butterfly conditions.
+
+As a solution to the instability of the LML topology, this dissertation introduces a fully Bayesian framework utilising the Hamiltonian Monte Carlo (HMC) No-U-Turn Sampler (NUTS) to integrate over hyperparameter uncertainty rather than optimising for a single coordinate. The primary innovation of this research lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. This approach fundamentally prevents the emergence of economic arbitrage violations without the necessity to artificially restrict the surface.
+
+The empirical evaluations in S\&P 500 index options across diverse macroeconomic regimes show that the deterministic optimiser has yielded a 100\% butterfly arbitrage failure rate on evaluated dates. In contrast, the Bayesian HMC sampler drastically reduces the generalisation error during… \TODO{finish this section when the data arrives}
 
 
 \chapter*{Declaration}
@@ -137,11 +143,85 @@ I would like to thank my supervisor, the School of Mathematics and Statistics, a
 \clearpage
 \pagenumbering{arabic}
 
+\chapter*{Glossary of Financial Terminology}
+\addcontentsline{toc}{chapter}{Glossary of Financial Terminology}
+\label{sec:glossary}
+
+This is a comprehensive glossary with fundamental financial terminology used throughout this dissertation.
+
+\section*{I. Basic Option Definitions}
+\phantomsection
+\addcontentsline{toc}{section}{I. Basic Option Mechanics}
+\label{sec:glossary_basic_option_definitions}
+These terms define the fundamental building blocks of the derivative contracts modelled in this text.
+
+\begin{description}
+    \item[Option Contract:] A financial derivative that gives the buyer the right, but not the obligation, to buy or sell an underlying asset at a specific price on or before a certain date.
+    \item[European-style Option:] An option contract that can only be exercised at the expiration date.
+    \item[American Option:] In contrast to the European Option, an American option contract allows the holder to exercise their right at any time prior to expiration.
+    \item[Call Option:] A contract whose payoff is tied to the right to buy the underlying asset, defined mathematically at maturity as $(S_T - K)^+ = \max(S_T - K, 0)$. Intuitively, an investor might buy a call to speculate if he thinks the price of the asset will go up; if that happens, he will be able to purchase the asset at the Strike Price $K$.
+    \item[Strike Price ($K$):] The predetermined, fixed price at which the option contract can be executed.
+    \item[Spot Price ($S_0$):] Current or initial market price.
+    \item[Maturity / Time to Maturity ($T$):] The annualised time remaining until the option contract expires.
+    \item[Premium:] The absolute market price of the option today, reflecting the compensation traders demand for bearing risk.
+    \item[SPX:] The ticker symbol for S\&P 500 Index options, which track the largest Fortune 500 companies and serve as the highly liquid, primary benchmark for global equity derivative markets.
+    \item[Bid-Ask Spread / Microstructural Noise:] The small-scale market frictions and discrete tick sizes present in real-world trading that introduce noise into observed option prices.
+\end{description}
+
+\section*{II. Volatility \& Surface Metrics}
+\phantomsection
+\addcontentsline{toc}{section}{II. Volatility \& Surface Metrics}
+\label{sec:glossary_volatility_surface_metrics}
+These definitions bridge the gap between absolute option prices and the standardised space where the Gaussian Process operates.
+
+\begin{description}
+    \item[Black-Scholes Model:] The Black-Scholes model can be used to price European-style options and to estimate a theoretical fair value for a call or put based on spot, strike, time to expiry, risk-free rate, and volatility. It is also widely used as a benchmark for hedging and for \textit{inferring implied volatility} from market option prices.
+    \[\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0\]
+    where, $V = V(S, t)$ is the option value, $S$ is the underlying asset price, $t$ is time, $r$ is the risk-free interest rate and $\sigma$ is the volatility of the unrelying asset returns.
+    \item[Black-Scholes Implied Volatility ($\sigma_{imp}$):] The unique volatility parameter that, when passed through the inverted Black-Scholes-Merton formula, yields the exact market price of the option. It acts as a forward-looking metric of market consensus on risk.
+    \item[Implied Volatility Surface:] A three-dimensional graph mapping implied volatility across various strikes and maturities for a single asset, denoted as $(K,T) \mapsto \sigma_{imp}(K,T)$. An example can be:
+    
+    \begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.45\textwidth]{Figures/mplied-volatility-surface-generated-by-S-4-with-as-in-Figure-6-right-Red-dots.png}
+    \caption{Implied volatility surface adapted from ResearchGate \TODO{I'll find my examples, or just model it myself.}.}
+    \label{fig:iv_surface_example}
+\end{figure}
+    
+    \item[Log-Moneyness ($k$):] A normalised metric defined as $k = \log(K/F_0)$ used to gauge risk independent of the underlying asset's price dynamics.
+    \item[Forward Price ($F_0$):] The agreed-upon price of the underlying asset for future delivery at time zero, used to calculate log-moneyness.
+    \item[Total Variance ($w$):] A transformation space defined as $w(k, T) = \sigma_{imp}^2(k, T)T$ that removes the trivial $\sqrt{T}$ scaling from implied volatility and linearizes static no-arbitrage conditions.
+    \item[Volatility Skew / Smile:] The structural, non-linear shape of the volatility surface across strikes, often exhibiting extreme downside asymmetry in equity markets like the SPX. Can often be referred to as a skewed convex parabola for simplicity.
+    \item[Out-of-the-money (OTM):] Option contracts with strikes far from the current asset price; deep OTM options encode the extreme asymptotic tails of the market's risk-neutral distribution.
+    \item[In-the-money (ITM) and At-the-money (ATM):] Option contracts with strike equal to the Spot Price (ATM) and option contracts with strike less than the Spot Price (ITM).
+\end{description}
+\Revised{}
+\section*{III. Arbitrage \& Pricing Theory}
+\phantomsection
+\addcontentsline{toc}{section}{III. Arbitrage \& Pricing Theory}
+\label{sec:glossary_arbitrage_pricing_theory}
+These concepts define the strict financial and mathematical boundaries that the model must respect to remain valid.
+
+\begin{description}
+    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework where the current value of a future payoff is exactly equal to its discounted expected value, calculated using the risk-free rate.
+    \item[Risk-Free Rate ($r$):] The continuously compounded theoretical rate of return of an investment with zero risk, used to discount future option payoffs to their present value.
+    \item[Static Arbitrage:] A financially impossible scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit.
+    \item[Calendar Spread:] An option strategy involving two contracts with the same strike price but different maturities.
+    \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one, violating the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
+    \item[Butterfly Spread:] A strategy involving three options with staggered strikes (buying a low and high strike, selling two middle strikes).
+    \item[Butterfly Arbitrage:] A violation indicating that the model's implied probability distribution has dropped below zero. It occurs when the surface lacks convexity, meaning a middle strike is priced too high relative to its neighbours.
+    \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem proving that the market-implied risk-neutral probability density is strictly proportional to the second partial derivative of the call price with respect to the strike ($\frac{\partial^2 C}{\partial K^2}$).
+\end{description}
+
+\newpage
+
 % ------------------------------------------------- chapter 1
 \chapter{Introduction}
+This chapter introduces the motivation and outlines the scope of research that the paper will be targeting. Along with it, we define the central hypothesis and the structure of the dissertation. The formal definitions and context provision for the problem will begin in Chapter 2.
+
 
 \section{Context and Motivation}
-Accurate modelling of the implied volatility surface is central to modern quantitative finance. Volatility surfaces are required for pricing, hedging, calibration, and risk management, particularly in index option markets such as SPX. At the same time, nonparametric machine learning methods, and Gaussian Processes in particular, offer a flexible framework for modelling nonlinear structure with uncertainty quantification.
+Accurate modelling of the implied volatility surface is central to modern quantitative finance. Volatility surfaces are required for pricing, hedging, calibration, and risk management, particularly in index option markets such as SPX. At the same time, Bayesian nonparametric methods, and Gaussian Processes in particular, offer a flexible framework for modelling nonlinear structure with uncertainty quantification.
 
 This dissertation is motivated by the need for a reliable implied-volatility surface for pricing and risk management. As financial data is naturally messy, Gaussian Process regression is a flexible yet reliable solution that has the potential to interpolate this sparse and noisy volatility data smoothly. However, the practical performance of the regression is heavily dependent on the estimation of unstable kernel hyperparameters. This paper studies whether the Bayesian approach to those hyperparameters gives a more reliable surface.
 
@@ -149,12 +229,23 @@ This dissertation is motivated by the need for a reliable implied-volatility sur
 
 The problem considered in this dissertation is the failure of the deterministic point estimation algorithm in weakly identifiable topological landscapes of the Log-Marginal Likelihood for Gaussian Process volatility surface models. Under noisy and chaotic market data, the L-BFGS-B algorithm suffers from arbitrary hyperparameter configurations, depending on the initialisation coordinate. Because the ridge at the bottom of the LML surface is flat, any point yields near-equivalent log-marginal likelihood values but results in different predictive surfaces and pricing outputs.
 
-\section{Research Objectives and Hypothesis}
-\textbf{The main research question is:}
+\section{Research Questions and Hypothesis}
+\textbf{We can break up the objective into two main research questions:}
 \begin{quote}
-How does the weak identifiability of Gaussian Process hyperparameters impact the out-of-sample predictive accuracy of the implied volatility surface, and can Bayesian inference via Hamiltonian Monte Carlo (HMC/NUTS) resolve this instability to improve pricing performance while maintaining arbitrage-free constraints?
+\begin{itemize}
+	\item How does the weak identifiability of Gaussian Process hyperparameters impact the out-of-sample predictive accuracy of the implied volatility surface?
+
+	\item Can Bayesian inference via Hamiltonian Monte Carlo (HMC/NUTS) resolve this instability to improve pricing performance while maintaining arbitrage-free constraints?
+\end{itemize}
 \end{quote}
-This dissertation adopts the central hypothesis that flat ridges in the log-marginal likelihood topology cause deterministic optimisers to fail, and that replacing point estimation with a full posterior distribution over hyperparameters will improve out-of-sample prediction accuracy with only a minimal and acceptable trade-off in localised butterfly arbitrage violations. 
+In this dissertation, we adopt the central hypothesis that flat ridges in the log-marginal likelihood topology cause deterministic optimisers to fail, and that replacing point estimation with a full posterior distribution over hyperparameters will improve out-of-sample prediction accuracy with only a minimal and acceptable trade-off in localised butterfly and calendar arbitrage violations. 
+
+Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like Knudsen, N. et al. (2024) and Titsias, M. (n.d.) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
+
+Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. Cousin \& Gueye (2021) and Chataigner et al. (2021) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (See Dictionary) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce. This research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
+
+To summarise, the novel contribution of this work lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. 
+
 
 \section{Dissertation Structure}
 The dissertation is organised into eight chapters. Chapter 2 introduces the financial and arbitrage foundations of the implied volatility surface. Chapter 3 develops the Gaussian Process framework and point-estimation approach. Chapter 4 empirically identifies the weak-identifiability pathology. Chapter 5 introduces Bayesian hyperparameter inference using HMC/NUTS. Chapter 6 describes the data and empirical design. Chapter 7 presents the results, and Chapter 8 concludes with implications, limitations, and future work.
@@ -167,7 +258,7 @@ Before discussing the financial constraints, we should introduce the object to w
 
 Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk.
 
-This expected risk is difficult to evaluate by only looking at absolute metrics such as spot and options prices. Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$, where $F_0$ denotes the asset’s forward price at time zero. By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
+This expected risk is difficult to evaluate by only looking at absolute metrics such as spot and options prices (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}). Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$, where $F_0$ denotes the asset’s forward price at time zero. By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
 
 \paragraph{The Role of SPX Options.}
 For practical purposes, the underlying asset for this empirical evaluation is the S\&P 500 Index (SPX), which tracks the performance of the largest U.S. Fortune 500 companies. The SPX derivatives serve as the primary benchmark for global equity derivative markets. This is due to a couple of reasons: the SPX being exceptionally liquid across many strikes and maturities, possessing a European-style contract type without the option of early exercise, and abundant documentation. Additionally, the SPX surface possesses a highly pronounced structural downside skew. This extreme asymmetry makes SPX options a highly interesting testing ground for evaluating Bayesian hyperparameter inference and surface modelling.
@@ -207,11 +298,11 @@ As described by Gatheral, calendar arbitrage arises from the calendar spread opt
 
 \paragraph{Link to total variance.}
 In total variance terms, the calendar arbitrage constraint becomes a monotonicity condition in maturity:
-\[\frac{\partial w}{\partial T}(k,T) \geq 0.\]
+\[\frac{\partial w(k,T)}{\partial T} \geq 0.\]
 The $w(k,T)$ represents the cumulative variance up to time $T$, the constraint implies that with every step, the variance should not decrease. In other words, the uncertainty should accumulate over time and never decrease; otherwise, it would create an arbitrage opportunity.
 
 \paragraph{Numerical implementation.}
-Numerically implementing the constraint in total variance space is also easier; the condition is checked on the discrete maturity grid $T_1, \dots, T_n$ using first differences. 
+Numerically implementing the calendar arbitrage constraint in total variance space is also easier. We check the condition on the discrete maturity grid $T_1, \dots, T_n$ using first differences. 
 
 \[\frac{w(k_i,T_{j+1}) - w(k_i,T_j)}{T_{j+1} - T_j} < 0\]
 
@@ -234,10 +325,10 @@ Let \(0<T_1<T_2\). No-arbitrage implies \(C(K,T_2)\ge C(K,T_1)\). Since the Blac
 \subsection{Butterfly Arbitrage}
 \label{subsubsec:butterfly-arbitrage}
 
-Butterfly arbitrage originates from the butterfly spread option strategy, which involves four options with staggered strike prices. It entails purchasing a call at a low strike price $K_1$, selling two calls at a middle strike price $K_2$, and buying a call at a high strike price $K_3$ (where $K_3 - K_2 = K_2 - K_1$). This arbitrage indicates that the implied probability distribution of the asset is negative and invalid, often due to an overly steep or improperly smoothed IV surface during interpolation. Consequently, the position's cost can become negative, meaning the trader profits risk-free without owning the underlying asset.
+Butterfly arbitrage originates from the butterfly spread option strategy, which involves four options with staggered strike prices $K_3 > K_2 > K_1$. It entails purchasing a call at a low strike price $K_1$, selling two calls at a middle strike price $K_2$, and buying a call at a high strike price $K_3$ (where $K_3 - K_2 = K_2 - K_1$). This arbitrage indicates that the implied probability distribution of the asset is negative and invalid, often due to an overly steep or improperly smoothed IV surface during interpolation. Consequently, the position's payoff can become negative, meaning the trader profits risk-free without owning the underlying asset.
 
 \paragraph{Intuition.}
-A natural way to test this constraint is to examine the local curvature; the curve should always be convex, so the middle strike should not lie above the average of the neighbouring strikes. In other words, if the middle option price is too high relative to the neighbouring points, an arbitrage opportunity exists. The connection to the fundamental Breeden--Litzenberger theorem is that a sufficiently tight butterfly spread is a finite-difference estimate of the second derivative of the call price curve with respect to strike $K$.
+A natural way to test this constraint is to examine the local curvature; the curve should always be convex, so the middle strike should not lie above the average of the neighbouring strikes. In other words, if the middle option price is too high relative to the neighbouring points, an arbitrage opportunity exists. The connection to the fundamental Breeden--Litzenberger theorem (see Appendix B.4 for proof and \ref{breeden1978prices} for reference) is that a sufficiently tight butterfly spread is a finite-difference estimate of the second derivative of the call price curve with respect to strike $K$.
 
 As derived by Breeden and Litzenberger (1978, p. 627)\citep{breeden1978prices}, the pricing function $P(M,T)$ is “analogous to a density function,” and in Section II, page 627, the authors derive: 
 
@@ -253,8 +344,10 @@ where
 \[d_1 = \frac{\log(S/K) + (r + \tfrac12\sigma^2)T}{\sigma\sqrt{T}}, \qquad d_2 = d_1 - \sigma\sqrt{T}. \]
 
 \paragraph{Numerical implementation.}
-The numerical implementation mirrors the mathematical definition. We use the Breeden-Litzenberger condition, where the risk-neutral probability equals the second partial derivative with respect to strike $\partial^2 C/\partial K^2\geq 0$. This is done by implementing the central finite-difference approximation of option prices across a grid to detect negative probabilities, which would then be counted as a butterfly arbitrage. 
+The numerical implementation of the butterfly arbitrage mirrors the mathematical definition. We use the Breeden-Litzenberger condition, where the risk-neutral probability equals the second partial derivative with respect to strike $\partial^2 C/\partial K^2\geq 0$. This is done by implementing the central finite-difference approximation of option prices across a grid to detect negative probabilities, which would then be counted as a butterfly arbitrage. 
 
+
+\TODO{Remove the section below as I will put it in the appendix}
 \paragraph{Derivation.}
 The derivation comes from the proven Breeden--Litzenberger result \citep{breeden1978prices}. Starting from the risk-neutral pricing formula for a European call, which can be written in the expanded form of the Expected Value $\E$.
 \[ C(K,T) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(S_T-K)^+] = e^{-rT}\int_K^\infty (s-K)f_{S_T}(s)\,ds.\]
@@ -277,7 +370,7 @@ Because a density must be non-negative, the call price must satisfy
 This is the continuous convexity condition underlying butterfly arbitrage. A violation means that the implied density is negative somewhere, which is not financially admissible.
 
 \section{The Parametric Prior}
-In nonparametric machine learning models like Gaussian Processes, setting a mean function lets us include financial knowledge before seeing any data. Rather than making the Gaussian Process learn the overall shape of the implied volatility surface from nothing, we use a parametric prior.
+In Bayesian nonparametric machine learning models like Gaussian Processes, setting a mean function lets us include financial knowledge before seeing any data. Rather than making the Gaussian Process learn the overall shape of the implied volatility surface from nothing, we use a parametric prior.
 We define the prior distribution as:
 
 \begin{equation}
@@ -1076,9 +1169,110 @@ Or equivalently, using cyclic permutation. We can express the gradient equation 
 
 $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( \left( \alpha \alpha^T - K_y^{-1} \right) \frac{\partial K_y}{\partial \theta_j} \right)$$
 
+\newpage
+% ------------------------- mathematical proof b.3
+
+
+\section{Analytical Derivatives of the Matérn 5/2 Kernel}
+\label{sec:derivatives_matern_kernel)}
+
+This is the mathematical derivation for the analytical derivatives of the Matérn 5/2 kernel. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage), removing any reliance on finite-difference approximations.
+
+\subsection{The GP Linear Operator Property}
+
+Derived from the B.1 proof, we define the predictive mean of a Gaussian Process as:
+
+
+$$\bar{f}_* = k_*^T (K_{yy})^{-1} y$$
+
+However, now we optimise the multivariate calculus for the algorithm. Hence, we define $k_* = K(X, x_*)$, which is a row vector, as the cross-covariance vector between the training data and a single test coordinate $x_*$, and $y$ is the vector of observed targets. Because the test coordinate $x_*$ only appears inside the kernel function vector $k_*$, we can again define the pre-computed weight vector $\alpha = (K_{yy})^{-1} y$.
+
+Because arbitrage constraints (Section 2.3) are strictly directional. We differentiate with respect to a specific dimension $i$ of the test coordinate $x_{*, i}$ (e.g., Strike $K$ or Maturity $T$):
+
+$$\frac{\partial \bar{f}_*}{\partial x_{*, i}} = \left( \frac{\partial k_*}{\partial x_{*, i}} \right)^T \alpha$$
+
+Similarly, the second derivative (the Hessian diagonal) required for evaluating butterfly convexity becomes:
+
+
+$$\frac{\partial^2 \bar{f}_*}{\partial x_{*, i}^2} = \left( \frac{\partial^2 k_*}{\partial x_{*, i}^2} \right)^T \alpha$$
+
+\subsection{The Matérn 5/2 Kernel and Mahalanobis Distance}
+To compute the derivatives of $k_*$, by the chain rule, we must differentiate the kernel function itself. We define the anisotropic Matérn 5/2 kernel between a training point $x$ and a test point $x_*$ as:
+$$k_{5/2}(r) = \sigma_f^2 \left( 1 + \sqrt{5}r + \frac{5}{3}r^2 \right) \exp(-\sqrt{5}r)$$
+
+where $r$ is the anisotropic Mahalanobis distance. For a two-dimensional input space of Strike ($x_1 = K$) and Maturity ($x_2 = T$) with independent length-scales $\ell_1$ and $\ell_2$, the Mahalanobis distance is:
+
+$$r(x, x_*) = \sqrt{ \frac{(x_{*, 1} - x_1)^2}{\ell_1^2} + \frac{(x_{*, 2} - x_2)^2}{\ell_2^2} }$$
+
+\subsection{The Derivation: First Derivative (The Gradient)}
+
+We apply the chain rule to differentiate the kernel with respect to a specific spatial input coordinate $x_{*, i}$:
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = \frac{\partial k_{5/2}}{\partial r} \frac{\partial r}{\partial x_{*, i}}$$
+
+
+\subsubsection{Step A: Differentiate the Kernel with Respect to Distance ($r$)}
+Applying the product rule to $k_{5/2}(r)$:
+
+$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \left[\left(\sqrt{5} + \frac{10}{3}r\right) \exp(-\sqrt{5}r) - \sqrt{5} \left(1 + \sqrt{5}r + \frac{5}{3}r^2\right) \exp(-\sqrt{5}r) \right]$$
+
+Factoring out $\sigma_f^2 \exp(-\sqrt{5}r)$ and simplifying the polynomial:
+
+$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \exp(-\sqrt{5}r) \left[ \sqrt{5} + \frac{10}{3}r - \sqrt{5} - 5r - \frac{5\sqrt{5}}{3}r^2 \right]$$
+
+$$\therefore \frac{\partial k_{5/2}}{\partial r} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r^2) \exp(-\sqrt{5}r)$$
 
 
 
+\subsubsection{Step B: Differentiate the Distance with Respect to the Coordinate ($x_{*, i}$)}
+Differentiating the Mahalanobis distance $r$ using the chain rule:
+
+$$\frac{\partial r}{\partial x_{*, i}} = \frac{1}{2r} \cdot 2 \frac{(x_{*, i} - x_i)}{\ell_i^2} = \frac{x_{*, i} - x_i}{r \ell_i^2}$$
+
+
+\subsubsection{Step C: The Complete First Derivative}
+Multiplying Step A and Step B (noting that the $r$ in the denominator cancels with the $r$ in the numerator):
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{(x_{*, i} - x_i)}{\ell_i^2}$$
+
+This first derivative evaluates the continuous local slope of the surface, natively defining the calendar arbitrage constraint when evaluated with respect to Maturity ($T$).
+
+\subsection{The Derivation: Second Derivative (The Hessian)}
+To evaluate butterfly convexity, we require the second partial derivative with respect to Strike ($K$). Let $x_{*, i} = K$. We differentiate the first derivative again using the product rule. Let the derivative of Mahalanobis distance $r$ with respect to a single test coordinate $x_{*, i}$ be defined as $D_K = \frac{x_{*, i} - x_i}{\ell_i^2}$ for simplicity. Hence, the first derivative simplifies to:
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 \left[ (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \right] D_K$$
+
+By applying the product rule, we obtain:
+ 
+$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ \frac{\partial}{\partial x_{*, i}} \Big( (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \Big) \cdot D_K + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \cdot \frac{\partial D_K}{\partial x_{*, i}} \right]$$
+
+\subsubsection{Step A: Inner Chain Rule}
+Let $u(r) = (1 + \sqrt{5}r) \exp(-\sqrt{5}r)$.
+
+
+$$\frac{\partial u}{\partial r} = \sqrt{5} \exp(-\sqrt{5}r) - \sqrt{5}(1+\sqrt{5}r)\exp(-\sqrt{5}r) = -5r \exp(-\sqrt{5}r)$$
+
+Multiplying by $\frac{\partial r}{\partial x_{*, i}}$:
+
+$$\frac{\partial u}{\partial x_{*, i}} = -5r \exp(-\sqrt{5}r) \frac{x_{*, i} - x_i}{r \ell_i^2} = -5 \exp(-\sqrt{5}r) D_K$$
+
+
+\subsubsection{Step B: The Second Term}
+The derivative of the spatial distance component $D_K$ is simply a constant scaling factor:
+
+
+$$\frac{\partial D_K}{\partial x_{*, i}} = \frac{1}{\ell_i^2}$$
+
+
+
+\subsubsection{Step C: The Complete Second Derivative}
+Substituting the components back into the product rule yields the exact analytical second derivative:
+
+
+$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ -5 \exp(-\sqrt{5}r) D_K^2 + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{1}{\ell_i^2} \right]$$
+
+
+% ------------------------- mathematical proof b.4
 
 
 \TODO{i have more in my notebook, but they just need to be written out}
