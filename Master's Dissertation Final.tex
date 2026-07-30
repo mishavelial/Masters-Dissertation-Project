@@ -1172,108 +1172,40 @@ $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( 
 \newpage
 % ------------------------- mathematical proof b.3
 
+\section{The Breeden-Litzenberger Density and Static Arbitrage}
+\label{sec:breeden_litz_proof}
+In this derivation, we establish the relationship between the price of a European call option and the implied risk-neutral probability density function. Essentially, by isolating the convexity term, we show that the term must remain strictly positive to avoid butterfly arbitrage.
 
-\section{Analytical Derivatives of the Matérn 5/2 Kernel}
-\label{sec:derivatives_matern_kernel)}
+\subsection{The Setup: Risk-Neutral Expected Payoff}
 
-This is the mathematical derivation for the analytical derivatives of the Matérn 5/2 kernel. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage), removing any reliance on finite-difference approximations.
+Under the fundamental theorem of asset pricing, the arbitrage-free price of a European call option $C(K, T)$ with strike $K$ and maturity $T$ is the discounted expected value of its payoff under the risk-neutral measure $\mathbb{Q}$.
 
-\subsection{The GP Linear Operator Property}
+Assuming a constant continuously compounded risk-free rate $r$, we can express the expectation as an integral over the risk-neutral probability density function (PDF) of the terminal asset price, denoted as $p(S_T)$:
 
-Derived from the B.1 proof, we define the predictive mean of a Gaussian Process as:
+$$C(K, T) = e^{-rT} \mathbb{E}^{\mathbb{Q}}[\max(S_T - K, 0)]$$
 
+The integral can be separated into two parts, with the first ranging from $0$ to $K$ and the second from $K$ to $\infty$. Since the payoff of the first one is zero if $S_T - K < 0$, we equate the integral to 0 and proceed with the second.
 
-$$\bar{f}_* = k_*^T (K_{yy})^{-1} y$$
+$$C(K, T) = e^{-rT} \int_{K}^{\infty} (S_T - K) p(S_T) dS_T$$
 
-However, now we optimise the multivariate calculus for the algorithm. Hence, we define $k_* = K(X, x_*)$, which is a row vector, as the cross-covariance vector between the training data and a single test coordinate $x_*$, and $y$ is the vector of observed targets. Because the test coordinate $x_*$ only appears inside the kernel function vector $k_*$, we can again define the pre-computed weight vector $\alpha = (K_{yy})^{-1} y$.
+\subsection{The Derivation: First Derivative (The Survival Function)}
 
-Because arbitrage constraints (Section 2.3) are strictly directional. We differentiate with respect to a specific dimension $i$ of the test coordinate $x_{*, i}$ (e.g., Strike $K$ or Maturity $T$):
+To isolate the density function $p(S_T)$, we must differentiate the integral with respect to the strike price $K$. Because the variable of differentiation $K$ appears in both the integrand and the lower limit of integration, we apply the Leibniz rule:
 
-$$\frac{\partial \bar{f}_*}{\partial x_{*, i}} = \left( \frac{\partial k_*}{\partial x_{*, i}} \right)^T \alpha$$
+\TODO{should i show the leibniz rule explicitly?}
 
-Similarly, the second derivative (the Hessian diagonal) required for evaluating butterfly convexity becomes:
-
-
-$$\frac{\partial^2 \bar{f}_*}{\partial x_{*, i}^2} = \left( \frac{\partial^2 k_*}{\partial x_{*, i}^2} \right)^T \alpha$$
-
-\subsection{The Matérn 5/2 Kernel and Mahalanobis Distance}
-To compute the derivatives of $k_*$, by the chain rule, we must differentiate the kernel function itself. We define the anisotropic Matérn 5/2 kernel between a training point $x$ and a test point $x_*$ as:
-$$k_{5/2}(r) = \sigma_f^2 \left( 1 + \sqrt{5}r + \frac{5}{3}r^2 \right) \exp(-\sqrt{5}r)$$
-
-where $r$ is the anisotropic Mahalanobis distance. For a two-dimensional input space of Strike ($x_1 = K$) and Maturity ($x_2 = T$) with independent length-scales $\ell_1$ and $\ell_2$, the Mahalanobis distance is:
-
-$$r(x, x_*) = \sqrt{ \frac{(x_{*, 1} - x_1)^2}{\ell_1^2} + \frac{(x_{*, 2} - x_2)^2}{\ell_2^2} }$$
-
-\subsection{The Derivation: First Derivative (The Gradient)}
-
-We apply the chain rule to differentiate the kernel with respect to a specific spatial input coordinate $x_{*, i}$:
-
-$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = \frac{\partial k_{5/2}}{\partial r} \frac{\partial r}{\partial x_{*, i}}$$
-
-
-\subsubsection{Step A: Differentiate the Kernel with Respect to Distance ($r$)}
-Applying the product rule to $k_{5/2}(r)$:
-
-$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \left[\left(\sqrt{5} + \frac{10}{3}r\right) \exp(-\sqrt{5}r) - \sqrt{5} \left(1 + \sqrt{5}r + \frac{5}{3}r^2\right) \exp(-\sqrt{5}r) \right]$$
-
-Factoring out $\sigma_f^2 \exp(-\sqrt{5}r)$ and simplifying the polynomial:
-
-$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \exp(-\sqrt{5}r) \left[ \sqrt{5} + \frac{10}{3}r - \sqrt{5} - 5r - \frac{5\sqrt{5}}{3}r^2 \right]$$
-
-$$\therefore \frac{\partial k_{5/2}}{\partial r} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r^2) \exp(-\sqrt{5}r)$$
+We evaluate the upper bound, $b(K) = \infty$, so $\frac{db}{dK} = 0$. The lower bound: $a(K) = K$, so $\frac{da}{dK} = 1$.
+And the integrand becomes $(S_T - K)p(S_T)$.
 
 
 
-\subsubsection{Step B: Differentiate the Distance with Respect to the Coordinate ($x_{*, i}$)}
-Differentiating the Mahalanobis distance $r$ using the chain rule:
-
-$$\frac{\partial r}{\partial x_{*, i}} = \frac{1}{2r} \cdot 2 \frac{(x_{*, i} - x_i)}{\ell_i^2} = \frac{x_{*, i} - x_i}{r \ell_i^2}$$
 
 
-\subsubsection{Step C: The Complete First Derivative}
-Multiplying Step A and Step B (noting that the $r$ in the denominator cancels with the $r$ in the numerator):
+% ------------------------- mathematical proof b.5
 
-$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{(x_{*, i} - x_i)}{\ell_i^2}$$
+% ------------------------- mathematical proof b.6
 
-This first derivative evaluates the continuous local slope of the surface, natively defining the calendar arbitrage constraint when evaluated with respect to Maturity ($T$).
-
-\subsection{The Derivation: Second Derivative (The Hessian)}
-To evaluate butterfly convexity, we require the second partial derivative with respect to Strike ($K$). Let $x_{*, i} = K$. We differentiate the first derivative again using the product rule. Let the derivative of Mahalanobis distance $r$ with respect to a single test coordinate $x_{*, i}$ be defined as $D_K = \frac{x_{*, i} - x_i}{\ell_i^2}$ for simplicity. Hence, the first derivative simplifies to:
-
-$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 \left[ (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \right] D_K$$
-
-By applying the product rule, we obtain:
- 
-$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ \frac{\partial}{\partial x_{*, i}} \Big( (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \Big) \cdot D_K + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \cdot \frac{\partial D_K}{\partial x_{*, i}} \right]$$
-
-\subsubsection{Step A: Inner Chain Rule}
-Let $u(r) = (1 + \sqrt{5}r) \exp(-\sqrt{5}r)$.
-
-
-$$\frac{\partial u}{\partial r} = \sqrt{5} \exp(-\sqrt{5}r) - \sqrt{5}(1+\sqrt{5}r)\exp(-\sqrt{5}r) = -5r \exp(-\sqrt{5}r)$$
-
-Multiplying by $\frac{\partial r}{\partial x_{*, i}}$:
-
-$$\frac{\partial u}{\partial x_{*, i}} = -5r \exp(-\sqrt{5}r) \frac{x_{*, i} - x_i}{r \ell_i^2} = -5 \exp(-\sqrt{5}r) D_K$$
-
-
-\subsubsection{Step B: The Second Term}
-The derivative of the spatial distance component $D_K$ is simply a constant scaling factor:
-
-
-$$\frac{\partial D_K}{\partial x_{*, i}} = \frac{1}{\ell_i^2}$$
-
-
-
-\subsubsection{Step C: The Complete Second Derivative}
-Substituting the components back into the product rule yields the exact analytical second derivative:
-
-
-$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ -5 \exp(-\sqrt{5}r) D_K^2 + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{1}{\ell_i^2} \right]$$
-
-
-% ------------------------- mathematical proof b.4
-
+% ------------------------- mathematical proof b.7
 
 \TODO{i have more in my notebook, but they just need to be written out}
 
