@@ -1172,6 +1172,107 @@ $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( 
 \newpage
 % ------------------------- mathematical proof b.3
 
+
+\section{Analytical Derivatives of the Matérn 5/2 Kernel}
+\label{sec:derivatives_matern_kernel)}
+
+This is the mathematical derivation for the analytical derivatives of the Matérn 5/2 kernel. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage), removing any reliance on finite-difference approximations.
+
+\subsection{The GP Linear Operator Property}
+
+Derived from the B.1 proof, we define the predictive mean of a Gaussian Process as:
+
+
+$$\bar{f}_* = k_*^T (K_{yy})^{-1} y$$
+
+However, now we optimise the multivariate calculus for the algorithm. Hence, we define $k_* = K(X, x_*)$, which is a row vector, as the cross-covariance vector between the training data and a single test coordinate $x_*$, and $y$ is the vector of observed targets. Because the test coordinate $x_*$ only appears inside the kernel function vector $k_*$, we can again define the pre-computed weight vector $\alpha = (K_{yy})^{-1} y$.
+
+Because arbitrage constraints (Section 2.3) are strictly directional. We differentiate with respect to a specific dimension $i$ of the test coordinate $x_{*, i}$ (e.g., Strike $K$ or Maturity $T$):
+
+$$\frac{\partial \bar{f}_*}{\partial x_{*, i}} = \left( \frac{\partial k_*}{\partial x_{*, i}} \right)^T \alpha$$
+
+Similarly, the second derivative (the Hessian diagonal) required for evaluating butterfly convexity becomes:
+
+
+$$\frac{\partial^2 \bar{f}_*}{\partial x_{*, i}^2} = \left( \frac{\partial^2 k_*}{\partial x_{*, i}^2} \right)^T \alpha$$
+
+\subsection{The Matérn 5/2 Kernel and Mahalanobis Distance}
+To compute the derivatives of $k_*$, by the chain rule, we must differentiate the kernel function itself. We define the anisotropic Matérn 5/2 kernel between a training point $x$ and a test point $x_*$ as:
+$$k_{5/2}(r) = \sigma_f^2 \left( 1 + \sqrt{5}r + \frac{5}{3}r^2 \right) \exp(-\sqrt{5}r)$$
+
+where $r$ is the anisotropic Mahalanobis distance. For a two-dimensional input space of Strike ($x_1 = K$) and Maturity ($x_2 = T$) with independent length-scales $\ell_1$ and $\ell_2$, the Mahalanobis distance is:
+
+$$r(x, x_*) = \sqrt{ \frac{(x_{*, 1} - x_1)^2}{\ell_1^2} + \frac{(x_{*, 2} - x_2)^2}{\ell_2^2} }$$
+
+\subsection{The Derivation: First Derivative (The Gradient)}
+
+We apply the chain rule to differentiate the kernel with respect to a specific spatial input coordinate $x_{*, i}$:
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = \frac{\partial k_{5/2}}{\partial r} \frac{\partial r}{\partial x_{*, i}}$$
+
+
+\subsubsection{Step A: Differentiate the Kernel with Respect to Distance ($r$)}
+Applying the product rule to $k_{5/2}(r)$:
+
+$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \left[\left(\sqrt{5} + \frac{10}{3}r\right) \exp(-\sqrt{5}r) - \sqrt{5} \left(1 + \sqrt{5}r + \frac{5}{3}r^2\right) \exp(-\sqrt{5}r) \right]$$
+
+Factoring out $\sigma_f^2 \exp(-\sqrt{5}r)$ and simplifying the polynomial:
+
+$$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \exp(-\sqrt{5}r) \left[ \sqrt{5} + \frac{10}{3}r - \sqrt{5} - 5r - \frac{5\sqrt{5}}{3}r^2 \right]$$
+
+$$\therefore \frac{\partial k_{5/2}}{\partial r} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r^2) \exp(-\sqrt{5}r)$$
+
+
+
+\subsubsection{Step B: Differentiate the Distance with Respect to the Coordinate ($x_{*, i}$)}
+Differentiating the Mahalanobis distance $r$ using the chain rule:
+
+$$\frac{\partial r}{\partial x_{*, i}} = \frac{1}{2r} \cdot 2 \frac{(x_{*, i} - x_i)}{\ell_i^2} = \frac{x_{*, i} - x_i}{r \ell_i^2}$$
+
+
+\subsubsection{Step C: The Complete First Derivative}
+Multiplying Step A and Step B (noting that the $r$ in the denominator cancels with the $r$ in the numerator):
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{(x_{*, i} - x_i)}{\ell_i^2}$$
+
+This first derivative evaluates the continuous local slope of the surface, natively defining the calendar arbitrage constraint when evaluated with respect to Maturity ($T$).
+
+\subsection{The Derivation: Second Derivative (The Hessian)}
+To evaluate butterfly convexity, we require the second partial derivative with respect to Strike ($K$). Let $x_{*, i} = K$. We differentiate the first derivative again using the product rule. Let the derivative of Mahalanobis distance $r$ with respect to a single test coordinate $x_{*, i}$ be defined as $D_K = \frac{x_{*, i} - x_i}{\ell_i^2}$ for simplicity. Hence, the first derivative simplifies to:
+
+$$\frac{\partial k_{5/2}}{\partial x_{*, i}} = -\frac{5}{3} \sigma_f^2 \left[ (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \right] D_K$$
+
+By applying the product rule, we obtain:
+ 
+$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ \frac{\partial}{\partial x_{*, i}} \Big( (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \Big) \cdot D_K + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \cdot \frac{\partial D_K}{\partial x_{*, i}} \right]$$
+
+\subsubsection{Step A: Inner Chain Rule}
+Let $u(r) = (1 + \sqrt{5}r) \exp(-\sqrt{5}r)$.
+
+
+$$\frac{\partial u}{\partial r} = \sqrt{5} \exp(-\sqrt{5}r) - \sqrt{5}(1+\sqrt{5}r)\exp(-\sqrt{5}r) = -5r \exp(-\sqrt{5}r)$$
+
+Multiplying by $\frac{\partial r}{\partial x_{*, i}}$:
+
+$$\frac{\partial u}{\partial x_{*, i}} = -5r \exp(-\sqrt{5}r) \frac{x_{*, i} - x_i}{r \ell_i^2} = -5 \exp(-\sqrt{5}r) D_K$$
+
+
+\subsubsection{Step B: The Second Term}
+The derivative of the spatial distance component $D_K$ is simply a constant scaling factor:
+
+
+$$\frac{\partial D_K}{\partial x_{*, i}} = \frac{1}{\ell_i^2}$$
+
+
+
+\subsubsection{Step C: The Complete Second Derivative}
+Substituting the components back into the product rule yields the exact analytical second derivative:
+
+
+$$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ -5 \exp(-\sqrt{5}r) D_K^2 + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{1}{\ell_i^2} \right]$$
+
+\newpage
+% ------------------------- mathematical proof b.4
 \section{The Breeden-Litzenberger Density and Static Arbitrage}
 \label{sec:breeden_litz_proof}
 In this derivation, we establish the relationship between the price of a European call option and the implied risk-neutral probability density function. Essentially, by isolating the convexity term, we show that the term must remain strictly positive to avoid butterfly arbitrage.
@@ -1186,8 +1287,10 @@ $$C(K, T) = e^{-rT} \mathbb{E}^{\mathbb{Q}}[\max(S_T - K, 0)]$$
 
 The integral can be separated into two parts, with the first ranging from $0$ to $K$ and the second from $K$ to $\infty$. Since the payoff of the first one is zero if $S_T - K < 0$, we equate the integral to 0 and proceed with the second.
 
-$$C(K, T) = e^{-rT} \int_{K}^{\infty} (S_T - K) p(S_T) dS_T$$
-
+\begin{equation}
+C(K, T) = e^{-rT} \int_{K}^{\infty} (S_T - K) p(S_T) dS_T
+\label{eq:expected_payoff_call}
+\end{equation}
 \subsection{The Derivation: First Derivative (The Survival Function)}
 
 To isolate the density function $p(S_T)$, we must differentiate the integral with respect to the strike price $K$. Because the variable of differentiation $K$ appears in both the integrand and the lower limit of integration, we apply the Leibniz rule:
@@ -1197,11 +1300,162 @@ To isolate the density function $p(S_T)$, we must differentiate the integral wit
 We evaluate the upper bound, $b(K) = \infty$, so $\frac{db}{dK} = 0$. The lower bound: $a(K) = K$, so $\frac{da}{dK} = 1$.
 And the integrand becomes $(S_T - K)p(S_T)$.
 
+As we evaluate the boundary terms, the upper boundary term vanishes because $\frac{db}{dK} = 0$. And the lower boundary term is evaluated at $S_T = K$, yielding $(K - K)p(K) \cdot 1 = 0$. Consequently, both terms vanish, and we are left with the integral of the partial derivative of the integrand:
+
+$$\frac{\partial C}{\partial K} = e^{-rT} \int_{K}^{\infty} \frac{\partial}{\partial K} \left[ (S_T - K) p(S_T) \right] dS_T$$
+
+Differentiating the inside with respect to $K$ and simplifying:
 
 
+\begin{equation}
+\frac{\partial C}{\partial K} = e^{-rT} \int_{K}^{\infty} (-1) p(S_T) dS_T = -e^{-rT} \int_{K}^{\infty} p(S_T) dS_T
+\label{eq:disc_survival_function}
+\end{equation}
+
+This first derivative represents the survival function; negative discounted risk-neutral probability that the option finishes in the money (ITM).
+
+\subsection{The Derivation: Second Derivative (The Density)}
+
+To prove the butterfly arbitrage constraint, we must differentiate a second time with respect to $K$. This time, $K$ only appears in the lower bound of the integral. Thereby, we simply apply the Fundamental Theorem of Calculus:
+
+$$\frac{\partial^2 C}{\partial K^2} = -e^{-rT} \frac{\partial}{\partial K} \int_{K}^{\infty} p(S_T) dS_T$$
+
+By the Fundamental Theorem of Calculus, when we differentiate an integral with respect to its lower bound, the equation simply yields the negative of the integrand evaluated at that bound:
+
+
+\begin{equation}
+\frac{\partial^2 C}{\partial K^2} = -e^{-rT} \left( -p(K) \right) = e^{-rT} p(K)
+\label{eq:initial_b_l_result}
+\end{equation}
+\subsection{The Result: The Butterfly Arbitrage Constraint}
+
+After simplification, we isolate the risk-neutral probability density $p(K)$ to obtain the Breeden-Litzenberger formula:
+
+
+\begin{equation}
+p(K) = e^{rT} \frac{\partial^2 C}{\partial K^2}
+\label{eq:rearanged_b_l_result}
+\end{equation}
+Following Kolmogorov's foundational axioms of probability theory, a probability density function can never be negative. Therefore, it must hold true that $p(K)$ is strictly positive $p(K) \ge 0$. Additionally, because the discount factor $e^{rT}$ also can never be negative, the second partial derivative of the call price must always be positive. 
+
+$$\frac{\partial^2 C}{\partial K^2} \ge 0$$
+
+Hence, if an interpolated surface exhibits local concavity, it directly implies the existence of a negative risk-neutral probability. This violates static butterfly constraints and makes the surface financially unreliable.
+\newpage
 
 
 % ------------------------- mathematical proof b.5
+
+\section{Dupire’s Equation}
+
+As per the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that actually generates those prices. The Dupire equation shows that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
+
+\subsection{The Setup: The SDE and the FPK Equation}
+
+We assume the underlying asset $S_t$ follows a risk-neutral stochastic differential equation (SDE):
+
+\begin{equation}
+dS_t = r S_t dt + \sigma_L(S_t, t) S_t dW_t
+\label{eq:sde}
+\end{equation}
+
+Putting it into words, the infinitesimal change $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time. And the diffusion term ($\sigma_L(S_t, t) S_t dW_t$), where $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, is scaled by the pure randomness term $dW_t$ (Brownian Motion) and the price $S_t$ of the asset. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), plus or minus a random percentage shock amplified by the local volatility conditions ($\sigma_L S_t dW_t$).
+
+Additionally, by the definitions of stochastic calculus, the transition probability density function $p(S, T)$ of the \ref{eq:sde} process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
+
+\begin{equation}
+\frac{\partial p}{\partial T} = \frac{1}{2} \frac{\partial^2}{\partial S^2} \left( \sigma_L^2(S, T) S^2 p \right) - \frac{\partial}{\partial S} (r S p)
+\label{eq:fpk_equation}
+\end{equation}
+
+Where $S$ serves as the dummy variable for the terminal asset price $S_T$.
+
+\subsection{The Derivation: Differentiating the Call Price with Respect to Time}
+
+We begin with the standard risk-neutral pricing formula for a European call, expressed as an integral over the density $p(S, T)$. This notation was previously introduced in Equation \ref{eq:expected_payoff_call}:
+
+$$C(K, T) = e^{-rT} \int_{K}^{\infty} (S - K) p(S, T) dS$$
+
+To find the evolution of the price over time, we differentiate both sides with respect to maturity $T$ using the product rule:
+
+$$\frac{\partial C}{\partial T} = -r e^{-rT} \int_{K}^{\infty} (S - K) p(S, T) dS + e^{-rT} \int_{K}^{\infty} (S - K) \frac{\partial p}{\partial T} dS$$
+
+We recognise that the first term contains the original call price definition. So the equation is simply:
+
+\begin{equation}
+\frac{\partial C}{\partial T} = -rC + e^{-rT} \int_{K}^{\infty} (S - K) \frac{\partial p}{\partial T} dS
+\label{eq:simplified_first_derivative_call}
+\end{equation}
+
+\subsection{Substituting the FPK Equation}
+
+In Equation \ref{eq:simplified_first_derivative_call}, we have $\frac{\partial p}{\partial T}$ (the rate at which the probability density changes over time) stuck inside an integral that is being evaluated with respect to the stock price ($dS$). This is a massive problem as we cannot integrate a time derivative with respect to a spatial variable ($S$). Because $T$ and $S$ are independent variables, we cannot evaluate this integral without knowing the explicit function $p(S,T)$ ahead of time. Hence, we make use of the FPK Equation defined in \ref{eq:fpk_equation} to convert time derivatives into spatial derivatives. By substituting the FPK Forward Equation into our $\frac{\partial p}{\partial T}$ term inside the integral, we split the integral into a diffusion term and a drift term:
+
+\begin{equation}
+\frac{\partial C}{\partial T} = -rC 
++ e^{-rT} \underbrace{\int_{K}^{\infty} (S - K) \frac{1}{2} \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS}_{\text{Diffusion Term}} 
+- e^{-rT} \underbrace{\int_{K}^{\infty} (S - K) \frac{\partial}{\partial S} (r S p) dS}_{\text{Drift Term}}
+\label{eq:time_derivative_eq}
+\end{equation}
+
+Firstly, we begin by evaluating the diffusion term using integration by parts. For the first pass, we let $u = (S - K)$ and $dv = \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS$, so $du = dS$ and $v = \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right)$. Collecting the terms, we obtain:
+
+$$\int_{K}^{\infty} (S - K) \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS = 
+\left[ (S - K) \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) \right]_{K}^{\infty} - \int_{K}^{\infty} \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) dS$$
+
+Because of the $(S-K)$ multiplier, when we set $S$ to the lower boundary term $K$ and the upper boundary term to $\infty$, the entire boundary term becomes 0 because of density decay as $S \to \infty$. Thereby, we apply the Fundamental Theorem of Calculus to the remaining simplified equation:
+
+\begin{equation}
+- \int_{K}^{\infty} \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) dS = - \left[ \sigma_L^2 S^2 p \right]_{K}^{\infty}
+\label{eq:diffusion_term}
+\end{equation}
+
+Evaluating at infinity yields zero, and evaluating the term at the lower bound $K$ subtracts the term, neutralising the negative sign. Intuitively, evaluating at infinity results in zero because of the $p(S, T)$ function, which represents the likelihood of an asset to land on a price level $S$ at time $T$. The probability that an asset reaches a price level of $\infty$ is 0. Hence:
+
+$$-\left( 0 - \sigma_L^2(K, T) K^2 p(K, T) \right) = \sigma_L^2(K, T) K^2 p(K, T)$$
+
+Next, we evaluate the drift term using standard integration by parts. Let $u = (S - K)$, so $du = dS$. Let $dv = \frac{\partial}{\partial S} (rSp) dS$, yielding $v = rSp$.
+
+$$\int_{K}^{\infty} (S - K) \frac{\partial}{\partial S} (rS p) dS = 
+\left[ (S - K) r S p \right]_{K}^{\infty} - \int_{K}^{\infty} rS p dS$$
+
+Now we evaluate the boundaries. At the lower bound ($S = K$), the $(S - K)$ term becomes $(K - K)$, becoming 0, and as we set ($S \to \infty$), the probability density $p(S, T)$ decays to zero faster than the polynomial grows. We are left only with the subtracted integral:
+
+\begin{equation}
+- \int_{K}^{\infty}rSp dS
+\label{eq:drift_term}
+\end{equation}
+
+To express the full equation, we substitute the drift term result from \ref{eq:diffusion_term} and the diffusion term result \ref{eq:drift_term} back into the time-derivative equation from \ref{eq:time_derivative_eq}:
+
+$$\frac{\partial C}{\partial T} = -rC + e^{-rT} \left( \frac{1}{2} \sigma_L^2(K, T) K^2 p(K, T) \right) - e^{-rT} \left( - \int_{K}^{\infty} r S p dS \right)$$
+
+$$\frac{\partial C}{\partial T} = -rC + \frac{1}{2} \sigma_L^2(K, T) K^2 \left( e^{-rT} p(K, T) \right) + r e^{-rT} \int_{K}^{\infty} S p dS$$
+
+\subsection{Connecting to Breeden-Litzenberger}
+To finally isolate the local volatility term, we must rewrite the remaining components strictly in terms of the call price derivatives. First, we apply the Breeden-Litzenberger result derived in \ref{eq:initial_b_l_result} ($e^{-rT} p(K, T) = \frac{\partial^2 C}{\partial K^2}$) to the diffusion term and expand the integral in the drift term by adding and subtracting $K$:
+
+$$r e^{-rT} \int_{K}^{\infty} (S - K + K) p dS = r e^{-rT} \int_{K}^{\infty} (S - K) p dS + r K e^{-rT} \int_{K}^{\infty} p dS$$
+
+Notice that $e^{-rT} \int_{K}^{\infty} (S - K) p dS$ is simply the Call Price $C$ from \ref{eq:expected_payoff_call}. Also recall from the Breeden-Litzenberger derivation \ref{eq:disc_survival_function} that the first derivative of the call price is the discounted survival function $\frac{\partial C}{\partial K} = -e^{-rT} \int_{K}^{\infty} p dS$. So we substitute these identities back into the expanded drift term:
+
+$$r \left( C - K \frac{\partial C}{\partial K} \right)$$
+
+Inserting everything back into the main equation, we obtain:
+
+$$\frac{\partial C}{\partial T} = -rC + \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partial^2 C}{\partial K^2} + rC - rK \frac{\partial C}{\partial K}$$
+
+The $-rC$ and $+rC$ perfectly cancel each other out, leaving:
+
+$$\frac{\partial C}{\partial T} = \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partial^2 C}{\partial K^2} - rK \frac{\partial C}{\partial K}$$
+
+\subsection{The Result: Dupire’s Formula}
+
+Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s final formula:
+
+$$\sigma_L^2(K, T) = \frac{\frac{\partial C}{\partial T} + rK \frac{\partial C}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C}{\partial K^2}}$$
+
+This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier, asian), and if the second derivative is negative, the local volatility becomes an imaginary number, crashing the pipeline.
 
 % ------------------------- mathematical proof b.6
 
