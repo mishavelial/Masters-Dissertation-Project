@@ -168,6 +168,7 @@ These terms define the fundamental building blocks of the derivative contracts m
     \item[Bid-Ask Spread / Microstructural Noise:] The small-scale market frictions and discrete tick sizes present in real-world trading that introduce noise into observed option prices.
 \end{description}
 
+\newpage
 \section*{II. Volatility \& Surface Metrics}
 \phantomsection
 \addcontentsline{toc}{section}{II. Volatility \& Surface Metrics}
@@ -176,7 +177,7 @@ These definitions bridge the gap between absolute option prices and the standard
 
 \begin{description}
     \item[Black-Scholes Model:] The Black-Scholes model can be used to price European-style options and to estimate a theoretical fair value for a call or put based on spot, strike, time to expiry, risk-free rate, and volatility. It is also widely used as a benchmark for hedging and for \textit{inferring implied volatility} from market option prices.
-    \[\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0\]
+    $$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0$$
     where, $V = V(S, t)$ is the option value, $S$ is the underlying asset price, $t$ is time, $r$ is the risk-free interest rate and $\sigma$ is the volatility of the unrelying asset returns.
     \item[Black-Scholes Implied Volatility ($\sigma_{imp}$):] The unique volatility parameter that, when passed through the inverted Black-Scholes-Merton formula, yields the exact market price of the option. It acts as a forward-looking metric of market consensus on risk.
     \item[Implied Volatility Surface:] A three-dimensional graph mapping implied volatility across various strikes and maturities for a single asset, denoted as $(K,T) \mapsto \sigma_{imp}(K,T)$. An example can be:
@@ -190,12 +191,13 @@ These definitions bridge the gap between absolute option prices and the standard
     
     \item[Log-Moneyness ($k$):] A normalised metric defined as $k = \log(K/F_0)$ used to gauge risk independent of the underlying asset's price dynamics.
     \item[Forward Price ($F_0$):] The agreed-upon price of the underlying asset for future delivery at time zero, used to calculate log-moneyness.
-    \item[Total Variance ($w$):] A transformation space defined as $w(k, T) = \sigma_{imp}^2(k, T)T$ that removes the trivial $\sqrt{T}$ scaling from implied volatility and linearizes static no-arbitrage conditions.
+    \item[Total Variance ($w$):] A transformation of the implied volatility to total variance space using the equation $w(k, T) = \sigma_{imp}^2(k, T)T$. First, it is easier to calculate arbitrage violations in total variance space because variance should be non-decreasing across strikes and maturities. In addition, $\sigma^2T$ is much easier to implement into SDE's than $\sigma \sqrt{T}$.
     \item[Volatility Skew / Smile:] The structural, non-linear shape of the volatility surface across strikes, often exhibiting extreme downside asymmetry in equity markets like the SPX. Can often be referred to as a skewed convex parabola for simplicity.
     \item[Out-of-the-money (OTM):] Option contracts with strikes far from the current asset price; deep OTM options encode the extreme asymptotic tails of the market's risk-neutral distribution.
     \item[In-the-money (ITM) and At-the-money (ATM):] Option contracts with strike equal to the Spot Price (ATM) and option contracts with strike less than the Spot Price (ITM).
 \end{description}
-\Revised{}
+
+\newpage
 \section*{III. Arbitrage \& Pricing Theory}
 \phantomsection
 \addcontentsline{toc}{section}{III. Arbitrage \& Pricing Theory}
@@ -203,14 +205,15 @@ These definitions bridge the gap between absolute option prices and the standard
 These concepts define the strict financial and mathematical boundaries that the model must respect to remain valid.
 
 \begin{description}
-    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework where the current value of a future payoff is exactly equal to its discounted expected value, calculated using the risk-free rate.
-    \item[Risk-Free Rate ($r$):] The continuously compounded theoretical rate of return of an investment with zero risk, used to discount future option payoffs to their present value.
-    \item[Static Arbitrage:] A financially impossible scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit.
+    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate, this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales.
+    \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. Example: if we invest 100\$ at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
+    \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Intuitively, this means that there is a free lunch hidden in the option quotes.
     \item[Calendar Spread:] An option strategy involving two contracts with the same strike price but different maturities.
-    \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one, violating the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
-    \item[Butterfly Spread:] A strategy involving three options with staggered strikes (buying a low and high strike, selling two middle strikes).
-    \item[Butterfly Arbitrage:] A violation indicating that the model's implied probability distribution has dropped below zero. It occurs when the surface lacks convexity, meaning a middle strike is priced too high relative to its neighbours.
-    \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem proving that the market-implied risk-neutral probability density is strictly proportional to the second partial derivative of the call price with respect to the strike ($\frac{\partial^2 C}{\partial K^2}$).
+        \item[Butterfly Arbitrage:] It occurs when the surface lacks convexity, meaning a middle strike is priced too high relative to its neighbours. In terms of the implied volatility surface, an arbitrage exists when a model's implied probability distribution has dropped below zero.
+    \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one. Essentially, an arbitrage opportunity occurs when a longer-dated option is priced lower than the shorter-dated. This violates the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
+    \item[Butterfly Spread:] A strategy involving three options with staggered strikes (buying a low and high strike $K_1$, selling two middle strikes). $$K_3 > K_2 > K_1$$. \TODO{Needs revision.}
+    \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem that connects local concavity of a financial surface to butterfly arbitrage violations. 
+     ($\frac{\partial^2 C}{\partial K^2}$).
 \end{description}
 
 \newpage
