@@ -770,19 +770,19 @@ For each maturity, the raw option chains are filtered using a strict preprocessi
 
 \section{Market Regimes}
 \label{sec:market-regimes}
-To ensure that the observed reduction in predictive error is attributable to the probabilistic methodology rather than to a particular feature of the market state, we evaluate both the deterministic point-estimate algorithm L-BFGS-B and the Bayesian HMC approaches across different environments. 30 dates spanning different market regimes were selected. Each regime was selected to stress-test a specific structural vulnerability in the surface fitting process:
+To ensure that the observed reduction in predictive error is attributable to the probabilistic methodology rather than to a particular feature of the market state, we evaluate both the deterministic point-estimate algorithm L-BFGS-B and the Bayesian HMC approaches across different environments. 21 dates spanning different market regimes were selected. Each regime was selected to stress-test a specific structural vulnerability in the surface fitting process:
 
 \begin{itemize}
     \item \textbf{High Volatility Shock (March 2020):} 
-    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. Because this month's volatility surface is heavily backwardated and chaotic, it is the perfect environment to test the HMC sampler in difficult conditions. \textit{Selected dates: 3, 6, 10, 13, 17, 19, 23, and 25 March 2020.}
+    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. Because this month's volatility surface is heavily backwardated and chaotic, it is the perfect environment to test the HMC sampler in difficult conditions. \textit{Selected dates: 3, 13, 17, 19, 23, and 25 March 2020.}
     
-    \item \textbf{Grinding Bear \& Rate Shock (September -- October 2022):} 	During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 13, 16, 21, 26, 30 September and 5, 11 October 2022.}
+    \item \textbf{Grinding Bear \& Rate Shock (September -- October 2022):} During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 16, 21, 26, 30 September and 5 of October 2022.}
     
     \item \textbf{Steady, Low-Vol Bull (Summer 2023):} 
-    The summer of 2023 serves as the baseline regime with low volatility and a standard volatility smile. This tests whether the GP model correctly relies on the parametric prior without overfitting the microstructural noise.\textit{Selected dates: 2, 7, 13, 21, 26, 30 June and 6, 11 July 2023.}
+    The summer of 2023 serves as the baseline regime with low volatility and a standard volatility smile. This tests whether the GP model correctly relies on the parametric prior without overfitting the microstructural noise. \textit{Selected dates: 7, 13, 21, 26, 30 of June 2023.}
     
     \item \textbf{High Momentum Expansion (January -- February 2024):} 
-    Driven by aggressive, continuous market rallies. This regime specifically tests the pipeline's ability to map right-tail asymmetry and the pronounced call skew that emerges during rapid expansions. \textit{Selected dates: 18, 24, 30 January and 5, 9, 15, 22 February 2024.}
+    Driven by aggressive, continuous market rallies. This regime specifically tests the pipeline's ability to map right-tail asymmetry and the pronounced call skew that emerges during rapid expansions. \textit{Selected dates: 18, 24, 30 January and 9, 15 February 2024.}
 \end{itemize}
 
 \section{Evaluation Metrics}
@@ -1089,8 +1089,11 @@ $$p(y \mid X, \theta) = (2\pi)^{-\frac{n}{2}} \vert{}K_y\vert{}^{-\frac{1}{2}} \
 
 where $K_y = K_\theta + \sigma_n^2 I \in \mathbb{R}^{n \times n}$ represents the noisy covariance (Gram) matrix. By taking the natural logarithm, we obtain the Log-Marginal Likelihood objective function $\mathcal{L}(\theta) = \log p(y \mid X, \theta)$ that we explicitly defined in Section 3.3.
 
-$$\mathcal{L}(\theta) = \underbrace{-\frac{1}{2} y^T K_y^{-1} y}_{\text{Data Fit Term}} \ - \ \underbrace{\frac{1}{2} \log \vert{}K_y\vert{}}_{\text{Complexity Penalty}} \ - \ \underbrace{\frac{n}{2} \log (2\pi)}_{\text{Normalization Constant}}$$
 
+\begin{equation}
+\mathcal{L}(\theta) = \underbrace{-\frac{1}{2} y^T K_y^{-1} y}_{\text{Data Fit Term}} \ - \ \underbrace{\frac{1}{2} \log \vert{}K_y\vert{}}_{\text{Complexity Penalty}} \ - \ \underbrace{\frac{n}{2} \log (2\pi)}_{\text{Normalization Constant}}
+\label{eq:lml_objective_function}
+\end{equation}
 
 \subsection{Mathematical Prerequisites: Matrix Calculus Rules}
 First, we invoke two fundamental matrix calculus identities in order to differentiate $\mathcal{L}(\theta)$ with respect to a scalar hyperparameter $\theta_j$:
@@ -1453,11 +1456,90 @@ $$\frac{\partial C}{\partial T} = \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partia
 
 Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s final formula:
 
-$$\sigma_L^2(K, T) = \frac{\frac{\partial C}{\partial T} + rK \frac{\partial C}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C}{\partial K^2}}$$
+
+\begin{equation}
+\sigma_L^2(K, T) = \frac{\frac{\partial C}{\partial T} + rK \frac{\partial C}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C}{\partial K^2}}
+\label{eq:dupires_equation}
+\end{equation}
 
 This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier, asian), and if the second derivative is negative, the local volatility becomes an imaginary number, crashing the pipeline.
-
+\newpage
 % ------------------------- mathematical proof b.6
+
+\section{Mercer's Theorem and the RKHS Norm Derivation}
+In this proof, we will break down a concept from pure Functional Analysis: the Reproducing Kernel Hilbert Space (RKHS) norm, which comes embedded in the \textit{scikit-learn} library. It represents the formal penalty which constrains the Gaussian Process Regression from creating an overly jagged surface. Hence, it is necessary to formally introduce it in this paper. 
+
+\subsection{Definition of the Kernel Operator}
+We begin by defining the kernel operator. Let $\mathcal{X}$ be a compact space and $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ be a continuous, symmetric, positive semi-definite kernel function. Then, define the integral operator $T_k: L^2(\mathcal{X}) \to L^2(\mathcal{X})$ such that:
+
+$$(T_k f)(x) = \int_{\mathcal{X}} k(x, x') f(x') dx'$$
+
+Since we cannot decompose the kernel directly, we have to take the continuum limit of the discrete Gram matrix $K \in \mathbb{R}^{n \times n}$, thereby obtaining the linear integral operator $T_k: L^2(\mathcal{X}) \to L^2(\mathcal{X})$. Essentially upgrading a discrete matrix $K$ to its continuous counterpart $T_k$ to be able to decompose the kernel by using Mercer's Theorem.
+
+\subsection{Mercer's Theorem (Eigen-decomposition)}
+By Mercer’s Theorem, $T_k$ admits an orthonormal basis of eigenfunctions $\{\phi_i\}_{i=1}^{\infty}$ and a corresponding set of non-negative eigenvalues $\{\lambda_i\}_{i=1}^{\infty}$ ordered such that $\lambda_1 \ge \lambda_2 \ge \dots \ge 0$. Intuitively, Mercer's Theorem guarantees that we can break our integral operator $T_k$ into an infinite set of perfectly independent eigenfunctions and sort them by their importance (eigenvalues). So, the eigenvalue problem is defined as:
+
+$$\int_{\mathcal{X}} k(x, x') \phi_i(x') dx' = \lambda_i \phi_i(x)$$
+
+By Mercer's Theorem, we can express our Matern kernel as a uniformly convergent series:
+
+$$k(x, x') = \sum_{i=1}^{\infty} \lambda_i \phi_i(x) \phi_i(x')$$
+
+\subsection{Construction of the RKHS ($\mathcal{H}_k$)}
+Having deconstructed the kernel into eigenfunctions and eigenvalues, we pick any two basis functions to construct the RKHS norm. Let $\mathcal{H}_k$ be the function space defined by the span of the eigenfunctions, formally $\mathcal{H}_k = \text{span}\{\phi_i\}_{i=1}^{\infty}$. Any function $f, g \in \mathcal{H}_k$ can be expressed as a linear combination of these basis functions:
+
+$$f(x) = \sum_{i=1}^{\infty} c_i \phi_i(x)$$
+$$g(x) = \sum_{i=1}^{\infty} d_i \phi_i(x)$$
+
+
+where $c_i, d_i \in \mathbb{R}$.
+
+\subsection{Verification of the Reproducing Property}
+To prove $\mathcal{H}_k$ is a Reproducing Kernel Hilbert Space, we must show that $\langle f, k(\cdot, x) \rangle_{\mathcal{H}_k} = f(x)$. Where, by definition, the inner product space for $\mathcal{H}_k$ is $\langle f, g \rangle_{\mathcal{H}_k} = \sum_{i=1}^{\infty} \frac{c_i d_i}{\lambda_i}$. Contingent on the fact that $c_i, d_i$ must decay sufficiently fast such that the sum converges. Firstly, we express the kernel function $k(\cdot, x)$ for a fixed $x$ in terms of the basis functions. Let $d_i = \lambda_i \phi_i(x)$:
+
+
+$$k(\cdot, x) = \sum_{i=1}^{\infty} (\lambda_i \phi_i(x)) \phi_i(\cdot)$$
+
+We substitute $c_i$ from $f(x)$ and $d_i$ from $k(\cdot, x)$ into the inner product definition and obtain:
+
+$$\langle f, k(\cdot, x) \rangle_{\mathcal{H}_k} = \sum_{i=1}^{\infty} \frac{c_i (\lambda_i \phi_i(x))}{\lambda_i}$$
+
+As a result, the $\lambda_i$ terms cancel out:
+
+$$\langle f, k(\cdot, x) \rangle_{\mathcal{H}_k} = \sum_{i=1}^{\infty} c_i \phi_i(x)$$
+
+By the definition of $f(x)$ established priorly, this evaluates to:
+
+$$\langle f, k(\cdot, x) \rangle_{\mathcal{H}_k} = f(x)$$
+
+Thus, proving that $\mathcal{H}_k$ is indeed a valid RKHS.
+
+\subsection{Derivation of the RKHS Norm}
+The RKHS norm of the function $f \in \mathcal{H}_k$ can be found by its inner product with itself. Setting $g(x) = f(x)$, we imply that $d_i = c_i$:
+
+\begin{equation}
+\vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2 = \langle f, f \rangle_{\mathcal{H}_k}
+\label{eq:rkhs_norm}
+\end{equation}
+
+$$\vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2 = \sum_{i=1}^{\infty} \frac{c_i c_i}{\lambda_i}$$
+
+$$\vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2 = \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$
+
+It is important to note that the definition of the RKHS norm from Equation \ref{eq:rkhs_norm} cannot be evaluated by the computer because of the infinite sum of eigenvalues ($\sum \frac{c_i^2}{\lambda_i}$). Instead, it uses the Representer Theorem, which states that the infinite-dimensional RKHS norm is perfectly equal to a finite matrix calculation:
+
+$$\vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2 = y^T K_y^{-1} y$$
+
+This formulation can be found in the data fit term in Equation \ref{eq:lml_objective_function} of Appendix \ref{sec:lml_gradients} for the Log-Marginal Likelihood.
+
+\subsection{Application to the Gaussian Process Loss Functional}
+Under Tikhonov regularisation (and by extension, the negative log marginal likelihood of a Gaussian Process), the objective functional $J(f)$ over $N$ observations is:
+
+$$J(f) = \sum_{j=1}^{N} (y_j - f(x_j))^2 + \sigma_n^2 \vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2$$
+
+Where, practically, $\sum_{j=1}^{N} (y_j - f(x_j))^2$ is the data error term and $\sigma_n^2 \vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2$ is the RKHS norm penalty. Finally, by substituting the derived norm into the objective functional $J(f)$, we obtain the final result:
+
+$$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)^2 + \sigma_n^2 \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$
 
 % ------------------------- mathematical proof b.7
 
