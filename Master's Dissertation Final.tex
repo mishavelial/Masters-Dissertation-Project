@@ -125,7 +125,7 @@ Many financial quantitative risk valuation methods rely on accurate interpolatio
 
 As a solution to the instability of the LML topology, this dissertation introduces a fully Bayesian framework utilising the Hamiltonian Monte Carlo (HMC) No-U-Turn Sampler (NUTS) to integrate over hyperparameter uncertainty rather than optimising for a single coordinate. The primary innovation of this research lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. This approach fundamentally prevents the emergence of economic arbitrage violations without the necessity to artificially restrict the surface.
 
-The empirical evaluations in S\&P 500 index options across diverse macroeconomic regimes show that the deterministic optimiser has yielded a 100\% butterfly arbitrage failure rate on evaluated dates. In contrast, the Bayesian HMC sampler drastically reduces the generalisation error during… \TODO{finish this section when the data arrives}
+The empirical evaluations in S\&P 500 index options across diverse macroeconomic regimes demonstrate that the deterministic optimiser suffers a 61.9\% butterfly arbitrage failure rate on evaluated dates, frequently collapsing into systemic dual-violations. In contrast, the Bayesian HMC sampler acts as a structural regulariser. By marginalising over hyperparameter uncertainty, the framework drastically reduces, and often eradicates, these localised arbitrage violations. While this introduces a microscopic penalty to the out-of-sample generalisation error in low-volatility regimes, it proves to be a mandatory and mathematically acceptable trade-off to guarantee an economically admissible, arbitrage-free volatility surface.
 
 
 \chapter*{Declaration}
@@ -134,7 +134,8 @@ I declare that this dissertation is my own work and that it has not been submitt
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
-I would like to thank my supervisor, the School of Mathematics and Statistics, and those who supported me throughout this project. \TODO{Basic}
+I would like to thank my supervisor for their invaluable guidance, patience, and expertise throughout the development of this research. I also extend my gratitude to the School of Mathematics and Statistics for providing the academic foundation necessary to complete this project, and to my family and friends for their unwavering support.
+
 \newpage
 \tableofcontents
 \listoffigures
@@ -184,8 +185,8 @@ These definitions bridge the gap between absolute option prices and the standard
     
     \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.45\textwidth]{Figures/mplied-volatility-surface-generated-by-S-4-with-as-in-Figure-6-right-Red-dots.png}
-    \caption{Implied volatility surface adapted from ResearchGate \TODO{I'll find my examples, or just model it myself.}.}
+    \includegraphics[width=0.55\textwidth]{Figures/iv_surface_example.png}
+    \caption{A canonical representation of an Implied Volatility Surface, demonstrating the volatility skew across log-moneyness and maturity.}
     \label{fig:iv_surface_example}
 \end{figure}
     
@@ -209,11 +210,12 @@ These concepts define the strict financial and mathematical boundaries that the 
     \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. Example: if we invest 100\$ at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
     \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Intuitively, this means that there is a free lunch hidden in the option quotes.
     \item[Calendar Spread:] An option strategy involving two contracts with the same strike price but different maturities.
-        \item[Butterfly Arbitrage:] It occurs when the surface lacks convexity, meaning a middle strike is priced too high relative to its neighbours. In terms of the implied volatility surface, an arbitrage exists when a model's implied probability distribution has dropped below zero.
+     \item[Butterfly Spread:] A neutral options strategy involving three staggered strike prices ($K_1 < K_2 < K_3$). Typically, a trader buys one lower strike option at $K_1$, sells two middle strike options at $K_2$, and buys one higher strike option at $K_3$. In the context of volatility surfaces, pricing a butterfly spread below zero indicates a negative risk-neutral probability, signifying an arbitrage violation.
     \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one. Essentially, an arbitrage opportunity occurs when a longer-dated option is priced lower than the shorter-dated. This violates the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
     \item[Butterfly Spread:] A strategy involving three options with staggered strikes (buying a low and high strike $K_1$, selling two middle strikes). $$K_3 > K_2 > K_1$$. \TODO{Needs revision.}
     \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem that connects local concavity of a financial surface to butterfly arbitrage violations. 
      ($\frac{\partial^2 C}{\partial K^2}$).
+     \item[Constrained Kriging:] A spatial interpolation method in Gaussian Process regression where hard constraints (such as monotonicity or convexity) are explicitly enforced on the predictive posterior to satisfy financial arbitrage conditions, often at the expense of computational efficiency or model flexibility.
 \end{description}
 
 \newpage
@@ -246,7 +248,7 @@ In this dissertation, we adopt the central hypothesis that flat ridges in the lo
 
 Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like (\citet{titsias_nd}) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
 
-Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (See Dictionary) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce. This research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
+Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory})) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce, this research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
 
 To summarise, the novel contribution of this work lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. 
 
@@ -985,10 +987,11 @@ The logical progression for future quantitative research is to bridge this compu
 \chapter{Mathematical Proofs and Extended Derivations}
 \section{The Schur Complement and the GP Predictive Distribution}
 \label{sec:schur_complement}
+
 This derivation provides the formal proof for how a Gaussian Process conditions its predictions based on observed market data. By applying the Schur complement to a partitioned block covariance matrix, we isolate the exact conditional mean and covariance for unseen test coordinates.
 
 \subsection{The Setup: The Joint Multivariate Gaussian}
-
+\begin{proof}
 We begin by defining the joint probability distribution of our observed, noisy market targets (Total Implied Variance, denoted as $y$) and our unobserved, noise-free predictive targets denoted as $f_*$. The joint distribution becomes multivariate Gaussian, assuming the data has been scaled or the parametric prior has been subtracted:
 
 $$\begin{bmatrix} y \\ f_* \end{bmatrix} \sim \mathcal{N} \left( \begin{bmatrix} \mathbf{0} \\ \mathbf{0} \end{bmatrix}, \begin{bmatrix} K(X, X) + \alpha I & K(X, X_*) \\ K(X_*, X) & K(X_*, X_*) \end{bmatrix} \right)$$
@@ -1005,14 +1008,11 @@ For algebraic clarity, we will denote the covariance matrix into blocks as follo
 Thus, the joint covariance matrix is $\Sigma = \begin{bmatrix} K_{yy} & K_{y*} \\ K_{*y} & K_{} \end{bmatrix}$.
 
 \subsection{The Derivation: Affine Transformation and the Schur Complement}
-
-To find the conditional distribution $P(f_* \mid y)$, we must mathematically isolate $f_*$ from $y$. We achieve this by applying a linear affine transformation to decorrelate the variables.
-
-We define a transformation matrix $M$ designed to eliminate the cross-covariance terms:
+To find the conditional distribution $P(f_* \mid y)$, we must mathematically isolate $f_*$ from $y$. We achieve this by applying a linear affine transformation to decorrelate the variables. Firstly, we define a transformation matrix $M$ designed to eliminate the cross-covariance terms:
 
 $$M = \begin{bmatrix} I & \mathbf{0} \\ -K_{*y}K_{yy}^{-1} & I \end{bmatrix}, Z=\begin{bmatrix} y \\ f_* \end{bmatrix}$$
 
-We apply this transformation matrix to our joint random vector $Z$:
+We apply this transformation matrix to our joint random vector $Z$ to obtain:
 
 $$MZ = M \begin{bmatrix} y \\ f_* \end{bmatrix} = \begin{bmatrix} y \\ f_* - K_{*y}K_{yy}^{-1}y \end{bmatrix}$$
 
@@ -1027,7 +1027,7 @@ Expanding the matrix multiplication step-by-step, we multiply $M$ by $\Sigma$:
 
 $$M \Sigma = \begin{bmatrix} K_{yy} & K_{y*} \\ -K_{*y}K_{yy}^{-1}K_{yy} + K_{*y} & -K_{*y}K_{yy}^{-1}K_{y*} + K_{**} \end{bmatrix} = \begin{bmatrix} K_{yy} & K_{y*} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix}$$
 
-Next, multiply by $M^T$:
+Next, we multiply by $M^T$:
 
 
 $$M \Sigma M^T = \begin{bmatrix} K_{yy} & K_{y*} \\ \mathbf{0} & K_{**} - K_{*y}K_{yy}^{-1}K_{y*} \end{bmatrix} \begin{bmatrix} I & -K_{yy}^{-1}K_{y*} \\ \mathbf{0} & I \end{bmatrix}$$
@@ -1039,10 +1039,7 @@ M \Sigma M^T = \begin{bmatrix} K_{yy} & -K_{yy}K_{yy}^{-1}K_{y*} + K_{y*} \\ \ma
 
 \subsection{Decorrelation and Independence}
 
-The resulting $M \Sigma M^T$ block from the \ref{eq:z_linear_transform} linear transformation gives exactly $\mathbf{0}$ in the off-diagonal covariance blocks. Since $y$ and $(f_* - K_{*y}K_{yy}^{-1}y)$ are jointly Gaussian, they become strictly statistically independent and stripped of any correlation. 
-
-The term in the bottom right block is formally known as the \textbf{Schur Complement} of $K_{yy}$ in the joint matrix $\Sigma$:
-
+The resulting $M \Sigma M^T$ block from the \ref{eq:decorrelated_covariance} linear transformation gives exactly $\mathbf{0}$ in the off-diagonal covariance blocks. Since $y$ and $(f_* - K_{*y}K_{yy}^{-1}y)$ are jointly Gaussian, they become strictly statistically independent and stripped of any correlation. We can formally define the term in the bottom right block as the \textbf{Schur Complement} of $K_{yy}$ in the joint matrix $\Sigma$:
 
 $$S = K_{**} - K_{*y}K_{yy}^{-1}K_{y*}$$
 
@@ -1057,15 +1054,24 @@ To find the distribution of our target predictive variable $f_*$ conditioned on 
 
 $$f_* \mid y \sim \mathcal{N}\left(K_{*y}K_{yy}^{-1}y, \ S \right)$$
 
-Substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$):
+By substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$):
 
 \subsubsection{Predictive Mean:}
-$$\bar{f}_* = K(X_*, X) [K(X, X) + \alpha I]^{-1} y$$
+
+
+\begin{equation}
+\bar{f}_* = K(X_*, X) [K(X, X) + \alpha I]^{-1} y
+\label{eq:pred_mean_b1}
+\end{equation}
+
 
 \subsubsection{Predictive Covariance:}
-$$\Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)$$
 
-\hfill $\blacksquare$
+\begin{equation}
+\Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)
+\label{eq:pred_covariance_b1}
+\end{equation}
+\end{proof}
 
 \newpage
 
@@ -1077,12 +1083,12 @@ $$\Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)$$
 This derivation provides the formal proof of how gradient-based optimisers navigate the landscape and why they stall on flat ridges by computing the analytical partial derivatives of the Log-Marginal Likelihood (LML) with respect to GP covariance kernel hyperparameters $\theta_j$ (such as length-scales $\ell_K, \ell_T$, signal variance $\sigma_f^2$, or noise variance $\sigma_n^2$).
 
 \subsection{The Setup: The Objective Function}
+\begin{proof}
 Let $y \in \mathbb{R}^n$ denote the vector of observed targets (Total Implied Variance) and $X \in \mathbb{R}^{n \times d}$ denote the input matrix. Hence, $p(y \mid X, \theta)$ is the probability of seeing the financial targets $y$, given our input coordinates $X$ and chosen hyperparameters $\theta$. The standard practice is to assume a zero-mean Gaussian Process prior (or residuals after subtracting a parametric mean prior). Thereby, the standard Multivariate Gaussian PDF is:
 
 $$p(y \mid X, \theta) = (2\pi)^{-\frac{n}{2}} \vert{}K_y\vert{}^{-\frac{1}{2}} \exp \left( -\frac{1}{2} y^T K_y^{-1} y \right)$$
 
 where $K_y = K_\theta + \sigma_n^2 I \in \mathbb{R}^{n \times n}$ represents the noisy covariance (Gram) matrix. By taking the natural logarithm, we obtain the Log-Marginal Likelihood objective function $\mathcal{L}(\theta) = \log p(y \mid X, \theta)$ that we explicitly defined in Section \ref{sec:point_estimation_std_approach}.
-
 
 \begin{equation}
 \mathcal{L}(\theta) = \underbrace{-\frac{1}{2} y^T K_y^{-1} y}_{\text{Data Fit Term}} \ - \ \underbrace{\frac{1}{2} \log \vert{}K_y\vert{}}_{\text{Complexity Penalty}} \ - \ \underbrace{\frac{n}{2} \log (2\pi)}_{\text{Normalization Constant}}
@@ -1155,7 +1161,7 @@ Or equivalently, using cyclic permutation. We can express the gradient equation 
 
 $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( \left( \alpha \alpha^T - K_y^{-1} \right) \frac{\partial K_y}{\partial \theta_j} \right)$$
 
-\hfill $\blacksquare$
+\end{proof}
 
 \newpage
 % ------------------------- mathematical proof b.3
@@ -1167,20 +1173,18 @@ $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( 
 This is the mathematical derivation for the analytical derivatives of the Matérn 5/2 kernel. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage), removing any reliance on finite-difference approximations.
 
 \subsection{The GP Linear Operator Property}
-
-Derived from the B.1 proof, we define the predictive mean of a Gaussian Process as:
-
+\begin{proof}
+Derived in the Equation \ref{eq:pred_mean_b1}, we define the predictive mean of a Gaussian Process as:
 
 $$\bar{f}_* = k_*^T (K_{yy})^{-1} y$$
 
 However, now we optimise the multivariate calculus for the algorithm. Hence, we define $k_* = K(X, x_*)$, which is a row vector, as the cross-covariance vector between the training data and a single test coordinate $x_*$, and $y$ is the vector of observed targets. Because the test coordinate $x_*$ only appears inside the kernel function vector $k_*$, we can again define the pre-computed weight vector $\alpha = (K_{yy})^{-1} y$.
 
-Because arbitrage constraints (Section 2.3) are strictly directional. We differentiate with respect to a specific dimension $i$ of the test coordinate $x_{*, i}$ (e.g., Strike $K$ or Maturity $T$):
+Because arbitrage constraints (Section \ref{subsec:static-arbitrage}) are strictly directional. We differentiate with respect to a specific dimension $i$ of the test coordinate $x_{*, i}$ (e.g., Strike $K$ or Maturity $T$):
 
 $$\frac{\partial \bar{f}_*}{\partial x_{*, i}} = \left( \frac{\partial k_*}{\partial x_{*, i}} \right)^T \alpha$$
 
 Similarly, the second derivative (the Hessian diagonal) required for evaluating butterfly convexity becomes:
-
 
 $$\frac{\partial^2 \bar{f}_*}{\partial x_{*, i}^2} = \left( \frac{\partial^2 k_*}{\partial x_{*, i}^2} \right)^T \alpha$$
 
@@ -1209,7 +1213,6 @@ Factoring out $\sigma_f^2 \exp(-\sqrt{5}r)$ and simplifying the polynomial:
 $$\frac{\partial k_{5/2}}{\partial r} = \sigma_f^2 \exp(-\sqrt{5}r) \left[ \sqrt{5} + \frac{10}{3}r - \sqrt{5} - 5r - \frac{5\sqrt{5}}{3}r^2 \right]$$
 
 $$\therefore \frac{\partial k_{5/2}}{\partial r} = -\frac{5}{3} \sigma_f^2 (1 + \sqrt{5}r^2) \exp(-\sqrt{5}r)$$
-
 
 
 \subsubsection{Step B: Differentiate the Distance with Respect to the Coordinate ($x_{*, i}$)}
@@ -1259,16 +1262,17 @@ Substituting the components back into the product rule yields the exact analytic
 
 $$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ -5 \exp(-\sqrt{5}r) D_K^2 + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{1}{\ell_i^2} \right]$$
 
-\hfill $\blacksquare$
+\end{proof}
 
 \newpage
 % ------------------------- mathematical proof b.4
 \section{The Breeden-Litzenberger Density and Static Arbitrage}
 \label{sec:breeden_litz_proof}
+
 In this derivation, we establish the relationship between the price of a European call option and the implied risk-neutral probability density function. Essentially, by isolating the convexity term, we show that the term must remain strictly positive to avoid butterfly arbitrage.
 
 \subsection{The Setup: Risk-Neutral Expected Payoff}
-
+\begin{proof}
 Under the fundamental theorem of asset pricing, the arbitrage-free price of a European call option $C(K, T)$ with strike $K$ and maturity $T$ is the discounted expected value of its payoff under the risk-neutral measure $\mathbb{Q}$.
 
 Assuming a constant continuously compounded risk-free rate $r$, we can express the expectation as an integral over the risk-neutral probability density function (PDF) of the terminal asset price, denoted as $p(S_T)$:
@@ -1302,7 +1306,7 @@ Differentiating the inside with respect to $K$ and simplifying:
 \label{eq:disc_survival_function}
 \end{equation}
 
-This first derivative represents the survival function; negative discounted risk-neutral probability that the option finishes in the money (ITM).
+This first derivative represents the survival function; negative discounted risk-neutral probability that the option finishes in the money (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics})).
 
 \subsection{The Derivation: Second Derivative (The Density)}
 
@@ -1312,7 +1316,6 @@ $$\frac{\partial^2 C}{\partial K^2} = -e^{-rT} \frac{\partial}{\partial K} \int_
 
 By the Fundamental Theorem of Calculus, when we differentiate an integral with respect to its lower bound, the equation simply yields the negative of the integrand evaluated at that bound:
 
-
 \begin{equation}
 \frac{\partial^2 C}{\partial K^2} = -e^{-rT} \left( -p(K) \right) = e^{-rT} p(K)
 \label{eq:initial_b_l_result}
@@ -1320,7 +1323,6 @@ By the Fundamental Theorem of Calculus, when we differentiate an integral with r
 \subsection{The Result: The Butterfly Arbitrage Constraint}
 
 After simplification, we isolate the risk-neutral probability density $p(K)$ to obtain the Breeden-Litzenberger formula:
-
 
 \begin{equation}
 p(K) = e^{rT} \frac{\partial^2 C}{\partial K^2}
@@ -1332,7 +1334,7 @@ $$\frac{\partial^2 C}{\partial K^2} \ge 0$$
 
 Hence, if an interpolated surface exhibits local concavity, it directly implies the existence of a negative risk-neutral probability. This violates static butterfly constraints and makes the surface financially unreliable.
 
-\hfill $\blacksquare$
+\end{proof}
 \newpage
 
 
@@ -1343,7 +1345,7 @@ Hence, if an interpolated surface exhibits local concavity, it directly implies 
 As per the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that actually generates those prices. The Dupire equation shows that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
 
 \subsection{The Setup: The SDE and the FPK Equation}
-
+\begin{proof}
 We assume the underlying asset $S_t$ follows a risk-neutral stochastic differential equation (SDE):
 
 \begin{equation}
@@ -1454,16 +1456,18 @@ Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s
 This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier, asian), and if the second derivative is negative, the local volatility becomes an imaginary number, crashing the pipeline.
 
 
-\hfill $\blacksquare$
+\end{proof}
 
 \newpage
 % ------------------------- mathematical proof b.6
 
 \section{Mercer's Theorem and the RKHS Norm Derivation}
 \label{sec:m_theorem_b6}
+
 In this proof, we will break down a concept from pure Functional Analysis: the Reproducing Kernel Hilbert Space (RKHS) norm, which comes embedded in the \textit{scikit-learn} library. It represents the formal penalty which constrains the Gaussian Process Regression from creating an overly jagged surface. Hence, it is necessary to formally introduce it in this paper. 
 
 \subsection{Definition of the Kernel Operator}
+\begin{proof}
 We begin by defining the kernel operator. Let $\mathcal{X}$ be a compact space and $k: \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ be a continuous, symmetric, positive semi-definite kernel function. Then, define the integral operator $T_k: L^2(\mathcal{X}) \to L^2(\mathcal{X})$ such that:
 
 $$(T_k f)(x) = \int_{\mathcal{X}} k(x, x') f(x') dx'$$
@@ -1535,16 +1539,18 @@ Where, practically, $\sum_{j=1}^{N} (y_j - f(x_j))^2$ is the data error term and
 
 $$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)^2 + \sigma_n^2 \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$\
 
-\hfill $\blacksquare$
+\end{proof}
 
 % ------------------------- mathematical proof b.7
 \newpage
 \section{Fisher Information Matrix (FIM) for a Gaussian Process}
 \label{sec:fim_gp}
+
 Because for most of the option data, the optimiser stumbles across a flat ridge in the LML surface. We need to understand how confident our model is in the hyperparameters it chose. Thus, this proof is foundational to the L-BFGS-B optimisation chapter because it quantifies our uncertainty about our model.
 
 \subsection{The Log-Marginal Likelihood}
-We begin by setting up the objective function $\mathcal{L}(\theta)$ of the Log-Marginal Likelihood we defined in Section \label{sec:point_estimation_std_approach}.
+\begin{proof}
+We begin by setting up the objective function $\mathcal{L}(\theta)$ of the Log-Marginal Likelihood we defined in Section \ref{sec:point_estimation_std_approach}.
 
 $$\mathcal{L}(\theta) = -\frac{1}{2} y^T K^{-1} y - \frac{1}{2} \log \vert{}K\vert{} - \frac{N}{2} \log(2\pi)$$
 
@@ -1561,8 +1567,7 @@ To obtain the Fisher Information Matrix, which is defined as the negative expect
 
 $$-\frac{1}{2} \frac{\partial}{\partial \theta_j} \text{Tr}(K^{-1} K_i) = -\frac{1}{2} \text{Tr}\left( -K^{-1} K_j K^{-1} K_i + K^{-1} K_{ij} \right)$$
 
-Differentiating the Data Term (Quadratic Form):
-
+Differentiating the Data Term:
 
 \begin{equation}
 \frac{1}{2} \frac{\partial}{\partial \theta_j} \left( y^T K^{-1} K_i K^{-1} y \right) = \frac{1}{2} y^T \left( -K^{-1} K_j K^{-1} K_i K^{-1} + K^{-1} K_{ij} K^{-1} - K^{-1} K_i K^{-1} K_j K^{-1} \right) y
@@ -1582,11 +1587,11 @@ $$\mathbb{E}[y^T A y] = \text{Tr}(A K)$$
 
 After applying the trace trick and simplifying, we are left with:
 
-$$-\mathbb{E} [\text{Quadratic Term}] = -\frac{1}{2} \text{Tr}\left( \left( -2 K^{-1} K_j K^{-1} K_i K^{-1} + K^{-1} K_{ij} K^{-1} \right) K \right)$$
+$$-\mathbb{E} [\text{Data Term}] = -\frac{1}{2} \text{Tr}\left( \left( -2 K^{-1} K_j K^{-1} K_i K^{-1} + K^{-1} K_{ij} K^{-1} \right) K \right)$$
 
 As we distribute the coefficient and matrix $K$ across both terms, we can safely cancel out $K^{-1}$ at the end of the brackets with the $K$ from the trace trick:
 
-$$-\mathbb{E} [\text{Quadratic Term}] = \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
+$$-\mathbb{E} [\text{Data Term}] = \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
 
 \subsection{The Result: Fisher Information Matrix}
 After simplifying, we now apply the negative expectation to the trace term. Because the trace contains no $y$ variables, meaning it is entirely deterministic, the expectation does nothing. We just flip the sign:
@@ -1601,7 +1606,7 @@ $$\mathcal{I}_{ij} = \frac{1}{2} \text{Tr} \left( K^{-1} \frac{\partial K}{\part
 
 We have just mathematically proven that the curvature of our optimisation landscape is entirely dependent on how the covariance matrix $K$ reacts to changes in its hyperparameters ($\frac{\partial K}{\partial \theta}$). Because our Matérn kernel is fully differentiable, this FIM is guaranteed to exist and be well-behaved, ensuring that our L-BFGS-B optimiser will reliably converge to the safest possible volatility surface without crashing.
 
-\hfill $\blacksquare$
+\end{proof}
 
 %-------------------------- results section
 \newpage
