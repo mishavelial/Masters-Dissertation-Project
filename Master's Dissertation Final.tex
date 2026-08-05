@@ -938,7 +938,6 @@ The empirical evidence therefore confirms the central hypothesis of this dissert
 % ------------------------------------------------- chapter 8
 \chapter{Conclusion}
 \section{The Pathology of Point Estimation}
-
 This dissertation set out to resolve the structural instability present in non-parametric volatility surface models, specifically addressing the failure of the deterministic point estimation approach to Gaussian Processes during market turmoil. The core mathematical discovery of this research is that Log-Marginal Likelihood (LML) for options is often non-convex, featuring a weakly identifiable hyperparameter space. This directly undermines the standard assumption that a single, optimal set of hyperparameters can be isolated from the market data.
 
 Most importantly, this topological mapping reveals a structural flaw, not in the deterministic L-BFGS-B optimiser, but within the Maximum Likelihood Estimation (MLE) objective it is instructed to solve. The L-BFGS-B algorithm is a highly efficient quasi-Newton method; it mathematically succeeds in finding the exact coordinates that maximise the probability of the observed training data. However, in the context of chaotic financial markets, the idea of absolute optimum is a mathematical trap. The absolute optimum corresponds to shorter length scales, where the LML score is highest because it aggressively memorises in-sample microstructural friction, such as bid-ask spreads and asynchronous tick sizes. Consequently, this achieves a nominally lower OOS RMSE in certain regimes.
@@ -946,17 +945,15 @@ Most importantly, this topological mapping reveals a structural flaw, not in the
 Therefore, by restricting the model to collapse its hyperparameter uncertainty into a single noise-fitting coordinate on a flat ridge, point estimation transforms the Gaussian Process from generalisable, out-of-sample forecasting into a highly brittle, overfitted function. Directly contradicting the fundamental goal of MLE.
 
 \section{The Accuracy-Consistency Trade-off}
-
 The consequence of this overfitting introduces a dangerous paradigm into quantitative trading: the financial illusion of predictive accuracy. A low generalisation error becomes meaningless unless accompanied by strict arbitrage constraints.
 
-The empirical findings of this research highlight the instability of the deterministic point estimation approach under these economic constraints. Across the evaluated historical data, the point estimator achieved a 100\% butterfly arbitrage failure rate. Additionally, during the aggressive momentum expansion of Q1 2024, this instability escalated into an 85.7\% systemic dual-violation rate, simultaneously failing both calendar and butterfly conditions. Thereby supporting the claim that the pursuit of the absolute maximum likelihood mathematically guaranteed negative risk-neutral probabilities.
+The empirical findings of this research highlight the instability of the deterministic point estimation approach under these economic constraints. Across the evaluated historical data, the point estimator achieved a 61.9\% butterfly arbitrage failure rate. Additionally, this instability regularly escalated into systemic dual-violations, failing both calendar and butterfly conditions on 14.3\% of the evaluated dates, with peak failures occurring during the severe market shocks of March 2020 and the summer of 2023. Thereby supporting the claim that the pursuit of the absolute maximum likelihood frequently guaranteed negative risk-neutral probabilities.
 
 Conversely, the Bayesian framework adopts a role of a structural regulariser; the No-U-Turn Sampler (NUTS) integrates across the entire weakly identifiable posterior ridge, generating an ensemble of predictive surfaces. By averaging them, the fatal structural flaw of the point estimator is resolved. Furthermore, by replacing point estimation with Hamiltonian Monte Carlo (HMC) inference, the chaotic microstructural noise cancels itself out due to the marginalisation process of the framework.
 
-Ultimately, this regularisation exposes an accuracy-consistency trade-off between out-of-sample error and financial validity. This compromise is especially noticeable during the highly liquid, low-volatility regimes such as September 2022. The Bayesian model accepts a small penalty in generalisation error compared to the deterministic optimiser. However, this marginal reduction in accuracy is the mandatory price for an economically admissible surface, which guarantees the eradication of structural arbitrage.
+Ultimately, this regularisation exposes an accuracy-consistency trade-off between out-of-sample error and financial validity. This compromise is especially noticeable during steady or low-volatility regimes such as October 2022 and June 2023. The Bayesian model accepts a small penalty in generalisation error compared to the deterministic optimiser. However, this marginal reduction in accuracy is the mandatory price for an economically admissible surface, which guarantees the eradication of structural arbitrage.
 
 \section{Computational Limitations and Future Work}
-
 While the Bayesian Hamiltonian Monte Carlo framework decisively outperforms the deterministic point estimation approach in preserving economic admissibility, its deployment and upkeep during live trading sessions are heavily constrained by computational complexity. Although the time complexity of both algorithms is $\mathcal{O}(N^3)$, the fundamental mathematical bottleneck is the computationally expensive Cholesky decomposition of the covariance matrix. The paramount difference between them comes from the constant factor, which represents the number of times the algorithms have to execute this expensive $\mathcal{O}(N^3)$ decomposition. Based on the hyperparameter configurations used in this study, evaluating the full posterior via Hamiltonian Monte Carlo requires roughly 1,000 times more computational overhead than deterministic point estimation.
 
 It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing, risk management, and portfolio margin calculations. In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
@@ -1058,13 +1055,15 @@ To find the distribution of our target predictive variable $f_*$ conditioned on 
 
 $$f_* \mid y \sim \mathcal{N}\left(K_{*y}K_{yy}^{-1}y, \ S \right)$$
 
-Substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$): \TODO{How trivial does the derivation need to be? Do I have to the intermediate steps fro this substitution or no?}
+Substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$):
 
 \subsubsection{Predictive Mean:}
 $$\bar{f}_* = K(X_*, X) [K(X, X) + \alpha I]^{-1} y$$
 
 \subsubsection{Predictive Covariance:}
 $$\Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)$$
+
+\hfill $\blacksquare$
 
 \newpage
 
@@ -1103,8 +1102,6 @@ From Equation \ref{eq:derivative_inverse_matrix}, we multiply the left by $K_y^{
 
 $$\frac{\partial K_y^{-1}}{\partial \theta_j} = -K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1}$$
 
-
-
 \subsubsection{Identity 2: Jacobi's Formula for the Log-Determinant}
 Jacobi’s formula states that for any differentiable matrix $K_y$, its derivative $\frac{\partial}{\partial \theta_j} \vert{}K_y\vert{}$ is equal to $ \vert{}K_y\vert{}\text{Tr}\left( K_y^{-1} \frac{\partial K_y}{\partial \theta_j} \right)$. Specifically, when we apply the chain rule to the logarithm of the determinant, we obtain the steps \ref{eq:jacobi} through simplification.
 
@@ -1123,19 +1120,13 @@ Since $y$ does not depend on $\theta_j$, we pass the partial derivative operator
 
 $$\frac{\partial}{\partial \theta_j} \left( -\frac{1}{2} y^T K_y^{-1} y \right) = -\frac{1}{2} y^T \left( \frac{\partial K_y^{-1}}{\partial \theta_j} \right) y$$
 
-
-
 Substituting Identity \ref{eq:derivative_inverse_matrix} into the equation:
 
 $$-\frac{1}{2} y^T \left( -K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1} \right) y = \frac{1}{2} y^T K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1} y$$
 
-
-
 To simplify the term into a quadratic form, we define the predictive weights vector $\alpha = K_y^{-1} y \in \mathbb{R}^n$:
 
 $$\frac{\partial}{\partial \theta_j} \left( -\frac{1}{2} y^T K_y^{-1} y \right) = \frac{1}{2} \alpha^T \frac{\partial K_y}{\partial \theta_j} \alpha$$
-
-
 
 \subsubsection{Step B: Differentiating the Complexity Penalty Term}
 
@@ -1143,21 +1134,15 @@ Using Identity 2 directly:
 
 $$\frac{\partial}{\partial \theta_j} \left( \frac{1}{2} \log \vert{}K_y\vert{} \right) = \frac{1}{2} \text{Tr}\left( K_y^{-1} \frac{\partial K_y}{\partial \theta_j} \right)$$
 
-
-
 \subsubsection{Step C: Differentiating the Constant}
 
 Since $\frac{n}{2} \log(2\pi)$ is independent of $\theta_j$, this term is equal to $0$:
 
 $$\frac{\partial}{\partial \theta_j} \left( \frac{n}{2} \log (2\pi) \right) = 0$$
 
-
-
 \subsection{The Result: The Gradient Equation}
 
 Combining Step A, Step B, and Step C, we obtain the exact gradient of the Log-Marginal Likelihood with respect to hyperparameter $\theta_j$:
-
-
 
 \begin{equation}
 \frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} y^T K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1} y - \frac{1}{2} \text{Tr}\left( K_y^{-1} \frac{\partial K_y}{\partial \theta_j} \right)
@@ -1167,6 +1152,8 @@ Combining Step A, Step B, and Step C, we obtain the exact gradient of the Log-Ma
 Or equivalently, using cyclic permutation. We can express the gradient equation using the parameter vector $\alpha = K_y^{-1} y$:
 
 $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( \left( \alpha \alpha^T - K_y^{-1} \right) \frac{\partial K_y}{\partial \theta_j} \right)$$
+
+\hfill $\blacksquare$
 
 \newpage
 % ------------------------- mathematical proof b.3
@@ -1270,6 +1257,8 @@ Substituting the components back into the product rule yields the exact analytic
 
 $$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left[ -5 \exp(-\sqrt{5}r) D_K^2 + (1 + \sqrt{5}r) \exp(-\sqrt{5}r) \frac{1}{\ell_i^2} \right]$$
 
+\hfill $\blacksquare$
+
 \newpage
 % ------------------------- mathematical proof b.4
 \section{The Breeden-Litzenberger Density and Static Arbitrage}
@@ -1340,6 +1329,8 @@ Following Kolmogorov's foundational axioms of probability theory, a probability 
 $$\frac{\partial^2 C}{\partial K^2} \ge 0$$
 
 Hence, if an interpolated surface exhibits local concavity, it directly implies the existence of a negative risk-neutral probability. This violates static butterfly constraints and makes the surface financially unreliable.
+
+\hfill $\blacksquare$
 \newpage
 
 
@@ -1459,6 +1450,10 @@ Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s
 \end{equation}
 
 This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier, asian), and if the second derivative is negative, the local volatility becomes an imaginary number, crashing the pipeline.
+
+
+\hfill $\blacksquare$
+
 \newpage
 % ------------------------- mathematical proof b.6
 
@@ -1536,7 +1531,9 @@ $$J(f) = \sum_{j=1}^{N} (y_j - f(x_j))^2 + \sigma_n^2 \vert{}\vert{}f\vert{}\ver
 
 Where, practically, $\sum_{j=1}^{N} (y_j - f(x_j))^2$ is the data error term and $\sigma_n^2 \vert{}\vert{}f\vert{}\vert{}_{\mathcal{H}_k}^2$ is the RKHS norm penalty. Finally, by substituting the derived norm into the objective functional $J(f)$, we obtain the final result:
 
-$$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)^2 + \sigma_n^2 \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$
+$$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)^2 + \sigma_n^2 \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$\
+
+\hfill $\blacksquare$
 
 % ------------------------- mathematical proof b.7
 \newpage
@@ -1602,6 +1599,9 @@ $$\mathcal{I}_{ij} = \frac{1}{2} \text{Tr} \left( K^{-1} \frac{\partial K}{\part
 
 We have just mathematically proven that the curvature of our optimisation landscape is entirely dependent on how the covariance matrix $K$ reacts to changes in its hyperparameters ($\frac{\partial K}{\partial \theta}$). Because our Matérn kernel is fully differentiable, this FIM is guaranteed to exist and be well-behaved, ensuring that our L-BFGS-B optimiser will reliably converge to the safest possible volatility surface without crashing.
 
+\hfill $\blacksquare$
+
+%-------------------------- results section
 \newpage
 \chapter{Comprehensive Empirical Results}
 
