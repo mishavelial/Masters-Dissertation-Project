@@ -189,7 +189,7 @@ These definitions bridge the gap between absolute option prices and the standard
     \label{fig:iv_surface_example}
 \end{figure}
     
-    \item[Log-Moneyness ($k$):] A normalised metric defined as $k = \log(K/F_0)$ used to gauge risk independent of the underlying asset's price dynamics.
+    \item[Log-Moneyness ($k$):] A normalised metric defined as $k = \log(K/F_0)$ used to gauge risk independent of the underlying asset's price dynamics, where $F_0$ denotes the asset’s forward price at time zero
     \item[Forward Price ($F_0$):] The agreed-upon price of the underlying asset for future delivery at time zero, used to calculate log-moneyness.
     \item[Total Variance ($w$):] A transformation of the implied volatility to total variance space using the equation $w(k, T) = \sigma_{imp}^2(k, T)T$. First, it is easier to calculate arbitrage violations in total variance space because variance should be non-decreasing across strikes and maturities. In addition, $\sigma^2T$ is much easier to implement into SDE's than $\sigma \sqrt{T}$.
     \item[Volatility Skew / Smile:] The structural, non-linear shape of the volatility surface across strikes, often exhibiting extreme downside asymmetry in equity markets like the SPX. Can often be referred to as a skewed convex parabola for simplicity.
@@ -243,9 +243,9 @@ The problem considered in this dissertation is the failure of the deterministic 
 \end{quote}
 In this dissertation, we adopt the central hypothesis that flat ridges in the log-marginal likelihood topology cause deterministic optimisers to fail, and that replacing point estimation with a full posterior distribution over hyperparameters will improve out-of-sample prediction accuracy with only a minimal and acceptable trade-off in localised butterfly and calendar arbitrage violations. 
 
-Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like Knudsen, N. et al. (2024) and Titsias, M. (n.d.) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
+Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like (\citet{titsias_nd}) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
 
-Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. Cousin \& Gueye (2021) and Chataigner et al. (2021) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (See Dictionary) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce. This research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
+Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (See Dictionary) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce. This research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
 
 To summarise, the novel contribution of this work lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. 
 
@@ -257,21 +257,24 @@ The dissertation is organised into eight chapters. Chapter 2 introduces the fina
 \chapter{Financial Foundations and Constraints}
 
 \section{The Implied Volatility Surface}
-Before discussing the financial constraints, we should introduce the object to which they will apply: the implied volatility surface. The surface is a three-dimensional graph that maps the volatility of option contracts across several maturities and strikes for a single asset. Specifically, a function mapping of an option’s strike $K$ and time to maturity $T$ can be defined as $(K, T) \mapsto \sigma_{\mathrm{imp}}(K,T)$ across available strikes and maturities. The annualised volatility figure is derived from the inverted Black-Scholes-Merton formula to standardise absolute option prices. This standardisation enables comparison of an option across different strikes and maturities.
+Before discussing the financial constraints, we should introduce the object to which they will apply: the implied volatility surface. The surface is a three-dimensional graph that maps the volatility of option contracts across several maturities and strikes (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) for a single asset. Specifically, a function mapping of an option’s strike $K$ and time to maturity $T$ can be defined as $(K, T) \mapsto \sigma_{\mathrm{imp}}(K,T)$ across available strikes and maturities. The annualised volatility figure is derived from the inverted Black-Scholes-Merton formula (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) to standardise absolute option prices. This standardisation enables comparison of an option across different strikes and maturities.
 
-Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk.
+Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. This is because longer maturity dates of an option inherently carry larger variance, meaning that the price of an asset has more time to rise above the strike, which carries additional risk for the writer of the option.
 
-This expected risk is difficult to evaluate by only looking at absolute metrics such as spot and options prices (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}). Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$, where $F_0$ denotes the asset’s forward price at time zero. By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
+This expected risk is difficult to evaluate by only looking at absolute metrics such as spot (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) and option prices. Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$ (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}). By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
 
 \paragraph{The Role of SPX Options.}
-For practical purposes, the underlying asset for this empirical evaluation is the S\&P 500 Index (SPX), which tracks the performance of the largest U.S. Fortune 500 companies. The SPX derivatives serve as the primary benchmark for global equity derivative markets. This is due to a couple of reasons: the SPX being exceptionally liquid across many strikes and maturities, possessing a European-style contract type without the option of early exercise, and abundant documentation. Additionally, the SPX surface possesses a highly pronounced structural downside skew. This extreme asymmetry makes SPX options a highly interesting testing ground for evaluating Bayesian hyperparameter inference and surface modelling.
+For practical purposes, the underlying asset for this empirical evaluation is the S\&P 500 Index (SPX), which tracks the performance of the largest U.S. Fortune 500 companies. The SPX derivatives serve as the primary benchmark for global equity derivative markets. This is due to a couple of reasons: the SPX being exceptionally liquid across many strikes and maturities, possessing a European-style contract type (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) and abundant documentation. Additionally, the SPX surface possesses a highly pronounced structural downside skew. This extreme asymmetry makes SPX options a highly interesting testing ground for evaluating Bayesian hyperparameter inference and surface modelling.
 
 \section{Static Arbitrage Constraints}
 \label{subsec:static-arbitrage}
-Before introducing the Gaussian Process model, we must specify the constraints that will ensure the implied volatility surface is not only mathematically, but also financially and legally sound. The two static arbitrage constraints that are of most importance for this purpose are the \emph{calendar arbitrage} and the \emph{butterfly arbitrage}. These constraints allow for the surface to have a valid risk-neutral probability density function. In turn, this makes it financially impossible if it implies the existence of a portfolio with a non-negative payoff and a negative cost. Hence, a mathematically smooth and stable interpolant is not sufficient; it must also be economically admissible.
+Before introducing the Gaussian Process model, we must specify the constraints that will ensure the implied volatility surface is not only mathematically, but also financially and legally sound. The two static arbitrage constraints that are of most importance for this purpose are the \emph{calendar arbitrage} and the \emph{butterfly arbitrage} (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). These constraints allow for the surface to have a valid risk-neutral probability density function. In turn, this makes it financially impossible if it implies the existence of a portfolio with a non-negative payoff and a negative cost. Hence, a mathematically smooth and stable interpolant is not sufficient; it must also be economically admissible.
 
-\paragraph{Risk-neutral pricing framework.}
-Another important topic of discussion that formalises the aforementioned is a framework central to asset pricing: the risk-neutral principle. Strictly, if $X_T$ is a payoff at maturity $T$, then its time-$0$ value is
+Another important topic of discussion that formalises the aforementioned is a framework central to asset pricing: the risk-neutral principle (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). Intuitively, we use the risk-neutral measure $\mathbb{Q}$ in derivatives pricing as an equivalent probability measure to the physical measure $\mathbb{P}$, defined by the Radon-Nikodym derivative $\frac{d\mathbb{Q}}{d\mathbb{P}}$. It reweights the real-world probability distribution by shifting the expected asset return to the risk-free rate $r$. This parameter transformation absorbs investor risk aversion into the probability density itself, allowing us to compute no-arbitrage derivative prices as simple discounted expectations $\mathbb{E}^{\mathbb{Q}}[e^{-rT} X_T]$. We 
+
+\begin{proposition}[Arbitrage-free call price under risk-neutral measure $\mathbb{Q}$]
+
+Strictly, if $X_T$ is a payoff at maturity $T$, then its time-$0$ value is
 
 \[X_0 = e^{-rT}\mathbb{E}^{\mathbb{Q}}[X_T],\]
 
@@ -283,7 +286,8 @@ so its arbitrage-free price is
 
 \[C(K,T) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(S_T - K)^+].\]
 
-This pricing identity is the starting point for both static-arbitrage conditions: calendar arbitrage is linked to the option price rising over time, while butterfly arbitrage is linked to the payoff profile having a non-negative probability density. 
+This pricing identity is the starting point for both static-arbitrage conditions: calendar arbitrage is linked to the option price rising over time, while butterfly arbitrage is linked to the payoff profile having a non-negative probability density.
+\end{proposition}
 
 However, these conditions are difficult to implement through pure implied volatility (\(\sigma _{BS}\)), which makes static arbitrage constraints highly non-linear and mathematically intractable. A paper on SVI Surfaces (\citet{gatheral2014arbitrage}) pioneered the idea of shifting to total variance space \(w(k, \tau)\), which linearises the no-arbitrage conditions, making them far easier to enforce mathematically. The relationship of implied volatility to total variance is straightforward:
 
@@ -349,29 +353,6 @@ where
 \paragraph{Numerical implementation.}
 The numerical implementation of the butterfly arbitrage mirrors the mathematical definition. We use the Breeden-Litzenberger condition, where the risk-neutral probability equals the second partial derivative with respect to strike $\partial^2 C/\partial K^2\geq 0$. This is done by implementing the central finite-difference approximation of option prices across a grid to detect negative probabilities, which would then be counted as a butterfly arbitrage. 
 
-
-\TODO{Remove the section below as I will put it in the appendix}
-\paragraph{Derivation.}
-The derivation comes from the proven Breeden--Litzenberger result \citep{breeden1978prices}. Starting from the risk-neutral pricing formula for a European call, which can be written in the expanded form of the Expected Value $\E$.
-\[ C(K,T) = e^{-rT}\mathbb{E}^{\mathbb{Q}}[(S_T-K)^+] = e^{-rT}\int_K^\infty (s-K)f_{S_T}(s)\,ds.\]
-Differentiating once with respect to strike leaves us with the discounted survival function up to a discount factor under $\Q$
-
-\[-\frac{\partial C}{\partial K}(K,T)= e^{-rT}\int_K^\infty f_{S_T}(s)\,ds, \]
-Differentiating the function again yields the Breeden--Litzenberger result \citep{breeden1978prices}:
-
-
-\[\frac{\partial^2 C}{\partial K^2}(K,T) = e^{-rT}f_{S_T}(K),\]
-
-so that
-
-\[f_{S_T}(K) = e^{rT}\frac{\partial^2 C}{\partial K^2}.\]
-
-Because a density must be non-negative, the call price must satisfy
-
-\[\frac{\partial^2 C}{\partial K^2}(K,T) \geq 0.\]
-
-This is the continuous convexity condition underlying butterfly arbitrage. A violation means that the implied density is negative somewhere, which is not financially admissible.
-
 \section{The Parametric Prior}
 In Bayesian nonparametric machine learning models like Gaussian Processes, setting a mean function lets us include financial knowledge before seeing any data. Rather than making the Gaussian Process learn the overall shape of the implied volatility surface from nothing, we use a parametric prior.
 We define the prior distribution as:
@@ -381,7 +362,7 @@ w(K,T) = T\left(|a| + |b|(\log K)^2 + c \log K\right).
 \label{parametric_prior}
 \end{equation}
 
-The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation \citep{gatheral2014arbitrage}. By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
+The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation (\citet{gatheral2014arbitrage}). By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
 
 Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and crash the pricing engine. By incorporating |a| and |b|, a differentiable barrier is created where the optimiser can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
 
@@ -400,7 +381,7 @@ In standard machine learning literature, the mean function $m(\mathbf{x})$ is of
 
 \[m(\mathbf{x}) = T(|a| + |b|k^2 + c k)\]
 
-By substituting this SVI-inspired formulation into the GP mean function, the global structural constraints and theoretical asymptotic tail bounds are embedded directly in the prior distribution. Consequently, the learning burden shifts: the GP is no longer required to infer the macroeconomic shape of the smile from raw data. Instead, it is solely tasked with modelling the residuals. The residuals represent the localised, non-parametric deviations of the observed market data from the parametric mean. These residuals are governed by the covariance kernel, $k(\mathbf{x}, \mathbf{x}') = \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))]$. Essentially, this is the covariance between the process values at $\mathbf{x}$ and $\mathbf{x'}$, and $k(\mathbf{x}, \mathbf{x'})$ measures how these residuals vary together. The kernel describes how points on the volatility surface are related. It controls how smooth the surface is and how quickly the effect of one data point fades as you move across strike and term.
+By substituting this SVI-inspired formulation into the GP mean function, the global structural constraints and theoretical asymptotic tail bounds are embedded directly in the prior distribution. Consequently, the learning burden shifts: the GP is no longer required to infer the macroeconomic shape of the smile from raw data. Instead, it is solely tasked with modelling the residuals. The residuals represent the localised, non-parametric deviations of the observed market data from the parametric mean. These residuals are governed by the covariance kernel, $k(\mathbf{x}, \mathbf{x}') = \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))]$. Essentially, this is the covariance between the process values at $\mathbf{x}$ and $\mathbf{x'}$, and $k(\mathbf{x}, \mathbf{x'})$ measures how these residuals vary together. The kernel describes how points on the volatility surface are related. It controls how smooth the surface is and how quickly the effect of one data point fades as we move across strike and term.
 
 To formalise the regression model, assume a dataset of $n$ noisy total variance observations $\mathbf{y} = \{y_1, \dots, y_n\}^{\top}$ evaluated at input locations $X = \{\mathbf{x}_1, \dots, \mathbf{x}_n\}$. The observation model is given by:
 
@@ -978,7 +959,6 @@ The logical progression for future quantitative research is to bridge this compu
 \appendix
 
 \chapter{Pipeline Architecture}
-\TODO{Should I inlude all of the code?}
 \begin{itemize}[leftmargin=2em]
     \item \texttt{01\_ingest\_spx.py}: data ingestion,
     \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
@@ -1167,9 +1147,12 @@ $$\frac{\partial}{\partial \theta_j} \left( \frac{n}{2} \log (2\pi) \right) = 0$
 
 Combining Step A, Step B, and Step C, we obtain the exact gradient of the Log-Marginal Likelihood with respect to hyperparameter $\theta_j$:
 
-$$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} y^T K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1} y - \frac{1}{2} \text{Tr}\left( K_y^{-1} \frac{\partial K_y}{\partial \theta_j} \right)$$
 
 
+\begin{equation}
+\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} y^T K_y^{-1} \frac{\partial K_y}{\partial \theta_j} K_y^{-1} y - \frac{1}{2} \text{Tr}\left( K_y^{-1} \frac{\partial K_y}{\partial \theta_j} \right)
+\label{eq:gradient_equation}
+\end{equation}
 
 Or equivalently, using cyclic permutation. We can express the gradient equation using the parameter vector $\alpha = K_y^{-1} y$:
 
@@ -1545,73 +1528,165 @@ Where, practically, $\sum_{j=1}^{N} (y_j - f(x_j))^2$ is the data error term and
 $$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)^2 + \sigma_n^2 \sum_{i=1}^{\infty} \frac{c_i^2}{\lambda_i}$$
 
 % ------------------------- mathematical proof b.7
+\newpage
+\section{Fisher Information Matrix (FIM) for a Gaussian Process}
+Because for most of the option data, the optimiser stumbles across a flat ridge in the LML surface. We need to understand how confident our model is in the hyperparameters it chose. Thus, this proof is foundational to the L-BFGS-B optimisation chapter because it quantifies our uncertainty about our model.
 
-\TODO{i have more in my notebook, but they just need to be written out}
+\subsection{The Log-Marginal Likelihood}
+We begin by setting up the objective function $\mathcal{L}(\theta)$ of the Log-Marginal Likelihood we defined in Section ~3.3.
 
+$$\mathcal{L}(\theta) = -\frac{1}{2} y^T K^{-1} y - \frac{1}{2} \log \vert{}K\vert{} - \frac{N}{2} \log(2\pi)$$
+
+\subsection{The Score Function}
+To find how the likelihood changes when we change a single hyperparameter (like a lengthscale $\theta_i$), we take the first partial derivative to obtain the score function, which we derived in Equation \ref{eq:gradient_equation}. 
+
+$$\frac{\partial \mathcal{L}}{\partial \theta_i} = \frac{1}{2} y^T K^{-1} \frac{\partial K}{\partial \theta_i} K^{-1} y - \frac{1}{2} \text{Tr}\left( K^{-1} \frac{\partial K}{\partial \theta_i} \right)$$
+
+Intuitively, the first term of the score function measures how changing the kernel affects the data fit, and the second term (the trace) measures how changing the kernel affects the RKHS norm.
+
+\subsection{The Second Derivative (The Hessian)}
+
+To obtain the Fisher Information Matrix, which is defined as the negative expected value of the second derivative (the Hessian matrix). Hence, we differentiate the score function, this time with respect to a second hyperparameter $\theta_j$. For simplicity, let $K_i = \frac{\partial K}{\partial \theta_i}$ and $K_j = \frac{\partial K}{\partial \theta_j}$ to save space. We apply the product rule and obtain:
+
+$$-\frac{1}{2} \frac{\partial}{\partial \theta_j} \text{Tr}(K^{-1} K_i) = -\frac{1}{2} \text{Tr}\left( -K^{-1} K_j K^{-1} K_i + K^{-1} K_{ij} \right)$$
+
+Differentiating the Data Term (Quadratic Form):
+
+
+\begin{equation}
+\frac{1}{2} \frac{\partial}{\partial \theta_j} \left( y^T K^{-1} K_i K^{-1} y \right) = \frac{1}{2} y^T \left( -K^{-1} K_j K^{-1} K_i K^{-1} + K^{-1} K_{ij} K^{-1} - K^{-1} K_i K^{-1} K_j K^{-1} \right) y
+\label{eq:quadratic_form_fim}
+\end{equation}
+
+
+\subsection{The Expectation}
+We define the Fisher Information Matrix $\mathcal{I}_{ij}$ as the negative Expectation over all possible market observations $y$:
+
+$$\mathcal{I}_{ij} = -\mathbb{E}_y \left[ \frac{\partial^2 \mathcal{L}}{\partial \theta_i \partial \theta_j} \right]$$
+
+In order to evaluate the expectation of the massive quadratic form from Equation \ref{eq:quadratic_form_fim}. We use a trace trick from linear algebra. For any matrix $A$, the expectation of a quadratic form is $\mathbb{E}[y^T A y] = \text{Tr}(A \cdot \mathbb{E}[yy^T])$.
+Because $\mathbb{E}[yy^T]$ is simply the covariance matrix $K$, the rule simplifies to:
+
+$$\mathbb{E}[y^T A y] = \text{Tr}(A K)$$
+
+After applying the trace trick and simplifying, we are left with:
+
+$$-\mathbb{E} [\text{Quadratic Term}] = -\frac{1}{2} \text{Tr}\left( \left( -2 K^{-1} K_j K^{-1} K_i K^{-1} + K^{-1} K_{ij} K^{-1} \right) K \right)$$
+
+As we distribute the coefficient and matrix $K$ across both terms, we can safely cancel out $K^{-1}$ at the end of the brackets with the $K$ from the trace trick:
+
+$$-\mathbb{E} [\text{Quadratic Term}] = \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
+
+\subsection{The Result: Fisher Information Matrix}
+After simplifying, we now apply the negative expectation to the trace term. Because the trace contains no $y$ variables, meaning it is entirely deterministic, the expectation does nothing. We just flip the sign:
+
+$$-\mathbb{E} [\text{Trace Term}] = -\frac{1}{2} \text{Tr}(K^{-1} K_j K^{-1} K_i) + \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
+
+Finally, we collect the terms and cancel out the second cross-derivatives ($\frac{1}{2} \text{Tr}(K^{-1} K_{ij})$) to obtain the Fisher Information matrix element $\mathcal{I}_{ij}$:
+
+$$\mathcal{I}_{ij} = \left[ \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text{Tr}(K^{-1} K_{ij}) \right] + \left[ -\frac{1}{2} \text{Tr}(K^{-1} K_j K^{-1} K_i) + \frac{1}{2} \text{Tr}(K^{-1} K_{ij}) \right]$$
+
+$$\mathcal{I}_{ij} = \frac{1}{2} \text{Tr} \left( K^{-1} \frac{\partial K}{\partial \theta_i} K^{-1} \frac{\partial K}{\partial \theta_j} \right)$$
+
+We have just mathematically proven that the curvature of our optimisation landscape is entirely dependent on how the covariance matrix $K$ reacts to changes in its hyperparameters ($\frac{\partial K}{\partial \theta}$). Because our Matérn kernel is fully differentiable, this FIM is guaranteed to exist and be well-behaved, ensuring that our L-BFGS-B optimiser will reliably converge to the safest possible volatility surface without crashing.
+
+\newpage
 \chapter{Comprehensive Empirical Results}
 
-This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes. The dataset excludes dates corrupted by API ingestion failures. \TODO{although I will probably include them as they are valuable for further work}
+This appendix contains the aggregated out-of-sample Root Mean Square Error (RMSE) and discrete arbitrage violation counts for the evaluated market regimes.
 
 \begin{table}[htbp]
-    \centering
-    \small
-    \begin{tabular}{llccc}
-        \toprule
-        \textbf{Date} & \textbf{Method} & \textbf{OOS RMSE (IV)} & \textbf{Calendar Viol.} & \textbf{Butterfly Viol.} \\
-        \midrule
-        \multirow{2}{*}{2020-03-03} & Point-Estimated & 0.001667 & 76 & 20 \\
-                                    & Bayesian HMC    & 0.001122 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2020-03-17} & Point-Estimated & 0.001339 & 0  & 42 \\
-                                    & Bayesian HMC    & 0.001152 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2020-03-19} & Point-Estimated & 0.001123 & 0  & 22 \\
-                                    & Bayesian HMC    & 0.001172 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2020-03-23} & Point-Estimated & 0.001595 & 6  & 37 \\
-                                    & Bayesian HMC    & 0.001771 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2020-03-25} & Point-Estimated & 0.001581 & 0  & 33 \\
-                                    & Bayesian HMC    & 0.001891 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2022-09-16} & Point-Estimated & 0.002148 & 12 & 31 \\
-                                    & Bayesian HMC    & 0.002294 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2022-09-21} & Point-Estimated & 0.000877 & 0  & 66 \\
-                                    & Bayesian HMC    & 0.001154 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2022-09-26} & Point-Estimated & 0.000986 & 0  & 19 \\
-                                    & Bayesian HMC    & 0.002430 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2022-09-30} & Point-Estimated & 0.000773 & 0  & 26 \\
-                                    & Bayesian HMC    & 0.002074 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2023-06-07} & Point-Estimated & 0.001302 & 0  & 20 \\
-                                    & Bayesian HMC    & 0.001838 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2023-06-13} & Point-Estimated & 0.001275 & 0  & 18 \\
-                                    & Bayesian HMC    & 0.001683 & 0  & 0  \\
-        \midrule
-        \multirow{2}{*}{2024-01-24} & Point-Estimated & 0.125982 & 55 & 127 \\
-                                    & Bayesian HMC    & 0.038026 & 0  & 14 \\
-        \midrule
-        \multirow{2}{*}{2024-01-30} & Point-Estimated & 0.127834 & 10 & 116 \\
-                                    & Bayesian HMC    & 0.032215 & 0  & 21 \\
-        \midrule
-        \multirow{2}{*}{2024-02-09} & Point-Estimated & 0.186187 & 8  & 91 \\
-                                    & Bayesian HMC    & 0.069158 & 0  & 49 \\
-        \midrule
-        \multirow{2}{*}{2024-02-15} & Point-Estimated & 0.069451 & 35 & 81 \\
-                                    & Bayesian HMC    & 0.032105 & 0  & 23 \\
-        \bottomrule
-    \end{tabular}
-    \vspace{0.2cm}
-    \caption{Aggregate empirical metrics comparing the Point-Estimated GP against the Bayesian HMC GP. Note the catastrophic arbitrage violations present in the deterministic approach.}
-    \label{tab:master_results}
+\centering
+\small
+\begin{tabular}{llrrr}
+\toprule
+\textbf{Date} & \textbf{Method} & \textbf{OOS RMSE (IV)} & \textbf{Calendar Viol.} & \textbf{Butterfly Viol.} \\
+\midrule
+2020-03-03 & Point-Estimated GP & 0.051027 & 0 & 8 \\
+ & Bayesian HMC GP & 0.049461 & 2 & 0 \\
+\addlinespace
+2020-03-13 & Point-Estimated GP & 0.185960 & 0 & 76 \\
+ & Bayesian HMC GP & 0.196378 & 61 & 120 \\
+\addlinespace
+2020-03-17 & Point-Estimated GP & 0.080205 & 0 & 40 \\
+ & Bayesian HMC GP & 0.016883 & 1 & 40 \\
+\addlinespace
+2020-03-19 & Point-Estimated GP & 0.012353 & 223 & 127 \\
+ & Bayesian HMC GP & 0.012313 & 0 & 3 \\
+\addlinespace
+2020-03-23 & Point-Estimated GP & 0.049056 & 0 & 0 \\
+ & Bayesian HMC GP & 0.006548 & 0 & 0 \\
+\addlinespace
+2020-03-25 & Point-Estimated GP & 0.103873 & 0 & 0 \\
+ & Bayesian HMC GP & 0.026473 & 2 & 0 \\
+\addlinespace
+2022-09-16 & Point-Estimated GP & 0.046913 & 0 & 0 \\
+ & Bayesian HMC GP & 0.033894 & 0 & 0 \\
+\addlinespace
+2022-09-21 & Point-Estimated GP & 0.001326 & 0 & 0 \\
+ & Bayesian HMC GP & 0.001325 & 0 & 0 \\
+\addlinespace
+2022-09-26 & Point-Estimated GP & 0.008800 & 0 & 0 \\
+ & Bayesian HMC GP & 0.000634 & 0 & 0 \\
+\addlinespace
+2022-09-30 & Point-Estimated GP & 0.015139 & 0 & 0 \\
+ & Bayesian HMC GP & 0.005035 & 0 & 0 \\
+\addlinespace
+2022-10-05 & Point-Estimated GP & 0.002564 & 0 & 101 \\
+ & Bayesian HMC GP & 0.003268 & 0 & 7 \\
+\addlinespace
+2023-06-07 & Point-Estimated GP & 0.001656 & 0 & 80 \\
+ & Bayesian HMC GP & 0.001124 & 0 & 2 \\
+\addlinespace
+2023-06-13 & Point-Estimated GP & 0.022153 & 0 & 77 \\
+ & Bayesian HMC GP & 0.026897 & 0 & 0 \\
+\addlinespace
+2023-06-21 & Point-Estimated GP & 0.009759 & 450 & 114 \\
+ & Bayesian HMC GP & 0.006889 & 45 & 0 \\
+\addlinespace
+2023-06-26 & Point-Estimated GP & 0.004627 & 0 & 52 \\
+ & Bayesian HMC GP & 0.000787 & 1 & 0 \\
+\addlinespace
+2023-06-30 & Point-Estimated GP & 0.042433 & 0 & 1 \\
+ & Bayesian HMC GP & 0.045967 & 0 & 0 \\
+\addlinespace
+2024-01-18 & Point-Estimated GP & 0.068329 & 0 & 0 \\
+ & Bayesian HMC GP & 0.007522 & 0 & 0 \\
+\addlinespace
+2024-01-24 & Point-Estimated GP & 0.000330 & 0 & 2 \\
+ & Bayesian HMC GP & 0.000305 & 0 & 0 \\
+\addlinespace
+2024-01-30 & Point-Estimated GP & 0.000446 & 0 & 2 \\
+ & Bayesian HMC GP & 0.000446 & 0 & 2 \\
+\addlinespace
+2024-02-09 & Point-Estimated GP & 0.050451 & 0 & 0 \\
+ & Bayesian HMC GP & 0.048410 & 0 & 0 \\
+\addlinespace
+2024-02-15 & Point-Estimated GP & 0.000925 & 0 & 17 \\
+ & Bayesian HMC GP & 0.000914 & 0 & 6 \\
+\bottomrule
+\end{tabular}
+\caption{Master Comparison of Out-of-Sample RMSE and Arbitrage Violations: Point-Estimated GP vs. Bayesian HMC GP.}
+\label{tab:master_comparison_all_dates}
 \end{table}
 
 % ------------------------------------------------- bib
 \begin{thebibliography}{99}
+
+\bibitem[Chataigner et al.(2021)]{chataigner2021beyond}
+Chataigner, M., Cousin, A., Cr\'epey, S., Dixon, M., \& Gueye, D. (2021).
+Beyond Surrogate Modeling: Learning the Local Volatility Via Shape Constraints.
+\textit{SIAM Journal on Financial Mathematics}, 12(3), SC58--SC69.
+
+\bibitem[Cousin \& Gueye(2021)]{cousin2021gp}
+Cousin, A., \& Gueye, D. (2021).
+Kriging For Implied Volatility Surface.
+\textit{HAL Working Papers}, hal-03274026.
+
+\bibitem[Titsias(2009)]{titsias_nd}
+Titsias, M. (2009).
+Variational Learning of Inducing Variables in Sparse Gaussian Processes.
+\textit{Proceedings of the Twelfth International Conference on Artificial Intelligence and Statistics (AISTATS)}, PMLR 5:567--574.
 
 \bibitem[Breeden and Litzenberger(1978)]{breeden1978prices}
 Breeden, D. T., and Litzenberger, R. H. (1978).
