@@ -125,7 +125,7 @@ Many financial quantitative risk valuation methods rely on accurate interpolatio
 
 As a solution to the instability of the LML topology, this dissertation introduces a fully Bayesian framework utilising the Hamiltonian Monte Carlo (HMC) No-U-Turn Sampler (NUTS) to integrate over hyperparameter uncertainty rather than optimising for a single coordinate. The primary innovation of this research lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. This approach fundamentally prevents the emergence of economic arbitrage violations without the necessity to artificially restrict the surface.
 
-The empirical evaluations in S\&P 500 index options across diverse macroeconomic regimes demonstrate that the deterministic optimiser suffers a 61.9\% butterfly arbitrage failure rate on evaluated dates, frequently collapsing into systemic dual-violations. In contrast, the Bayesian HMC sampler acts as a structural regulariser. By marginalising over hyperparameter uncertainty, the framework drastically reduces, and often eradicates, these localised arbitrage violations. While this introduces a microscopic penalty to the out-of-sample generalisation error in low-volatility regimes, it proves to be a mandatory and mathematically acceptable trade-off to guarantee an economically admissible, arbitrage-free volatility surface.
+The empirical evaluations in S\&P 500 index options across diverse macroeconomic regimes demonstrate that the deterministic optimiser suffers a 61.9\% butterfly arbitrage failure rate on evaluated dates, frequently collapsing into systemic dual-violations. In contrast, the Bayesian HMC sampler acts as a structural regulariser. Essentially marginalising over hyperparameter uncertainty, the framework drastically reduces, and often eradicates, these localised arbitrage violations. As a trade-off, we have to accept a microscopic penalty to the out-of-sample generalisation error in low-volatility regimes. This proves to be a mandatory and mathematically acceptable trade-off to guarantee an economically admissible, arbitrage-free volatility surface. 
 
 
 \chapter*{Declaration}
@@ -134,7 +134,9 @@ I declare that this dissertation is my own work and that it has not been submitt
 
 \chapter*{Acknowledgements}
 \addcontentsline{toc}{chapter}{Acknowledgements}
-I would like to thank my supervisor for their invaluable guidance, patience, and expertise throughout the development of this research. I also extend my gratitude to the School of Mathematics and Statistics for providing the academic foundation necessary to complete this project, and to my family and friends for their unwavering support.
+I would like to thank my supervisor for his guidance and the experience he has provided during the development of this research.
+Additionally, I would like to extend my gratitude to my family and friends for their unconditional support throughout this period.
+Lastly, I would like to acknowledge the use of Grammarly to proofread this dissertation for spelling, grammar, and punctuation.
 
 \newpage
 \tableofcontents
@@ -160,7 +162,7 @@ These terms define the fundamental building blocks of the derivative contracts m
     \item[Option Contract:] A financial derivative that gives the buyer the right, but not the obligation, to buy or sell an underlying asset at a specific price on or before a certain date.
     \item[European-style Option:] An option contract that can only be exercised at the expiration date.
     \item[American Option:] In contrast to the European Option, an American option contract allows the holder to exercise their right at any time prior to expiration.
-    \item[Call Option:] A contract whose payoff is tied to the right to buy the underlying asset, defined mathematically at maturity as $(S_T - K)^+ = \max(S_T - K, 0)$. Intuitively, an investor might buy a call to speculate if he thinks the price of the asset will go up; if that happens, he will be able to purchase the asset at the Strike Price $K$.
+    \item[Call Option:] A contract whose payoff is tied to the right to buy the underlying asset, defined mathematically at maturity as $(S_T - K)^+ = \max(S_T - K, 0)$. Intuitively, an investor might buy a call to speculate if they anticipate asset appreciation; if that happens, they will be able to purchase the asset at the Strike Price $K$.
     \item[Strike Price ($K$):] The predetermined, fixed price at which the option contract can be executed.
     \item[Spot Price ($S_0$):] Current or initial market price.
     \item[Maturity / Time to Maturity ($T$):] The annualised time remaining until the option contract expires.
@@ -206,16 +208,19 @@ These definitions bridge the gap between absolute option prices and the standard
 These concepts define the strict financial and mathematical boundaries that the model must respect to remain valid.
 
 \begin{description}
-    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate, this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales.
-    \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. Example: if we invest 100\$ at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
-    \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Intuitively, this means that there is a free lunch hidden in the option quotes.
+    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate; this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales.
+    \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. For example, an initial investment of \$100 at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
+    \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Financially, this implies a self-financing portfolio with a strictly positive probability of a riskless profit.
     \item[Calendar Spread:] An option strategy involving two contracts with the same strike price but different maturities.
      \item[Butterfly Spread:] A neutral options strategy involving three staggered strike prices ($K_1 < K_2 < K_3$). Typically, a trader buys one lower strike option at $K_1$, sells two middle strike options at $K_2$, and buys one higher strike option at $K_3$. In the context of volatility surfaces, pricing a butterfly spread below zero indicates a negative risk-neutral probability, signifying an arbitrage violation.
     \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one. Essentially, an arbitrage opportunity occurs when a longer-dated option is priced lower than the shorter-dated. This violates the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
-    \item[Butterfly Spread:] A strategy involving three options with staggered strikes (buying a low and high strike $K_1$, selling two middle strikes). $$K_3 > K_2 > K_1$$. \TODO{Needs revision.}
+    \item[Butterfly Arbitrage:] A strategy involving three options with staggered strikes (buying a low and high strike $K_1$, selling two middle strikes). $$K_3 > K_2 > K_1$$. \TODO{Needs revision.}
     \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem that connects local concavity of a financial surface to butterfly arbitrage violations. 
      ($\frac{\partial^2 C}{\partial K^2}$).
      \item[Constrained Kriging:] A spatial interpolation method in Gaussian Process regression where hard constraints (such as monotonicity or convexity) are explicitly enforced on the predictive posterior to satisfy financial arbitrage conditions, often at the expense of computational efficiency or model flexibility.
+     \item[Backwardation:] A market regime characterized by an inverted term structure. In the context of implied volatility surfaces, backwardation occurs when near-term expected volatility is strictly greater than long-term expected volatility, usually signaling acute, immediate macroeconomic distress.
+     \item[Call Skew:] An asymmetric structural deformation in the volatility smile where out-of-the-money (OTM) call options command higher implied volatilities than equidistant OTM put options. This typically emerges during aggressive, high-momentum market expansions.
+     \item[Exotic Options (Asian / Barrier):] A broad class of derivative contracts possessing payoffs that are strictly path-dependent, contrasting with standard European options whose payoffs are determined solely by the terminal asset state $S_T$.
 \end{description}
 
 \newpage
@@ -228,7 +233,7 @@ This chapter introduces the motivation and outlines the scope of research that t
 \section{Context and Motivation}
 Accurate modelling of the implied volatility surface is central to modern quantitative finance. Volatility surfaces are required for pricing, hedging, calibration, and risk management, particularly in index option markets such as SPX. At the same time, Bayesian nonparametric methods, and Gaussian Processes in particular, offer a flexible framework for modelling nonlinear structure with uncertainty quantification.
 
-This dissertation is motivated by the need for a reliable implied-volatility surface for pricing and risk management. As financial data is naturally messy, Gaussian Process regression is a flexible yet reliable solution that has the potential to interpolate this sparse and noisy volatility data smoothly. However, the practical performance of the regression is heavily dependent on the estimation of unstable kernel hyperparameters. This paper studies whether the Bayesian approach to those hyperparameters gives a more reliable surface.
+This dissertation is motivated by the need for a reliable implied-volatility surface for pricing and risk management. Because financial data inherently contains microstructural noise, Gaussian Process regression is a flexible yet reliable solution that has the potential to interpolate this sparse and noisy volatility data smoothly. However, the practical performance of the regression is heavily dependent on the estimation of unstable kernel hyperparameters. This paper studies whether the Bayesian approach to those hyperparameters gives a more reliable surface.
 
 \section{Problem Statement}
 
@@ -248,7 +253,7 @@ In this dissertation, we adopt the central hypothesis that flat ridges in the lo
 
 Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like (\citet{titsias_nd}) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
 
-Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory})) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce, this research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
+Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce, this research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
 
 To summarise, the novel contribution of this work lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. 
 
@@ -296,7 +301,7 @@ However, these conditions are difficult to implement through pure implied volati
 
 \[w(k,T) = \sigma_{\mathrm{imp}}^2(k,T)\,T\]
 
-where $k = \log(K/S_0)$ is log-moneyness. We prefer the total variance space for two reasons. Firstly, it removes the trivial $\sqrt{T}$ scaling present in implied volatility, thereby making IV surfaces across different maturities comparable on a uniform scale. The trivial proof will not be discussed here. Secondly, the calendar arbitrage conditions can be naturally expressed as monotonicity conditions on $w(k,T)$, while butterfly arbitrage conditions can be checked after converting the fitted surface back into call prices.
+where $k = \log(K/S_0)$ is log-moneyness. We prefer the total variance space for two reasons. Firstly, it removes the trivial $\sqrt{T}$ scaling present in implied volatility, thereby making IV surfaces across different maturities comparable on a uniform scale. The proof is trivial and omitted for brevity. Secondly, the calendar arbitrage conditions can be naturally expressed as monotonicity conditions on $w(k,T)$, while butterfly arbitrage conditions can be checked after converting the fitted surface back into call prices.
 
 In other words, the total variance space serves as a smooth framework that allows us to conveniently assert the financial constraints, which we will discuss further.
 
@@ -304,7 +309,7 @@ In other words, the total variance space serves as a smooth framework that allow
 \subsection{Calendar Arbitrage}
 \label{subsubsec:calendar-arbitrage}
 
-As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month contract overpriced, which in turn could be shorted, and the far-month contract underpriced. It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity \(T\).\citep{gatheral2006volatility}
+As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month $T_1$ contract overpriced, which in turn could be shorted, and the far-month $T_2$ contract underpriced ($T_1 < T_2$). It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity \(T\).\citep{gatheral2006volatility}
 
 \paragraph{Link to total variance.}
 In total variance terms, the calendar arbitrage constraint becomes a monotonicity condition in maturity:
@@ -365,7 +370,7 @@ w(K,T) = T\left(|a| + |b|(\log K)^2 + c \log K\right).
 
 The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation (\citet{gatheral2014arbitrage}). By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
 
-Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and crash the pricing engine. By incorporating |a| and |b|, a differentiable barrier is created where the optimiser can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
+Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and rendering the pricing algorithm mathematically undefined. By incorporating |a| and |b|, a differentiable barrier is created where the optimiser can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
 
 Finally, this setup also works well with the tail behaviour suggested by the moment-based constraints model. In other words, deep OTM options encode the tails of the risk-neutral distribution; their prices must remain consistent with that distribution. The prior is not just smoothing the data, but it also encodes a theoretically allowed tail growth rate for the implied variance, based on which moments of the underlying asset are finite. The far OTM smile should match the asymptotic limits set by Roger Lee’s moment formula bounds \citep{lee2004moment}. Even though there is little real-option data far out of the money, this structured prior keeps the extrapolated total variance within economic bounds and follows the theoretical maximum growth rates of the volatility smile at extreme strikes.
 
@@ -377,7 +382,7 @@ We can formally define the Gaussian Process (GP) as a collection of random varia
 
 \[f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}'))\]
 
-The mean function, defined as $m(\mathbf{x}) = \mathbb{E}[f(\mathbf{x})]$, gives the GP the global topology of the function space. More casually, it represents the prior belief or an assumption about the distribution of an unknown function. It is set to dictate the overall smoothness, behaviour and interpolation of the unknown function. 
+The mean function, defined as $m(\mathbf{x}) = \mathbb{E}[f(\mathbf{x})]$, gives the GP the global topology of the function space. Conceptually, it encodes the prior distribution or an assumption about the distribution of an unknown function. It is set to dictate the overall smoothness, behaviour and interpolation of the unknown function. 
 In standard machine learning literature, the mean function $m(\mathbf{x})$ is often set to zero for algebraic convenience; however, a financial surface is inherently structurally asymmetrical. This asymmetry can be observed in features such as the persistent equity skew. Hence, the mean function needs careful tuning in order to safely extrapolate quotes in the sparsely populated deep out-of-the-money tails. To address this, the framework explicitly defines $m(\mathbf{x})$ using the parametric prior formulated in Equation \ref{parametric_prior}:
 
 \[m(\mathbf{x}) = T(|a| + |b|k^2 + c k)\]
@@ -426,7 +431,7 @@ where $\sigma_f^2$ represents the signal variance, controlling the vertical ampl
 
 The Matérn class of covariance functions is characterised by its versatility and smoothness parameter $\nu$, which allows for explicit control of the underlying random field. This is especially useful for Implied Volatility surfaces, as they require a twice-differentiable kernel to extract arbitrage-free risk-neutral probabilities from the surface. As established in standard Gaussian Process literature (\citet{rasmussen2006gp}), the sample paths of a GP with a Matérn kernel are $m$ times mean-square differentiable if and only if $\nu > m$. Consequently, setting $\nu = 5/2$ guarantees that the resulting latent function space is exactly twice mean-square differentiable ($\mathcal{C}^2$). The continuous calculus required to prove the kernel supports static arbitrage bounds is provided in Appendix \ref{sec:derivatives_matern_kernel)}. 
 
-This exact $\mathcal{C}^2$ regularity is almost a requirement when modelling implied volatility surfaces. The popular Squared Exponential (or Gaussian) kernel, which is the case when $\nu$ approaches infinity, gives sample paths that are infinitely smooth and analytic. However, this level of smoothness does not match real financial markets, since it over-smooths local volatility spikes and misses the small-scale frictions seen in options trading. The surface becomes silky-smooth, which is great for extrapolating for far OTM options, but pricing in between quotes is too restrictive. On the other hand, if $\nu = 3/2$ or $\nu = 1/2$, the resulting functions are only once differentiable or not differentiable at all, as in the Ornstein-Uhlenbeck process.
+This exact $\mathcal{C}^2$ regularity is almost a requirement when modelling implied volatility surfaces. The popular Squared Exponential (or Gaussian) kernel, which is the case when $\nu$ approaches infinity, gives sample paths that are infinitely smooth and analytic. However, this level of smoothness does not match real financial markets, since it over-smooths local volatility spikes and misses the small-scale frictions seen in options trading. The resultant surface is highly analytic, which facilitates stable extrapolation for far OTM options, but pricing in between quotes is too restrictive. On the other hand, if $\nu = 3/2$ or $\nu = 1/2$, the resulting functions are only once differentiable or not differentiable at all, as in the Ornstein-Uhlenbeck process.
 
 As mentioned before, the reason for exactly twice-differentiable sample paths is linked to the extraction of the market-implied risk-neutral density. As derived from the Breeden-Litzenberger theorem (\citet{breeden1978prices}), the risk-neutral probability density $p(K,T)$ is strictly proportional to the second partial derivative of the call price with respect to the strike:
 
@@ -483,9 +488,9 @@ $$\kappa(\mathcal{H}) = \frac{|\lambda_{max}|}{|\lambda_{min}|} \to \infty$$
 
 The divergence breaks the algorithm's mechanics in two ways. 
 
-First, in the search direction update $p_k = -\mathcal{H}^{-1} \nabla \mathcal{L}$ (the complete analytical derivation of this LML gradient is provided in Appendix \ref{sec:lml_gradients}), the inverse eigenvalue $1/\lambda_{min} \to \infty$ artificially amplifies infinitesimal numerical noise in the gradient along the ridge direction. The optimiser overreacts to very small numerical errors in the direction of the plateau. To satisfy the Wolfe conditions and prevent the step size from exploding, the line search algorithm compensates by heavily truncating the step length $\alpha_k$, even though the actual signal is basically flat. The algorithm ends up making tiny moves or getting stuck and thinks it has converged.
+First, in the search direction update $p_k = -\mathcal{H}^{-1} \nabla \mathcal{L}$ (the complete analytical derivation of this LML gradient is provided in Appendix \ref{sec:lml_gradients}), the inverse eigenvalue $1/\lambda_{min} \to \infty$ artificially amplifies infinitesimal numerical noise in the gradient along the ridge direction. The optimiser becomes hypersensitive to infinitesimal numerical perturbations in the direction of the plateau. To satisfy the Wolfe conditions and prevent the step size from exploding, the line search algorithm compensates by heavily truncating the step length $\alpha_k$, even though the actual signal is basically flat. The algorithm prematurely truncates its step size and converges on a suboptimal local coordinate.
 
-Second, the standard L-BFGS-B termination uses a stopping rule; the criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$ On a flat ridge, the algorithm thinks it has converged because the gradient is below that threshold. In reality, the surface is nearly flat along that direction. As the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$), the optimiser mistakenly interprets this flat gradient as evidence of a true stationary point. It prematurely terminates the line search, declaring convergence at a suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge and actually looking for a better one. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initialisations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
+Second, the standard L-BFGS-B termination uses a stopping rule; the criterion triggers when the maximum component of the projected gradient falls below a predefined tolerance $\epsilon$:$$\max_i |(\text{proj} \nabla \mathcal{L}(\theta_k))_i| < \epsilon$$ On a flat ridge, the algorithm falsely registers convergence because the gradient is below that threshold. In reality, the surface is nearly flat along that direction. As the directional derivative vanishes ($\nabla \mathcal{L}(\theta) \cdot v_{ridge} \approx 0$), the optimiser mistakenly interprets this flat gradient as evidence of a true stationary point. It prematurely terminates the line search, declaring convergence at a suboptimal coordinate $\hat{\theta}_{local}$ rather than traversing the ridge to locate the global optimum. As will be empirically demonstrated in Chapter 4, this structural pathology causes point-estimated models to become highly sensitive to random initialisations, trapping them in local optima and yielding unpredictable, financially unstable volatility surfaces.
 
 % ------------------------------------------------- chapter 4
 \chapter{The Pathology of Weak Identifiability}
@@ -501,7 +506,7 @@ To empirically assess why the quasi-Newton optimiser fails due to weak identifia
     \label{fig:topology-2026-06-12}
 \end{figure}
 
-The resulting contour in the Figure \ref{fig:topology-2026-06-12} shows a pronounced lack of convexity. This gets even worse in higher stress regimes, like during the 2020 COVID pandemic. The unique feature of these regimes is the absence of a unimodal peak; the LML topography is dominated by an elongated plateau at the shorter length scale $\ell_K$ across the hyperparameter space.
+The resulting contour in the Figure \ref{fig:topology-2026-06-12} shows a pronounced lack of convexity. This pathology is exacerbated during high-stress market regimes, like during the 2020 COVID pandemic. The unique feature of these regimes is the absence of a unimodal peak; the LML topography is dominated by an elongated plateau at the shorter length scale $\ell_K$ across the hyperparameter space.
 
 A key consideration is the behaviour of the LML function at the lower bounds of the parameter space. A naive interpretation might suggest that the optimal choice of hyperparameters occurs at the strike length scale $\ell_K \to 0$. However, a near-zero length-scale implies that the correlation between two neighbouring points tends to zero, and extrapolation vanishes entirely. This constitutes extreme overfitting, in which the model simply memorises microstructural noise, thereby losing its ability to generalise. 
 
@@ -541,7 +546,7 @@ The advantage of this shift can be observed through forecasting. The standard po
 
 $$p(\mathbf{f}_* \mid X_*, X, \mathbf{y}) = \int p(\mathbf{f}_* \mid X_*, X, \mathbf{y}, \theta) p(\theta \mid \mathbf{y}, X) d\theta$$
 
-In practical terms, this integral represents a continuous ensemble of Gaussian Processes. Rather than just picking one of them, which can lead to unstable extrapolation if the optimiser lands on a bad spot. The Bayesian integral avoids this by hedging across all plausible explanations of the data. More specifically, the integral averages the predictive surfaces over all possible hyperparameter combinations, weighting them by their posterior probabilities. This approach handles cases where the data weakly identify whether a local market movement is driven by a short strike length scale ($\ell_K$) or elevated signal variance ($\sigma_f^2$); the Bayesian predictive surface hedges between these competing scenarios. This structural averaging naturally avoids extreme localised extrapolations. Consequently, lowering the out-of-sample pricing error.
+In practical terms, this integral represents a continuous ensemble of Gaussian Processes. Rather than just picking one of them, which can lead to unstable extrapolation if the optimiser initialises in a suboptimal region of the parameter space. The Bayesian integral avoids this by hedging across all plausible explanations of the data. More specifically, the integral averages the predictive surfaces over all possible hyperparameter combinations, weighting them by their posterior probabilities. This approach handles cases where the data weakly identify whether a local market movement is driven by a short strike length scale ($\ell_K$) or elevated signal variance ($\sigma_f^2$); the Bayesian predictive surface hedges between these competing scenarios. This structural averaging naturally avoids extreme localised extrapolations. Consequently, lowering the out-of-sample pricing error.
 
 It is important to note that computing the exact Bayesian predictive distribution is practically impossible for a Gaussian Process regression. The primary reason for that is the denominator in the \eqref{eq:bayesian_theorem}, which lacks a closed-form analytical solution due to the highly nonlinear relationship between the hyperparameters and the inverted Matérn covariance matrix. As a consequence, this integral cannot be computed directly. Instead, we must approximate it using stochastic numerical methods. Hence, justifying the transition of analytical calculus to Markov Chain Monte Carlo (MCMC) simulation.
 
@@ -570,7 +575,7 @@ A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC
 
 \subsection{Phase Space and the Hamiltonian}
 
-Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$. This approach allows us to treat the hyperparameters as a point moving in the mathematical space. Essentially, we are artificially expanding the space so the sampling method can behave more like a physical system. Intuitively, we are applying a concept that serves as a computational helper, because we do not want the momentum variable to alter the target posterior over the original parameters. We explicitly define the joint distribution of the target variables and the auxiliary momentum as statistically independent: $p(q, p) = p(q)p(p)$. Where the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
+Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$. This approach allows us to treat the hyperparameters as a point moving in the mathematical space. Essentially, the parameter space is augmented to simulate Hamiltonian dynamics. Intuitively, we introduce an auxiliary momentum variable because we do not want the momentum variable to alter the target posterior over the original parameters. \TODO{FIX} We explicitly define the joint distribution of the target variables and the auxiliary momentum as statistically independent: $p(q, p) = p(q)p(p)$. Where the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
 
 $$p(q, p) = \frac{1}{Z} \exp(-H(q, p))$$
 
@@ -592,11 +597,11 @@ $$\frac{dq_i}{dt} = \frac{\partial H}{\partial p_i} = [M^{-1} p]_i$$
 
 $$\frac{dp_i}{dt} = -\frac{\partial H}{\partial q_i} = -\frac{\partial U}{\partial q_i}$$
 
-In practical terms, the first equation says that the position changes at a rate determined by the momentum. Hence, if momentum is larger in some direction, the parameter moves faster in that direction. While the other equation describes how the momentum changes according to the negative slope of the potential energy landscape. So, as the negative log-posterior increases, the particle drifts in some direction; the negative gradient pushes the particle back towards more probable regions, allowing it to rapidly traverse the flat ridges rather than wandering blindly through phase space.
+Mathematically, the first equation dictates that the position changes at a rate determined by the momentum. Hence, if momentum is larger in some direction, the parameter moves faster in that direction. While the other equation describes how the momentum changes according to the negative slope of the potential energy landscape. So, as the negative log-posterior increases, the particle drifts in some direction; the negative gradient pushes the particle back towards more probable regions, allowing it to rapidly traverse the flat ridges, mitigating the diffusive random-walk behavior characteristic of standard MCMC.
 
 \subsection{Theoretical Guarantees: Conservation, Volume, and Reversibility}
 
-In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov chain, the continuous-time evolution must satisfy three strict conditions: energy conservation, volume preservation, and time reversibility. In other words, for the HMC to efficiently explore the surface's geometry, it must obey the three laws so it doesn't change the posterior distribution it samples from.
+In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov chain, the continuous-time evolution must satisfy three strict conditions: energy conservation, volume preservation, and time reversibility. In other words, for the HMC to efficiently explore the surface's geometry, it must obey the three laws to ensure it does not perturb the target posterior distribution it samples from.
 
 \begin{enumerate}
 	\item \textbf{Energy Conservation}
@@ -764,15 +769,15 @@ To ensure that the observed reduction in predictive error is attributable to the
 
 \begin{itemize}
     \item \textbf{High Volatility Shock (March 2020):} 
-    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. Because this month's volatility surface is heavily backwardated and chaotic, it is the perfect environment to test the HMC sampler in difficult conditions. \textit{Selected dates: 3, 13, 17, 19, 23, and 25 March 2020.}
+    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. This month's volatility surface exhibits severe backwardation (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) and microstructural friction, providing a rigorous test environment for the HMC sampler under difficult conditions. \textit{Selected dates: 3, 13, 17, 19, 23, and 25 March 2020.}
     
-    \item \textbf{Grinding Bear \& Rate Shock (September -- October 2022):} During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 16, 21, 26, 30 September and 5 of October 2022.}
+    \item \textbf{Sustained Bear Market \& Rate Shock (September -- October 2022):} During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 16, 21, 26, 30 September and 5 of October 2022.}
     
     \item \textbf{Steady, Low-Vol Bull (Summer 2023):} 
     The summer of 2023 serves as the baseline regime with low volatility and a standard volatility smile. This tests whether the GP model correctly relies on the parametric prior without overfitting the microstructural noise. \textit{Selected dates: 7, 13, 21, 26, 30 of June 2023.}
     
     \item \textbf{High Momentum Expansion (January -- February 2024):} 
-    Driven by aggressive, continuous market rallies. This regime specifically tests the pipeline's ability to map right-tail asymmetry and the pronounced call skew that emerges during rapid expansions. \textit{Selected dates: 18, 24, 30 January and 9, 15 February 2024.}
+    Driven by aggressive, continuous market rallies. This regime specifically tests the pipeline's ability to map right-tail asymmetry and the pronounced call skew (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) that emerges during rapid expansions. \textit{Selected dates: 18, 24, 30 January and 9, 15 February 2024.}
 \end{itemize}
 
 \section{Evaluation Metrics}
@@ -851,7 +856,7 @@ Figure \ref{fig:posterior_2020_03_03} illustrates the posterior distributions fo
 
 Unlike the deterministic optimiser, which prematurely terminates upon encountering flat gradients, the empirical posterior demonstrates that the HMC sampler successfully navigated and mapped the weakly identifiable space. As Figure \ref{fig:posterior_2020_03_03} illustrates, the strike length-scale ($\ell_K$) forms a continuous, unimodal distribution with a slight rightward skew, indicating that the sampler efficiently identified and mixed within a region of high probability mass. Simultaneously, the maturity length-scale ($\ell_T$) exhibits a pronounced skew, systematically exploring a continuous range of plausible values while concentrating mass toward the upper region of its domain. The reason for the hard cut-off of the maturity length-scale ($\ell_T$) is overgeneralisation, which creates a very rigid surface. This continuous exploration is a direct physical manifestation of the Hamiltonian dynamics interacting with the flat ridge topology mapped in Section \ref{sec:map_lml_topology}. By utilizing auxiliary momentum, the simulated particle effectively traverses the phase space even when the gradient of the potential energy approaches zero ($\nabla U(q) \approx 0$). Consequently, the sampler maps the entire spectrum of hyperparameter uncertainty instead of stalling, providing a strong foundation for the structural averaging of the predictive surface.
 
-While a deterministic optimiser prematurely terminates upon encountering these flat gradients, causing the restart instability documented in Section \ref{sec:restart_instability}, the HMC algorithm successfully maps the entire ridge. Furthermore, the empirical data reveal that the location of this ridge is highly non-stationary across market regimes. During the 2020 COVID shock, the market was very chaotic and exhibited high microstructural noise as the bid-ask spreads widened. The HMC naturally favored a longer strike length-scale ($[1.1, 1.8]$) as can be seen from Figure \ref{fig:posterior_2020_03_03} because a longer $\ell_K$ enforces strict structural regularisation. The model recognised that the data was unreliable, so it aggressively smoothed over the chaos to prevent the surface from breaking. 
+While a deterministic optimiser prematurely terminates upon encountering these flat gradients, causing the restart instability documented in Section \ref{sec:restart_instability}, the HMC algorithm successfully maps the entire ridge. Furthermore, the empirical data reveal that the location of this ridge is highly non-stationary across market regimes. During the 2020 COVID shock, the market was very chaotic and exhibited high microstructural noise as the bid-ask spreads widened. The HMC naturally favored a longer strike length-scale ($[1.1, 1.8]$), as can be seen from Figure \ref{fig:posterior_2020_03_03}, because a longer $\ell_K$ enforces strict structural regularisation. The algorithm compensated for the degraded signal-to-noise ratio by enforcing strict structural regularisation, thereby maintaining an arbitrage-free surface.
 
 \begin{figure}[htbp]
 \centering
@@ -862,7 +867,7 @@ While a deterministic optimiser prematurely terminates upon encountering these f
 
 In comparison, the early 2024 regime was in high momentum expansion. During aggressive, continuous market rallies, option markets develop very sharp, pronounced structural skews (particularly on the call side as traders chase the rally). The HMC shifted to a lower length-scale ($[1.0, 1.15]$) as can be seen in Figure \ref{fig:posterior_2024-02-15} because the data had a cleaner, stronger signal, and the true economic shape of the surface was much steeper. A shorter length-scale allows the model to be more flexible and detailed. 
 
-By using structural averaging, the model can weed out extreme behaviours of specific length scales. In other words, it effectively hedges between the mathematical extremes of a weakly identifiable region. This prevents the kernel from memorising microstructural noise or making the surface too rigid.
+By using structural averaging, the framework mitigates the influence of parameter extremal  behaviours of specific length scales. In other words, it effectively hedges between the mathematical extremes of a weakly identifiable region. This prevents the kernel from memorising microstructural noise or making the surface too rigid.
 
 \section{Financial Consistency and the Arbitrage Trade-off}
 \label{sec:consistency_tradeoff}
@@ -877,7 +882,7 @@ The empirical results, aggregated in Appendix C, reveal the mostly consistent st
 \label{fig:surface_2024-01-24}
 \end{figure}
 
-As the algorithm tries to overfit the noisy data, it creates infinitesimal "kinks" in the predictive surface. This is especially pronounced in Figure \ref{fig:surface_2024-01-24}. When inverted to call prices, these kinks violate the strict convexity condition ($\partial^2 C / \partial K^2 \ge 0$) required by the Breeden-Litzenberger theorem, resulting in negative risk-neutral probabilities.
+Consequently, overfitting the microstructural noise induces high-frequency non-convexities across the predictive surface. This is especially pronounced in Figure \ref{fig:surface_2024-01-24}. When inverted to call prices, these kinks violate the strict convexity condition ($\partial^2 C / \partial K^2 \ge 0$) required by the Breeden-Litzenberger theorem, resulting in negative risk-neutral probabilities.
 
 An analysis of the 21 unique historical trading days reveals that the Point-Estimated GP generated butterfly arbitrage violations on $\mathbf{61.9\%}$ of the evaluated dates. More critically, the model regularly suffered from simultaneous, systemic collapses of both static arbitrage conditions:
 
@@ -903,7 +908,7 @@ Dual-Violation Days & 14.3\% (3/21) & \textbf{9.5\% (2/21)} \\
 
 Table \ref{tab:arbitrage_summary} illustrates that during rapid regime shifts and volatile environments, the point estimator shortens the length scales and memorises the entire surface, nominally beating the HMC GP on certain days, but trading financial validity for accuracy. The mechanics of this dangerous accuracy-consistency trade-off will be explicitly examined in the following section.
 
-The Bayesian HMC framework changes the perspective on the problem entirely, instead of finding the “best” single hyperparameter. The NUTS sampler integrates across the full posterior distribution, while exploring the entire weakly identifiable ridge surrounding the LML optimum. This process acts as an automated, structural regulariser. As the algorithm averages the predictive surfaces generated by varying length-scales, the random, chaotic microstructural noise cancels itself out. What survives the expectation integral is the true, macroeconomic shape of the volatility skew.
+The Bayesian HMC framework changes the perspective on the problem entirely, instead of finding the “best” single hyperparameter. The NUTS sampler integrates across the full posterior distribution, while exploring the entire weakly identifiable ridge surrounding the LML optimum. This process acts as an automated, structural regulariser. As the algorithm averages the predictive surfaces generated by varying length-scales, the random, chaotic microstructural noise cancels itself out. The resultant marginalised expectation isolates the macroeconomic volatility skew and unveils its true macroeconomic landscape.
 
 To summarise, the Bayesian HMC framework demonstrated strong financial validity and overall robustness with respect to structural regularisation. During the severe out-of-distribution coordinate expansion of June 2023, while the model could not completely overcome the extreme structural contradictions present in the raw breakout quotes, it drastically reduced absolute violations (e.g., dropping calendar violations from 450 down to 37, and completely eradicating butterfly violations from 113 down to 0 on 21 June).
 
@@ -935,7 +940,7 @@ To explicitly outline this behaviour of the deterministic point estimator, we wi
 
 As detailed in Table \ref{tab:accuracy_consistency_tradeoff}, on 13 June 2023, the Point-Estimated GP achieved an RMSE of just $0.022153$. However, it achieved this low score at the expense of the surface's financial stability, resulting in \textbf{77 butterfly arbitrage violations}. Similarly, on 5 October 2022, the deterministic model outperformed the Bayesian approach by $0.00054$ in RMSE. But it had to compromise on financial arbitrage, generating 101 butterfly violations.
 
-This smoothing effect explains the HMC results on 13 June 2023. By refusing to overfit the local microstructural noise, the Bayesian surface slightly "detuned" itself from the exact coordinates of the test set, resulting in a microscopic increase in generalisation error (RMSE of $0.024853$). However, this marginal RMSE penalty ($\approx 0.0027$) was the mathematical price required to completely iron out the jagged kinks, dropping the butterfly violations from 77 down to exactly 0.
+This smoothing effect explains the HMC results on 13 June 2023. By refusing to overfit the local microstructural noise, the Bayesian surface slightly "detuned" itself from the exact coordinates of the test set, resulting in a microscopic increase in generalisation error (RMSE of $0.024853$). However, this marginal RMSE penalty ($\approx 0.0027$) was the mathematical price required to eliminate the localised structural anomalies, dropping the butterfly violations from 77 down to exactly 0.
 
 The empirical evidence therefore confirms the central hypothesis of this dissertation. Evaluating non-parametric volatility models only on OOS RMSE creates a financial illusion of superiority. By replacing point estimation with Bayesian hyperparameter inference, we impose a mandatory regularisation mechanism that explicitly prioritises risk-neutral probability constraints over the memorisation of market friction.
 
@@ -944,7 +949,7 @@ The empirical evidence therefore confirms the central hypothesis of this dissert
 \section{The Pathology of Point Estimation}
 This dissertation set out to resolve the structural instability present in non-parametric volatility surface models, specifically addressing the failure of the deterministic point estimation approach to Gaussian Processes during market turmoil. The core mathematical discovery of this research is that Log-Marginal Likelihood (LML) for options is often non-convex, featuring a weakly identifiable hyperparameter space. This directly undermines the standard assumption that a single, optimal set of hyperparameters can be isolated from the market data.
 
-Most importantly, this topological mapping reveals a structural flaw, not in the deterministic L-BFGS-B optimiser, but within the Maximum Likelihood Estimation (MLE) objective it is instructed to solve. The L-BFGS-B algorithm is a highly efficient quasi-Newton method; it mathematically succeeds in finding the exact coordinates that maximise the probability of the observed training data. However, in the context of chaotic financial markets, the idea of absolute optimum is a mathematical trap. The absolute optimum corresponds to shorter length scales, where the LML score is highest because it aggressively memorises in-sample microstructural friction, such as bid-ask spreads and asynchronous tick sizes. Consequently, this achieves a nominally lower OOS RMSE in certain regimes.
+Most importantly, this topological mapping reveals a structural flaw, not in the deterministic L-BFGS-B optimiser, but within the Maximum Likelihood Estimation (MLE) objective it is instructed to solve. The L-BFGS-B algorithm is a highly efficient quasi-Newton method; it mathematically succeeds in finding the exact coordinates that maximise the probability of the observed training data. However, in the context of chaotic financial markets, the pursuit of an absolute optimum yields a spurious objective. The absolute optimum corresponds to shorter length scales, where the LML score is highest because it aggressively memorises in-sample microstructural friction, such as bid-ask spreads and asynchronous tick sizes. Consequently, this achieves a nominally lower OOS RMSE in certain regimes.
 
 Therefore, by restricting the model to collapse its hyperparameter uncertainty into a single noise-fitting coordinate on a flat ridge, point estimation transforms the Gaussian Process from generalisable, out-of-sample forecasting into a highly brittle, overfitted function. Directly contradicting the fundamental goal of MLE.
 
@@ -1353,7 +1358,7 @@ dS_t = r S_t dt + \sigma_L(S_t, t) S_t dW_t
 \label{eq:sde}
 \end{equation}
 
-Putting it into words, the infinitesimal change $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time. And the diffusion term ($\sigma_L(S_t, t) S_t dW_t$), where $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, is scaled by the pure randomness term $dW_t$ (Brownian Motion) and the price $S_t$ of the asset. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), plus or minus a random percentage shock amplified by the local volatility conditions ($\sigma_L S_t dW_t$).
+Conceptually, the stochastic differential equation dictates that $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time. And the diffusion term ($\sigma_L(S_t, t) S_t dW_t$), where $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, is scaled by the pure randomness term $dW_t$ (Brownian Motion) and the price $S_t$ of the asset. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), adjusted by a stochastic volatility diffusion term and amplified by the local volatility conditions ($\sigma_L S_t dW_t$).
 
 Additionally, by the definitions of stochastic calculus, the transition probability density function $p(S, T)$ of the \ref{eq:sde} process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
 
@@ -1383,7 +1388,7 @@ We recognise that the first term contains the original call price definition. So
 
 \subsection{Substituting the FPK Equation}
 
-In Equation \ref{eq:simplified_first_derivative_call}, we have $\frac{\partial p}{\partial T}$ (the rate at which the probability density changes over time) stuck inside an integral that is being evaluated with respect to the stock price ($dS$). This is a massive problem as we cannot integrate a time derivative with respect to a spatial variable ($S$). Because $T$ and $S$ are independent variables, we cannot evaluate this integral without knowing the explicit function $p(S,T)$ ahead of time. Hence, we make use of the FPK Equation defined in \ref{eq:fpk_equation} to convert time derivatives into spatial derivatives. By substituting the FPK Forward Equation into our $\frac{\partial p}{\partial T}$ term inside the integral, we split the integral into a diffusion term and a drift term:
+In Equation \ref{eq:simplified_first_derivative_call}, we have $\frac{\partial p}{\partial T}$ (the rate at which the probability density changes over time) stuck inside an integral that is being evaluated with respect to the stock price ($dS$). This presents a fundamental mathematical obstacle, as integrating a time derivative with respect to a spatial variable ($S$). Because $T$ and $S$ are independent variables, we cannot evaluate this integral without knowing the explicit function $p(S,T)$ ahead of time. Hence, we make use of the FPK Equation defined in \ref{eq:fpk_equation} to convert time derivatives into spatial derivatives. By substituting the FPK Forward Equation into our $\frac{\partial p}{\partial T}$ term inside the integral, we split the integral into a diffusion term and a drift term:
 
 \begin{equation}
 \frac{\partial C}{\partial T} = -rC 
@@ -1453,7 +1458,7 @@ Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s
 \label{eq:dupires_equation}
 \end{equation}
 
-This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier, asian), and if the second derivative is negative, the local volatility becomes an imaginary number, crashing the pipeline.
+This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier or asian, see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}), and if the second derivative is negative, the local volatility becomes an imaginary number, yielding complex-valued outputs and destabilising the pricing framework.
 
 
 \end{proof}
@@ -1594,7 +1599,7 @@ As we distribute the coefficient and matrix $K$ across both terms, we can safely
 $$-\mathbb{E} [\text{Data Term}] = \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
 
 \subsection{The Result: Fisher Information Matrix}
-After simplifying, we now apply the negative expectation to the trace term. Because the trace contains no $y$ variables, meaning it is entirely deterministic, the expectation does nothing. We just flip the sign:
+After simplifying, we now apply the negative expectation to the trace term. Because the trace contains no $y$ variables, meaning it is entirely deterministic, the expectation does nothing. Hence, we simply invert the sign:
 
 $$-\mathbb{E} [\text{Trace Term}] = -\frac{1}{2} \text{Tr}(K^{-1} K_j K^{-1} K_i) + \frac{1}{2} \text{Tr}(K^{-1} K_{ij})$$
 
@@ -1604,7 +1609,7 @@ $$\mathcal{I}_{ij} = \left[ \text{Tr}(K^{-1} K_j K^{-1} K_i) - \frac{1}{2} \text
 
 $$\mathcal{I}_{ij} = \frac{1}{2} \text{Tr} \left( K^{-1} \frac{\partial K}{\partial \theta_i} K^{-1} \frac{\partial K}{\partial \theta_j} \right)$$
 
-We have just mathematically proven that the curvature of our optimisation landscape is entirely dependent on how the covariance matrix $K$ reacts to changes in its hyperparameters ($\frac{\partial K}{\partial \theta}$). Because our Matérn kernel is fully differentiable, this FIM is guaranteed to exist and be well-behaved, ensuring that our L-BFGS-B optimiser will reliably converge to the safest possible volatility surface without crashing.
+We have just mathematically proven that the curvature of our optimisation landscape is entirely dependent on how the covariance matrix $K$ reacts to changes in its hyperparameters ($\frac{\partial K}{\partial \theta}$). Because our Matérn kernel is fully differentiable, this FIM is guaranteed to exist and be well-behaved, ensuring that our L-BFGS-B optimiser will reliably converge to the safest possible volatility surface without numerical divergence.
 
 \end{proof}
 
@@ -1746,6 +1751,41 @@ The Moment Formula for Implied Volatility at Extreme Strikes.
 Rasmussen, C. E., and Williams, C. K. I. (2006).
 \textit{Gaussian Processes for Machine Learning}.
 MIT Press.
+
+\bibitem[Black and Scholes(1973)]{black1973pricing}
+Black, F., and Scholes, M. (1973).
+The Pricing of Options and Corporate Liabilities.
+\textit{Journal of Political Economy}, 81(3), 637--654.
+
+\bibitem[Dupire(1994)]{dupire1994pricing}
+Dupire, B. (1994).
+Pricing with a Smile.
+\textit{Risk}, 7(1), 18--20.
+
+\bibitem[Bradbury et al.(2018)]{jax2018github}
+Bradbury, J., Frostig, R., Hawkins, P., Johnson, M. J., Leary, C., Maclaurin, D., Necula, G., Paszke, A., VanderPlas, J., Wanderman-Milne, S., and Zhang, Q. (2018).
+{JAX}: Composable Transformations of {Python}+{NumPy} Programs.
+\textit{Software available from http://github.com/google/jax}.
+
+\bibitem[Phan et al.(2019)]{phan2019numpyro}
+Phan, D., Pradhan, N., and Jankowiak, M. (2019).
+Composable Effects for Flexible and Scalable Probabilistic Programming in {NumPyro}.
+\textit{arXiv preprint arXiv:1912.11554}.
+
+\bibitem[Pedregosa et al.(2011)]{pedregosa2011scikit}
+Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., and Vanderplas, J. (2011).
+Scikit-learn: Machine Learning in {Python}.
+\textit{Journal of Machine Learning Research}, 12, 2825--2830.
+
+\bibitem[Neal(2011)]{neal2011mcmc}
+Neal, R. M. (2011).
+{MCMC} Using Hamiltonian Dynamics.
+In S. Brooks, A. Gelman, G. Jones, and X. L. Meng (Eds.), \textit{Handbook of Markov Chain Monte Carlo} (pp. 113--162). CRC Press.
+
+\bibitem[Shreve(2004)]{shreve2004stochastic}
+Shreve, S. E. (2004).
+\textit{Stochastic Calculus for Finance II: Continuous-Time Models}.
+Springer Science \& Business Media.
 
 \bibitem[CBOE(2026)]{cboe2026datashop}
 Chicago Board Options Exchange (CBOE). (2026).
