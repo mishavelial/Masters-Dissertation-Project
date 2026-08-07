@@ -179,7 +179,7 @@ These terms define the fundamental building blocks of the derivative contracts m
 These definitions bridge the gap between absolute option prices and the standardised space where the Gaussian Process operates.
 
 \begin{description}
-    \item[Black-Scholes Model:] The Black-Scholes model can be used to price European-style options and to estimate a theoretical fair value for a call or put based on spot, strike, time to expiry, risk-free rate, and volatility. It is also widely used as a benchmark for hedging and for \textit{inferring implied volatility} from market option prices.
+    \item[Black-Scholes Model:] The \citet{black1973pricing} model can be used to price European-style options and to estimate a theoretical fair value for a call or put based on spot, strike, time to expiry, risk-free rate, and volatility. It is also widely used as a benchmark for hedging and for \textit{inferring implied volatility} from market option prices.
     $$\frac{\partial V}{\partial t} + \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} + rS \frac{\partial V}{\partial S} - rV = 0$$
     where, $V = V(S, t)$ is the option value, $S$ is the underlying asset price, $t$ is time, $r$ is the risk-free interest rate and $\sigma$ is the volatility of the unrelying asset returns.
     \item[Black-Scholes Implied Volatility ($\sigma_{imp}$):] The unique volatility parameter that, when passed through the inverted Black-Scholes-Merton formula, yields the exact market price of the option. It acts as a forward-looking metric of market consensus on risk.
@@ -208,7 +208,7 @@ These definitions bridge the gap between absolute option prices and the standard
 These concepts define the strict financial and mathematical boundaries that the model must respect to remain valid.
 
 \begin{description}
-    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate; this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales.
+    \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate; this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales, which was first shown by \cite{harrison1979martingales}.
     \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. For example, an initial investment of \$100 at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
     \item[Yield Curve:] A yield curve or an interest rate graph plots the cost of borrowing at the time to maturity. A parallel shift in the yield curve implies a raise or a reduction in both short- and long-term rates, where the shape of the curve does not change.
     \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Financially, this implies a self-financing portfolio with a strictly positive probability of a riskless profit.
@@ -247,14 +247,14 @@ The problem considered in this dissertation is the failure of the deterministic 
 \begin{itemize}
 	\item How does the weak identifiability of Gaussian Process hyperparameters impact the out-of-sample predictive accuracy of the implied volatility surface?
 
-	\item Can Bayesian inference via Hamiltonian Monte Carlo (HMC/NUTS) resolve this instability to improve pricing performance while maintaining arbitrage-free constraints?
+	\item Can Bayesian inference via Hamiltonian Monte Carlo (HMC) and the No-U-Turn Sampler (NUTS) \cite{neal2011mcmc, hoffman2014nuts} resolve this instability to improve pricing performance while maintaining arbitrage-free constraints?
 \end{itemize}
 \end{quote}
 In this dissertation, we adopt the central hypothesis that flat ridges in the log-marginal likelihood topology cause deterministic optimisers to fail, and that replacing point estimation with a full posterior distribution over hyperparameters will enforce structural regularization, drastically reducing localized butterfly and calendar arbitrage violations, with only a minimal and acceptable trade-off in nominal out-of-sample prediction accuracy.
 
-Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like (\citet{titsias_nd}) have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser.
+Although the individual mathematical and financial components of this hypothesis have been explored separately in recent literature, their synthesis represents a novel contribution to the modelling of implied volatility. Within the topic of machine learning, the pathology of weakly identifiable Log-Marginal Likelihood (LML) topologies is well-documented and researched; papers like \citet{titsias_nd} have specifically outlined the shortcomings of the point estimation method. Hamiltonian Monte Carlo (HMC) is frequently proposed as an elegant solution to resolving the overfitting inherent in the deterministic optimiser \cite{neal2011mcmc}.
 
-Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. (\citet{cousin2021gp}) and (\citet{chataigner2021beyond}) have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce, this research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
+Additionally, Gaussian Processes have been explored for volatility surface interpolation in recent quantitative finance literature. \citet{cousin2021gp} and \citet{chataigner2021beyond} have recognised that GP is a powerful non-parametric tool for surface interpolation. However, existing finance literature has often artificially specified strict arbitrage violations by relying on constrained kriging (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) to explicitly avoid calendar and butterfly arbitrage violations. This thesis, on the other hand, seeks to bridge these two independent domains by establishing a direct causal link. Rather than treating arbitrage violation as a purely financial constraint that we need to artificially enforce, this research identifies the LML flat-ridge pathology and the resulting memorisation of microstructural noise as the fundamental mathematical cause of these economic violations.
 
 To summarise, the novel contribution of this work lies in framing Bayesian hyperparameter marginalisation as a structural regulariser, naturally filtering out the high-frequency overfitting that causes arbitrage violations in the first place. 
 
@@ -268,7 +268,7 @@ The dissertation is organised into eight chapters. Chapter 2 introduces the fina
 \section{The Implied Volatility Surface}
 Before discussing the financial constraints, we should introduce the object to which they will apply: the implied volatility surface. The surface is a three-dimensional graph that maps the volatility of option contracts across several maturities and strikes (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) for a single asset. Specifically, a function mapping of an option’s strike $K$ and time to maturity $T$ can be defined as $(K, T) \mapsto \sigma_{\mathrm{imp}}(K,T)$ across available strikes and maturities. The annualised volatility figure is derived from the inverted Black-Scholes-Merton formula (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) to standardise absolute option prices. This standardisation enables comparison of an option across different strikes and maturities.
 
-Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. This is because longer maturity dates of an option inherently carry larger variance, meaning that the price of an asset has more time to rise above the strike, which carries additional risk for the issuer of the option.
+Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) is the unique volatility parameter that, when used in the \citet{black1973pricing} model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. This is because longer-dated options inherently carry greater variance, meaning the asset's price has more time to rise above the strike, which poses additional risk for the option issuer.
 
 This expected risk is difficult to evaluate by only looking at absolute metrics such as spot (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) and option prices. Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$ (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}). By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
 
@@ -279,7 +279,7 @@ For practical purposes, the underlying asset for this empirical evaluation is th
 \label{subsec:static-arbitrage}
 Before introducing the Gaussian Process model, we must specify the constraints that will ensure the implied volatility surface is not only mathematically, but also financially and legally sound. The two static arbitrage constraints that are of most importance for this purpose are the \emph{calendar arbitrage} and the \emph{butterfly arbitrage} (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). These constraints allow for the surface to have a valid risk-neutral probability density function. In turn, this makes it financially impossible if it implies the existence of a portfolio with a non-negative payoff and a negative cost. Hence, a mathematically smooth and stable interpolant is not sufficient; it must also be economically admissible.
 
-Another important topic of discussion that formalises the aforementioned is a framework central to asset pricing: the risk-neutral principle (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). Intuitively, we use the risk-neutral measure $\mathbb{Q}$ in derivatives pricing as an equivalent probability measure to the physical measure $\mathbb{P}$, defined by the Radon-Nikodym derivative $\frac{d\mathbb{Q}}{d\mathbb{P}}$. It reweights the real-world probability distribution by shifting the expected asset return to the risk-free rate $r$. This parameter transformation absorbs investor risk aversion into the probability density itself, allowing us to compute no-arbitrage derivative prices as simple discounted expectations $\mathbb{E}^{\mathbb{Q}}[e^{-rT} X_T]$. We 
+Another important topic of discussion that formalises the aforementioned is a framework central to asset pricing: the risk-neutral principle (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). Intuitively, we use the risk-neutral measure $\mathbb{Q}$ in derivatives pricing as an equivalent probability measure to the physical measure $\mathbb{P}$, defined by the Radon-Nikodym derivative $\frac{d\mathbb{Q}}{d\mathbb{P}}$. It reweights the real-world probability distribution by shifting the expected asset return to the risk-free rate $r$. This parameter transformation absorbs investor risk aversion into the probability density itself. Because this framework relies on evaluating densities, the measure $\mathbb{Q}$ must strictly satisfy the foundational axioms of probability theory proposed by \citet{kolmogorov1933foundations}, allowing us to compute no-arbitrage derivative prices as rigorous discounted expectations $\mathbb{E}^{\mathbb{Q}}[e^{-rT} X_T]$.
 
 \begin{proposition}[Arbitrage-free call price under risk-neutral measure $\mathbb{Q}$]
 
@@ -369,22 +369,27 @@ w(K,T) = T\left(|a| + |b|(\log K)^2 + c \log K\right).
 
 The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation (\citet{gatheral2014arbitrage}). By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
 
-Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and rendering the pricing algorithm mathematically undefined. By incorporating |a| and |b|, a differentiable barrier is created where the optimiser can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
+Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and rendering the pricing algorithm mathematically undefined. By incorporating $|a|$ and $|b|$, a differentiable barrier is created where the optimizer can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
 
-Finally, this setup also works well with the tail behaviour suggested by the moment-based constraints model. In other words, deep OTM options encode the tails of the risk-neutral distribution; their prices must remain consistent with that distribution. The prior is not just smoothing the data, but it also encodes a theoretically allowed tail growth rate for the implied variance, based on which moments of the underlying asset are finite. The far OTM smile should match the asymptotic limits set by Roger Lee’s moment formula bounds \citep{lee2004moment}. Even though there is little real-option data far out of the money, this structured prior keeps the extrapolated total variance within economic bounds and follows the theoretical maximum growth rates of the volatility smile at extreme strikes.
+Finally, this setup also works well with the tail behaviour suggested by the moment-based constraints model. In other words, deep OTM (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) options encode the tails of the risk-neutral distribution; their prices must remain consistent with that distribution. The prior is not just smoothing the data, but it also encodes a theoretically allowed tail growth rate for the implied variance, based on which moments of the underlying asset are finite. The far OTM smile should match the asymptotic limits set by Roger Lee’s moment formula bounds \cite{lee2004moment}. Even though there is little real-option data far out of the money, this structured prior keeps the extrapolated total variance within economic bounds and follows the theoretical maximum growth rates of the volatility smile at extreme strikes.
 
 % ------------------------------------------------- chapter 3
 \chapter{Gaussian Processes in Financial Modelling}
 
 \section{GP Regression Framework}
-We can formally define the Gaussian Process (GP) as a collection of random variables, any of which possesses a joint Gaussian distribution. This way, it provides a non-parametric Bayesian framework for inferring other functions. A GP is specified by its mean function $m(\mathbf{x})$ and its covariance function, or kernel, $k(\mathbf{x}, \mathbf{x}')$. We denote the Gaussian Process prior as:
+We formally define a Gaussian Process (GP) as a collection of random variables, any finite subset of which possesses a joint Gaussian distribution. To ensure the mathematical existence of this stochastic process across an uncountable index set, we rely on the foundational probability space $(\Omega, \mathcal{F}, \mathbb{P})$ established by \citet{kolmogorov1933foundations}.
 
-\[f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}'))\]
+Consequently, this construction provides a strictly non-parametric Bayesian framework for performing inference over continuous function spaces. A GP is completely specified by its mean function $m(\mathbf{x})$ and its covariance function, or kernel, $k(\mathbf{x}, \mathbf{x}')$. We denote the Gaussian Process prior as:
+
+\begin{equation}
+f(\mathbf{x}) \sim \mathcal{GP}(m(\mathbf{x}), k(\mathbf{x}, \mathbf{x}'))
+\end{equation}
 
 The mean function, defined as $m(\mathbf{x}) = \mathbb{E}[f(\mathbf{x})]$, gives the GP the global topology of the function space. Conceptually, it encodes the prior distribution or an assumption about the distribution of an unknown function. It is set to dictate the overall smoothness, behaviour and interpolation of the unknown function. 
+
 In standard machine learning literature, the mean function $m(\mathbf{x})$ is often set to zero for algebraic convenience; however, a financial surface is inherently structurally asymmetrical. This asymmetry can be observed in features such as the persistent equity skew. Hence, the mean function needs careful tuning in order to safely extrapolate quotes in the sparsely populated deep out-of-the-money tails. To address this, the framework explicitly defines $m(\mathbf{x})$ using the parametric prior formulated in Equation \ref{parametric_prior}:
 
-\[m(\mathbf{x}) = T(|a| + |b|k^2 + c k)\]
+$$m(\mathbf{x}) = T(|a| + |b|k^2 + c k)$$
 
 By substituting this SVI-inspired formulation into the GP mean function, the global structural constraints and theoretical asymptotic tail bounds are embedded directly in the prior distribution. Consequently, the learning burden shifts: the GP is no longer required to infer the macroeconomic shape of the smile from raw data. Instead, it is solely tasked with modelling the residuals. The residuals represent the localised, non-parametric deviations of the observed market data from the parametric mean. These residuals are governed by the covariance kernel, $k(\mathbf{x}, \mathbf{x}') = \mathbb{E}[(f(\mathbf{x}) - m(\mathbf{x}))(f(\mathbf{x}') - m(\mathbf{x}'))]$. Essentially, this is the covariance between the process values at $\mathbf{x}$ and $\mathbf{x'}$, and $k(\mathbf{x}, \mathbf{x'})$ measures how these residuals vary together. The kernel describes how points on the volatility surface are related. It controls how smooth the surface is and how quickly the effect of one data point fades as we move across strike and term.
 
@@ -571,7 +576,7 @@ Conversely, if the steps taken by the algorithm are large. The isotropic candida
 To avoid this diffusive, random-walk behaviour, we replace the isotropic, gradient-free candidate state model with a gradient-informed MCMC algorithm based on $\nabla_\theta \log p(\theta \mid \mathbf{y}, X)$. Which will actively steer the Markov chain along the contours of the typical set.
 
 \section{Hamiltonian Monte Carlo}
-A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC), which reformulates the statistical sampling problem as a deterministic simulation of classical mechanics. The algorithm is able to explore the high-dimensional typical set by introducing an auxiliary momentum variable and using information from the gradient of the target density to construct a vector field. 
+A practical solution to the previous problem is Hamiltonian Monte Carlo (HMC), which reformulates the statistical sampling problem as a deterministic simulation of classical mechanics \cite{neal2011mcmc}. The algorithm is able to explore the high-dimensional typical set by introducing an auxiliary momentum variable and using information from the gradient of the target density to construct a vector field.
 
 \subsection{Phase Space and the Hamiltonian}
 
@@ -674,7 +679,7 @@ In complex topological landscapes—such as the flat, weakly identifiable Log-Ma
     \item \textbf{Excessive $L$ ($L$ too large):} The particle follows a long Hamiltonian trajectory that eventually loops back onto itself (takes a "U-turn"), wasting computationally expensive $\mathcal{O}(N^3)$ Cholesky gradient evaluations without expanding the exploration of the posterior target density.
 \end{itemize}
 
-To resolve this tuning dilemma, Hoffman and Gelman (2014) introduced the No-U-Turn Sampler (NUTS), an extension of HMC that dynamically determines the optimal trajectory length $L$ at every iteration while strictly preserving time-reversibility and detailed balance.
+To resolve this tuning dilemma, \citet{hoffman2014nuts} introduced the No-U-Turn Sampler (NUTS), an extension of HMC that dynamically determines the optimal trajectory length $L$ at every iteration while strictly preserving time-reversibility and detailed balance.
 
 \subsubsection{Symplectic Integration and Dynamic Trajectories}
 
@@ -722,7 +727,7 @@ Simultaneously, the inverse mass matrix $\mathbf{M}^{-1}$ is continuously update
 
 \subsubsection{Computational Implementation in JAX and NumPyro}
 
-In the implementation developed for this thesis, the NUTS engine is executed using the \texttt{NumPyro} library backed by \texttt{JAX}. This architecture affords significant mathematical and computational advantages when sampling over Gaussian Process hyperparameters:
+In the implementation developed for this thesis, the NUTS engine is executed using the \texttt{NumPyro} library \cite{phan2019numpyro} backed by \texttt{JAX} \cite{jax2018github}. This architecture affords significant mathematical and computational advantages when sampling over Gaussian Process hyperparameters:
 
 \begin{enumerate}
     \item \textbf{Unconstrained Parameter Mapping:} To prevent numerical integration boundaries, the constrained positive kernel parameters are mapped to unconstrained real space $\mathbf{q} \in \mathbb{R}^4$:
@@ -965,7 +970,7 @@ Ultimately, this regularisation exposes an accuracy-consistency trade-off betwee
 \section{Computational Limitations and Future Work}
 While the Bayesian Hamiltonian Monte Carlo framework decisively outperforms the deterministic point estimation approach in preserving economic admissibility, its deployment and upkeep during live trading sessions are heavily constrained by computational complexity. Although the time complexity of both algorithms is $\mathcal{O}(N^3)$, the fundamental mathematical bottleneck is the computationally expensive Cholesky decomposition of the covariance matrix. The paramount difference between them comes from the constant factor, which represents the number of times the algorithms have to execute this expensive $\mathcal{O}(N^3)$ decomposition. Based on the hyperparameter configurations used in this study, evaluating the full posterior via Hamiltonian Monte Carlo requires roughly 1,000 times more computational overhead than deterministic point estimation.
 
-It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing (i. e., the official daily valuation of derivative contracts), risk management, and portfolio margin calculations (i.e., the determination of regulatory capital requirements based on aggregate portfolio risk). In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
+It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing (i. e., the official daily valuation of derivative contracts), risk management, and portfolio margin calculations (i.e., the determination of regulatory capital requirements based on aggregate portfolio risk). In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler \cite{hoffman2014nuts} is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
 
 The logical progression for future quantitative research is to bridge this computational gap by exploring Variational Inference (VI) or Sparse Gaussian Processes. By framing Bayesian inference as an optimisation problem rather than a stochastic sampling problem, VI has the potential to approximate the true Bayesian posterior in a fraction of the time. Successfully implementing a Variational Gaussian Process could theoretically maintain the powerful regularising benefits of hyperparameter ensembling while achieving the near-deterministic execution speeds required for high-frequency trading floors. 
 
@@ -975,7 +980,9 @@ Furthermore, amortised inference should be considered a logical progression from
 \appendix
 
 \chapter{Pipeline Architecture}
-To ensure full computational reproducibility, the codebase developed for this dissertation, including the Hamiltonian Monte Carlo implementation and the Arbitrage Auditor, is publicly available at: [https://github.com/mishavelial/BayesianGaussianProcessHyperparameterInference].
+To ensure full computational reproducibility, the codebase developed for this dissertation, including the Hamiltonian Monte Carlo implementation and the Arbitrage Auditor, is publicly available at: 
+
+[https://github.com/mishavelial/BayesianGaussianProcessHyperparameterInference].
 \begin{itemize}[leftmargin=2em]
     \item \texttt{01\_ingest\_spx.py}: data ingestion,
     \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
@@ -983,7 +990,7 @@ To ensure full computational reproducibility, the codebase developed for this di
     \item \texttt{04\_gp\_point\_estimation.py}: point-estimated GP,
     \item \texttt{05\_topology\_scan.py}: LML topology analysis,
     \item \texttt{06\_restart\_sensitivity.py}: restart instability diagnostics,
-    \item \texttt{07\_gp\_hmc.py}: Bayesian inference with HMC/NUTS,
+    \item \texttt{07\_gp\_hmc.py}: Bayesian inference with HMC/NUTS \cite{neal2011mcmc, hoffman2014nuts} executed via NumPyro \cite{phan2019numpyro} and JAX \cite{jax2018github},
     \item \texttt{08\_compare\_results.py}: comparative evaluation,
     \item \texttt{09\_plots.py}: figures and posterior visualisation.
 \end{itemize}
@@ -1346,7 +1353,7 @@ Hence, if an interpolated surface exhibits local concavity, it directly implies 
 
 \section{Dupire’s Equation}
 \label{sec:dupire_eq}
-As per the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that actually generates those prices. The Dupire equation shows that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
+According to the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that generates those prices. The foundation of our continuous-time model is based on standard stochastic financial theory from the \citet{shreve2004stochastic} textbook. Thereby, for the Dupire equation to show that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
 
 \subsection{The Setup: The SDE and the FPK Equation}
 \begin{proof}
@@ -1357,7 +1364,9 @@ dS_t = r S_t dt + \sigma_L(S_t, t) S_t dW_t
 \label{eq:sde}
 \end{equation}
 
-Conceptually, the stochastic differential equation dictates that $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time, and the diffusion term ($\sigma_L(S_t, t) S_t dW_t$). Here, $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, scaled by the standard Brownian motion $dW_t$ and the asset price $S_t$. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), adjusted by a stochastic volatility diffusion term and amplified by the local volatility conditions ($\sigma_L S_t dW_t$). Additionally, by the definitions of stochastic calculus, the transition probability density function $p(x, T)$ of the process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
+Conceptually, the stochastic differential equation dictates that $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time, and the diffusion term ($\sigma_L(S_t, t) S_t dW_t$). Here, $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, scaled by the standard Brownian motion $dW_t$ and the asset price $S_t$. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), adjusted by a stochastic volatility diffusion term and amplified by the local volatility conditions ($\sigma_L S_t dW_t$). 
+
+Additionally, by the standard definitions of stochastic calculus proposed by \citet{shreve2004stochastic}, the transition probability density function $p(x, T)$ of the process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
 
 \begin{equation}
 \frac{\partial p}{\partial T} = \frac{1}{2} \frac{\partial^2}{\partial x^2} \left( \sigma_L^2(x, T) x^2 p \right) - \frac{\partial}{\partial x} (r x p)
@@ -1447,14 +1456,14 @@ $$\frac{\partial C}{\partial T} = \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partia
 
 \subsection{The Result: Dupire’s Formula}
 
-Isolating the local variance $\sigma_L^2(K, T)$ yields Dupire’s formula:
+Isolating the local variance $\sigma_L^2(K, T)$ yields Dupire’s foundational local volatility formula \citep{dupire1994pricing}:
 
 \begin{equation}
 \sigma_L^2(K, T) = \frac{\frac{\partial C}{\partial T} + rK \frac{\partial C}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C}{\partial K^2}}
 \label{eq:dupires_equation}
 \end{equation}
 
-This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (e.g., Barrier or Asian options, see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). If the second derivative $\frac{\partial^2 C}{\partial K^2}$ is negative, the local variance becomes negative, rendering the local volatility an imaginary number and destabilising the pricing framework.
+This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation \cite{dupire1994pricing} converts Implied Volatility to Local Volatility for pricing exotic options (e.g., Barrier or Asian options, see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). If the second derivative $\frac{\partial^2 C}{\partial K^2}$ is negative, the local variance becomes negative, rendering the local volatility an imaginary number and destabilising the pricing framework.
 \end{proof}
 
 \newpage
@@ -1780,6 +1789,11 @@ In S. Brooks, A. Gelman, G. Jones, and X. L. Meng (Eds.), \textit{Handbook of Ma
 Shreve, S. E. (2004).
 \textit{Stochastic Calculus for Finance II: Continuous-Time Models}.
 Springer Science \& Business Media.
+
+\bibitem[Kolmogorov(1933)]{kolmogorov1933foundations}
+Kolmogorov, A. N. (1933).
+\textit{Grundbegriffe der Wahrscheinlichkeitsrechnung}.
+Springer, Berlin. (English translation: \textit{Foundations of the Theory of Probability}, Chelsea Publishing Company, New York, 1950).
 
 \bibitem[CBOE(2026)]{cboe2026datashop}
 Chicago Board Options Exchange (CBOE). (2026).
