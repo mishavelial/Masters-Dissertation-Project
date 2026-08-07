@@ -210,11 +210,12 @@ These concepts define the strict financial and mathematical boundaries that the 
 \begin{description}
     \item[Risk-Neutral Measure ($\mathbb{Q}$):] A central asset pricing framework under which the expected return of every asset equals the risk-free rate; this means that we can calculate the price of an asset using expected values. Effectively behaving like martingales.
     \item[Risk-Free Rate ($r$):] The continuously compounded annual rate of return of an investment with zero risk. For example, an initial investment of \$100 at a continuously compounded rate of 5\% for 1 year. The future value is $100e^{0.05 * \frac{12}{12}} \approx 105.127\$$.
+    \item[Yield Curve:] A yield curve or an interest rate graph plots the cost of borrowing at the time to maturity. A parallel shift in the yield curve implies a raise or a reduction in both short- and long-term rates, where the shape of the curve does not change.
     \item[Static Arbitrage:] A financial scenario where a model implies the existence of a portfolio that has a non-negative future payoff but costs less than zero today, allowing for risk-free profit. Financially, this implies a self-financing portfolio with a strictly positive probability of a riskless profit.
     \item[Calendar Spread:] An option strategy involving two contracts with the same strike price but different maturities.
      \item[Butterfly Spread:] A neutral options strategy involving three staggered strike prices ($K_1 < K_2 < K_3$). Typically, a trader buys one lower strike option at $K_1$, sells two middle strike options at $K_2$, and buys one higher strike option at $K_3$. In the context of volatility surfaces, pricing a butterfly spread below zero indicates a negative risk-neutral probability, signifying an arbitrage violation.
-    \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one. Essentially, an arbitrage opportunity occurs when a longer-dated option is priced lower than the shorter-dated. This violates the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
-    \item[Butterfly Arbitrage:] A strategy involving three options with staggered strikes (buying a low and high strike $K_1$, selling two middle strikes). $$K_3 > K_2 > K_1$$. \TODO{Needs revision.}
+    \item[Calendar Arbitrage:] A violation occurring when a longer-maturity option has a lower total variance than a shorter-maturity one. Essentially, an arbitrage opportunity arises when a longer-dated option is priced lower than its shorter-dated counterpart. This violates the rule that uncertainty must accumulate monotonically over time ($\frac{\partial w}{\partial T} \ge 0$).
+    \item[Butterfly Arbitrage:] An opportunity that consists of buying a call at a low strike price $K_1$, selling two calls at a middle strike price $K_2$, and buying a call at a high strike price $K_3$ (where $K_3 - K_2 = K_2 - K_1$).
     \item[Breeden-Litzenberger Theorem:] A fundamental financial theorem that connects local concavity of a financial surface to butterfly arbitrage violations. 
      ($\frac{\partial^2 C}{\partial K^2}$).
      \item[Constrained Kriging:] A spatial interpolation method in Gaussian Process regression where hard constraints (such as monotonicity or convexity) are explicitly enforced on the predictive posterior to satisfy financial arbitrage conditions, often at the expense of computational efficiency or model flexibility.
@@ -267,7 +268,7 @@ The dissertation is organised into eight chapters. Chapter 2 introduces the fina
 \section{The Implied Volatility Surface}
 Before discussing the financial constraints, we should introduce the object to which they will apply: the implied volatility surface. The surface is a three-dimensional graph that maps the volatility of option contracts across several maturities and strikes (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) for a single asset. Specifically, a function mapping of an option’s strike $K$ and time to maturity $T$ can be defined as $(K, T) \mapsto \sigma_{\mathrm{imp}}(K,T)$ across available strikes and maturities. The annualised volatility figure is derived from the inverted Black-Scholes-Merton formula (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) to standardise absolute option prices. This standardisation enables comparison of an option across different strikes and maturities.
 
-Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. This is because longer maturity dates of an option inherently carry larger variance, meaning that the price of an asset has more time to rise above the strike, which carries additional risk for the writer of the option.
+Importantly, the Black-Scholes implied volatility (denoted as $\sigma_{\mathrm{imp}}(K,T)$) (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}) is the unique volatility parameter that, when used in the B-S model, yields the option’s exact market price. It acts as a forward-looking metric, pricing in the market consensus on expected risk and uncertainty rather than past price movements. In practice, it reflects the premium or compensation that traders demand today for bearing risk. This is because longer maturity dates of an option inherently carry larger variance, meaning that the price of an asset has more time to rise above the strike, which carries additional risk for the issuer of the option.
 
 This expected risk is difficult to evaluate by only looking at absolute metrics such as spot (see \hyperref[sec:glossary_basic_option_definitions]{I. Basic Option Mechanics}) and option prices. Hence, we should take a more relative approach in order to gauge this uncertainty, which implies constructing log-moneyness, defined as $k = \log(K/F_0)$ (see \hyperref[sec:glossary_volatility_surface_metrics]{II. Volatility \& Surface Metrics}). By using logarithms, we produce a stable and normalised representation of the volatility surface, independent of the underlying asset’s price dynamics.
 
@@ -309,7 +310,7 @@ In other words, the total variance space serves as a smooth framework that allow
 \subsection{Calendar Arbitrage}
 \label{subsubsec:calendar-arbitrage}
 
-As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month $T_1$ contract overpriced, which in turn could be shorted, and the far-month $T_2$ contract underpriced ($T_1 < T_2$). It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity \(T\).\citep{gatheral2006volatility}
+As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month $T_1$ contract overpriced, which in turn could be shorted (i. e., taking a negative position in the asset to capture the price discrepancy), and the far-month $T_2$ contract underpriced ($T_1 < T_2$). It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity $T$.\citep{gatheral2006volatility}
 
 \paragraph{Link to total variance.}
 In total variance terms, the calendar arbitrage constraint becomes a monotonicity condition in maturity:
@@ -343,9 +344,7 @@ Let \(0<T_1<T_2\). No-arbitrage implies \(C(K,T_2)\ge C(K,T_1)\). Since the Blac
 Butterfly arbitrage originates from the butterfly spread option strategy, which involves four options with staggered strike prices $K_3 > K_2 > K_1$. It entails purchasing a call at a low strike price $K_1$, selling two calls at a middle strike price $K_2$, and buying a call at a high strike price $K_3$ (where $K_3 - K_2 = K_2 - K_1$). This arbitrage indicates that the implied probability distribution of the asset is negative and invalid, often due to an overly steep or improperly smoothed IV surface during interpolation. Consequently, the position's payoff can become negative, meaning the trader profits risk-free without owning the underlying asset.
 
 \paragraph{Intuition.}
-A natural way to test this constraint is to examine the local curvature; the curve should always be convex, so the middle strike should not lie above the average of the neighbouring strikes. In other words, if the middle option price is too high relative to the neighbouring points, an arbitrage opportunity exists. The connection to the fundamental Breeden--Litzenberger theorem can be found in Appendix \ref{sec:breeden_litz_proof} for proof is that a sufficiently tight butterfly spread is a finite-difference estimate of the second derivative of the call price curve with respect to strike $K$. It is important to note that in the case of a butterfly arbitrage violation (implying probabilities), the local volatility in Dupire's framework becomes mathematically undefined, we direct the reader to Appendix B.5 for the full breakdown. This criteria is paramount for a valid volatility surface.
-
-\TODO{a very dense section!!}
+A natural way to test this constraint is to examine the local curvature; the curve should always be convex, so the middle strike should not lie above the average of the neighbouring strikes. In other words, if the middle option price is too high relative to the neighbouring points, an arbitrage opportunity exists. The connection to the fundamental Breeden--Litzenberger theorem can be found in Appendix \ref{sec:breeden_litz_proof}, where the proof is that a sufficiently tight butterfly spread is a finite-difference estimate of the second derivative of the call price curve with respect to strike $K$. It is important to note that in the case of a butterfly arbitrage violation (implying probabilities), the local volatility in Dupire's framework becomes mathematically undefined, we direct the reader to Appendix \ref{sec:dupire_eq} for the full breakdown.
 
 \paragraph{Relationship to total variance.}
 As we proved, butterfly arbitrage can be naturally stated in terms of call prices, unlike calendar arbitrage, which is inherently a monotonicity condition on the total variance across maturities. However, since the fitted model is expressed in the total-variance space, the implied total variance space must be converted back to call prices before assessing the convexity condition. Simply, this is done using the Black--Scholes formula:
@@ -404,7 +403,7 @@ Given a set of test inputs $X_*$, the joint distribution of the training targets
 
 where $K(X, X)$ is the $n \times n$ Gram matrix evaluated on the training inputs, $K(X, X_*)$ is the $n \times n_*$ cross-covariance matrix between the training $X$ and test $X_*$ inputs, and $I$ is the identity matrix. The statement \ref{joint_gaussian} asserts that by combining the observed training inputs and unknown test inputs together, the resulting joint distribution is Gaussian under the GP model. Importantly, the left block is the covariance between observed training inputs, plus the noise $\sigma^2I$ term, which indicates that the observed training targets $\mathbf{y}$ are noisy versions of the underlying function values. In this case, the model allows for noise rather than treating the observed data as exact realisations of the latent function. 
 
-By conditioning this joint prior on the observed market data $\mathbf{y}$, we derive the predictive posterior distribution $\mathbf{f}_* | X, \mathbf{y}, X_* \sim \mathcal{N}(\boldsymbol{\mu}_*, \Sigma_*)$ as shown in the \ref{sec:schur_complement} derivation. (\TODO{Is this wording fine for pointing the reader to a formal proof?})Equivalently, the above expression states that once we know the training outputs, we can update the joint Gaussian to get a new Gaussian distribution for the unknown test outputs. This is a standard conditioning step in GP regression. The exact matrix equations for the predictive mean and predictive covariance are:
+By conditioning this joint prior on the observed market data $\mathbf{y}$, we derive the predictive posterior distribution $\mathbf{f}_* | X, \mathbf{y}, X_* \sim \mathcal{N}(\boldsymbol{\mu}_*, \Sigma_*)$ as shown in the \ref{sec:schur_complement} derivation. Equivalently, the above expression states that once we know the training outputs, we can update the joint Gaussian to get a new Gaussian distribution for the unknown test outputs. This is a standard conditioning step in GP regression. The exact matrix equations for the predictive mean and predictive covariance are:
 
 \[\boldsymbol{\mu}_* = m(X_*) + K(X_*, X)[K(X, X) + \sigma_n^2 I]^{-1}(\mathbf{y} - m(X))\]
 
@@ -415,12 +414,13 @@ The predictive mean equation states that the forecast at the new points is the s
 The predictive covariance formula provides the model with the uncertainty after observing the data, where $K(X_*, X_*)$ is the prior uncertainty at the test points minus the part explained by the training data. In practical terms, uncertainty is minimised in dense regions and remains higher where the model must extrapolate.
 
 \section{The Mat\'ern 5/2 Kernel}
-While the mean function determines the overall shape of the volatility surface, the covariance kernel governs the local shape at discrete points and the interpolative behaviour of the residuals. The choice of kernel cannot be arbitrary; in financial applications, a covariance function should satisfy strict structural requirements dictated by arbitrage pricing theory. In this work, we adopt an anisotropic Matérn 5/2 kernel; other common kernels (RBF, Matérn 3/2, Rational Quadratic) are viable in general-purpose modelling but have features that are discussed briefly below, which make them less suitable for the present arbitrage-constrained framework. \TODO{Should I add a brief explanation as to why other kernels are not suitable?}
+While the mean function determines the overall shape of the volatility surface, the covariance kernel governs the local shape at discrete points and the interpolative behaviour of the residuals. The choice of kernel cannot be arbitrary; in financial applications, a covariance function should satisfy strict structural requirements dictated by arbitrage pricing theory. In this work, we adopt an anisotropic Matérn 5/2 kernel; other common kernels (RBF, Matérn 3/2, Rational Quadratic) are viable in general-purpose modelling but have features that are discussed briefly below, which make them less suitable for the present arbitrage-constrained framework. 
+
+Because the extraction of a valid risk-neutral probability density via the Breeden-Litzenberger theorem is based on the evaluation of the second partial derivative with respect to strike $K$, a Matérn 3/2 cannot be chosen as it produces sample paths that are only once mean-square differentiable. Implying that strict convexity must be enforced directly. On the other hand, the Squared Exponential (RBF) kernel generates infinitely differentiable, analytic sample paths, imposing an excessive degree of smoothing that fails to capture the localized volatility spikes and microstructural frictions inherent in equity markets. Hence, the choice leans toward the twice mean-square differentiable ($\mathcal{C}^2$) Matérn 5/2 kernel, which satisfies the theoretical prerequisites of arbitrage pricing theory while retaining sufficient flexibility to model complex residual geometries. 
 
 The covariance kernel is a function of two inputs, $\mathbf{x}$ and $\mathbf{x}'$. We define two distinct input vectors: $\mathbf{x} = (k, T)^{\top}$ and $\mathbf{x}' = (k', T')^{\top}$. Furthermore, to account for the fundamentally different dynamics along the strike and term-structure dimensions, we define the anisotropic Mahalanobis distance $r$ using independent length-scales $\ell_k$ and $\ell_T$:
 
 $$r(\mathbf{x}, \mathbf{x}') = \sqrt{\frac{(k - k')^2}{\ell_k^2} + \frac{(T - T')^2}{\ell_T^2}}$$
-\TODO{Should I explain whats happening inside?}
 
 The Matérn $5/2$ covariance function is then formally defined as:
 
@@ -480,7 +480,7 @@ $$\mathcal{L}(\theta_k + p) \approx \mathcal{L}(\theta_k) + \nabla \mathcal{L}(\
 
 where $\mathcal{H}_k = \nabla^2 \mathcal{L}(\theta_k)$ is the Hessian. The Taylor expansion is used because the LML is a complicated nonlinear function of $\theta$ with no closed-form optimal step, but locally around $\theta_k$, any smooth function looks quadratic, as Taylor's theorem guarantees.
 
-However, $\mathcal{H}_k$ is computationally prohibitive to compute exactly. This is due to the extensive differentiation sequences of the kernel matrix, which involve terms of the form $\operatorname{tr}!\left(K_y^{-1} \frac{\partial K_y}{\partial \theta_i}\right)$. These are expensive when $N$ is large. Moreover, the Hessian can become nearly singular, for instance, when hyperparameters are weakly identifiable or approach a boundary, making direct inversion numerically unstable. L-BFGS-B addresses both issues by building a low-rank approximation $B_k^{-1} \approx \mathcal{H}_k^{-1}$ from the last $m$ gradient difference pairs $(s_j, r_j)$ and determining the search direction as $p_k = -B_k^{-1} \nabla \mathcal{L}(\theta_k)$.
+However, $\mathcal{H}_k$ is computationally prohibitive to compute exactly. This is due to the extensive differentiation sequences of the kernel matrix, which involve terms of the form $\operatorname{tr}\left(K_y^{-1} \frac{\partial K_y}{\partial \theta_i}\right)$. These are expensive when $N$ is large. Moreover, the Hessian can become nearly singular, for instance, when hyperparameters are weakly identifiable or approach a boundary, making direct inversion numerically unstable. L-BFGS-B addresses both issues by building a low-rank approximation $B_k^{-1} \approx \mathcal{H}_k^{-1}$ from the last $m$ gradient difference pairs $(s_j, r_j)$ and determining the search direction as $p_k = -B_k^{-1} \nabla \mathcal{L}(\theta_k)$.
 
 The Quasi-Newton approach is computationally efficient in strictly convex regimes, but it can fail in the presence of weak invertibility. To prove this, we must decompose the curvature matrix ($\mathcal{H}$) into its principal directions and magnitudes. We rewrite the Hessian as a sum of eigen-directions, each with an eigenvalue attached. The Hessian $\mathcal{H}$ at a point on a plateau admits an eigenpair ($\lambda_{ridge},v_{ridge}$) with $|\lambda_{ridge}| \approx 0$, where $v_{ridge}$ goes along the tangent direction of the simple curvature, causing the condition number to diverge:
 
@@ -558,7 +558,7 @@ The standard approach to this approximation problem is the Random Walk Metropoli
 $$\theta^\prime \sim \mathcal{N}(\theta^{(s)}, \Sigma_{prop})$$
 
 
-where $\Sigma_{prop} = \sigma^2 I$ is the isotropic variance and controls the step size. The proposal is then accepted or rejected based on the Metropolis acceptance probability $\alpha$: (\TODO{should I explain how the Metropolis sampling works?})
+where $\Sigma_{prop} = \sigma^2 I$ is the isotropic variance and controls the step size. The proposal is then accepted or rejected based on the Metropolis acceptance probability $\alpha$:
 
 $$\alpha = \min\left(1, \frac{p(\theta^\prime \mid \mathbf{y}, X)}{p(\theta^{(s)} \mid \mathbf{y}, X)}\right)$$
 
@@ -575,7 +575,7 @@ A practical solution to the previous problem is the Hamiltonian Monte Carlo (HMC
 
 \subsection{Phase Space and the Hamiltonian}
 
-Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$. This approach allows us to treat the hyperparameters as a point moving in the mathematical space. Essentially, the parameter space is augmented to simulate Hamiltonian dynamics. Intuitively, we introduce an auxiliary momentum variable because we do not want the momentum variable to alter the target posterior over the original parameters. \TODO{FIX} We explicitly define the joint distribution of the target variables and the auxiliary momentum as statistically independent: $p(q, p) = p(q)p(p)$. Where the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
+Let the Gaussian Process hyperparameter vector $\theta$ map to a position vector $q \in \mathbb{R}^d$. To model this as a physical system, we introduce a fictitious, independent momentum vector $p \in \mathbb{R}^d$ representing an additional random push. The original parameter space is thus expanded into a $2d$-dimensional \textbf{phase space} $(q, p)$. This approach allows us to treat the hyperparameters as a point moving in the mathematical space. Essentially, the parameter space is augmented to simulate Hamiltonian dynamics. Conceptually, the auxiliary momentum variable is introduced to enable vector-field dynamics without perturbing the target posterior over the original parameters. To achieve this, the joint distribution of the position and momentum variables is explicitly defined as statistically independent: $p(q, p) = p(q)p(p)$. Where the Hamiltonian $H(q, p)$ is the energy of this artificial system. In statistical mechanics, the canonical distribution relates the joint density to the energy function $H(q, p)$:
 
 $$p(q, p) = \frac{1}{Z} \exp(-H(q, p))$$
 
@@ -769,9 +769,9 @@ To ensure that the observed reduction in predictive error is attributable to the
 
 \begin{itemize}
     \item \textbf{High Volatility Shock (March 2020):} 
-    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80. This month's volatility surface exhibits severe backwardation (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) and microstructural friction, providing a rigorous test environment for the HMC sampler under difficult conditions. \textit{Selected dates: 3, 13, 17, 19, 23, and 25 March 2020.}
+    This regime is characterised by extreme market distress with the volatility index VIX exceeding 80 (i. e., the VIX index is a standardized metric representing the market's expectation of 30-day forward-looking volatility). This month's volatility surface exhibits severe backwardation (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) and microstructural friction, providing a rigorous test environment for the HMC sampler under difficult conditions. \textit{Selected dates: 3, 13, 17, 19, 23, and 25 March 2020.}
     
-    \item \textbf{Sustained Bear Market \& Rate Shock (September -- October 2022):} During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 16, 21, 26, 30 September and 5 of October 2022.}
+    \item \textbf{Sustained Bear Market \& Rate Shock (September -- October 2022):} During this period, the volatility is stable and sustained. Additionally, the months of September and October feature a shifted yield curve (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) and a steady loss in the equity market, making it a great fit to test the behaviour of the model under prolonged macroeconomic friction. \textit{Selected dates: 16, 21, 26, 30 September and 5 of October 2022.}
     
     \item \textbf{Steady, Low-Vol Bull (Summer 2023):} 
     The summer of 2023 serves as the baseline regime with low volatility and a standard volatility smile. This tests whether the GP model correctly relies on the parametric prior without overfitting the microstructural noise. \textit{Selected dates: 7, 13, 21, 26, 30 of June 2023.}
@@ -856,7 +856,7 @@ Figure \ref{fig:posterior_2020_03_03} illustrates the posterior distributions fo
 
 Unlike the deterministic optimiser, which prematurely terminates upon encountering flat gradients, the empirical posterior demonstrates that the HMC sampler successfully navigated and mapped the weakly identifiable space. As Figure \ref{fig:posterior_2020_03_03} illustrates, the strike length-scale ($\ell_K$) forms a continuous, unimodal distribution with a slight rightward skew, indicating that the sampler efficiently identified and mixed within a region of high probability mass. Simultaneously, the maturity length-scale ($\ell_T$) exhibits a pronounced skew, systematically exploring a continuous range of plausible values while concentrating mass toward the upper region of its domain. The reason for the hard cut-off of the maturity length-scale ($\ell_T$) is overgeneralisation, which creates a very rigid surface. This continuous exploration is a direct physical manifestation of the Hamiltonian dynamics interacting with the flat ridge topology mapped in Section \ref{sec:map_lml_topology}. By utilizing auxiliary momentum, the simulated particle effectively traverses the phase space even when the gradient of the potential energy approaches zero ($\nabla U(q) \approx 0$). Consequently, the sampler maps the entire spectrum of hyperparameter uncertainty instead of stalling, providing a strong foundation for the structural averaging of the predictive surface.
 
-While a deterministic optimiser prematurely terminates upon encountering these flat gradients, causing the restart instability documented in Section \ref{sec:restart_instability}, the HMC algorithm successfully maps the entire ridge. Furthermore, the empirical data reveal that the location of this ridge is highly non-stationary across market regimes. During the 2020 COVID shock, the market was very chaotic and exhibited high microstructural noise as the bid-ask spreads widened. The HMC naturally favored a longer strike length-scale ($[1.1, 1.8]$), as can be seen from Figure \ref{fig:posterior_2020_03_03}, because a longer $\ell_K$ enforces strict structural regularisation. The algorithm compensated for the degraded signal-to-noise ratio by enforcing strict structural regularisation, thereby maintaining an arbitrage-free surface.
+While a deterministic optimiser prematurely terminates upon encountering these flat gradients, causing the restart instability documented in Section \ref{sec:restart_instability}, the HMC algorithm successfully maps the entire ridge. Furthermore, the empirical data reveal that the location of this ridge is highly non-stationary across market regimes. During the 2020 COVID shock, the market was very chaotic and exhibited high microstructural noise as the bid-ask spreads widened. The posterior distribution naturally favored a longer strike length-scale ($[1.1, 1.8]$), as can be seen from Figure \ref{fig:posterior_2020_03_03}, because a longer $\ell_K$ enforces strict structural regularisation. The Bayesian framework compensated for the degraded signal-to-noise ratio by enforcing strict structural regularisation, thereby maintaining an arbitrage-free surface.
 
 \begin{figure}[htbp]
 \centering
@@ -865,7 +865,7 @@ While a deterministic optimiser prematurely terminates upon encountering these f
 \label{fig:posterior_2024-02-15}
 \end{figure}
 
-In comparison, the early 2024 regime was in high momentum expansion. During aggressive, continuous market rallies, option markets develop very sharp, pronounced structural skews (particularly on the call side as traders chase the rally). The HMC shifted to a lower length-scale ($[1.0, 1.15]$) as can be seen in Figure \ref{fig:posterior_2024-02-15} because the data had a cleaner, stronger signal, and the true economic shape of the surface was much steeper. A shorter length-scale allows the model to be more flexible and detailed. 
+In comparison, the early 2024 regime was in high-momentum expansion. During aggressive, continuous market rallies, option markets develop very sharp, pronounced structural skews (particularly on the call side (see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}) as traders chase the rally). Rather than the HMC shifting, the peak of the marginal posterior shifted to a lower length-scale ($[1.0, 1.15]$), as can be seen in Figure \ref{fig:posterior_2024-02-15}, because the data had a cleaner, stronger signal, and the true economic shape of the surface was much steeper. A shorter length scale allows the model to be more flexible and detailed. 
 
 By using structural averaging, the framework mitigates the influence of parameter extremal  behaviours of specific length scales. In other words, it effectively hedges between the mathematical extremes of a weakly identifiable region. This prevents the kernel from memorising microstructural noise or making the surface too rigid.
 
@@ -910,7 +910,7 @@ Table \ref{tab:arbitrage_summary} illustrates that during rapid regime shifts an
 
 The Bayesian HMC framework changes the perspective on the problem entirely, instead of finding the “best” single hyperparameter. The NUTS sampler integrates across the full posterior distribution, while exploring the entire weakly identifiable ridge surrounding the LML optimum. This process acts as an automated, structural regulariser. As the algorithm averages the predictive surfaces generated by varying length-scales, the random, chaotic microstructural noise cancels itself out. The resultant marginalised expectation isolates the macroeconomic volatility skew and unveils its true macroeconomic landscape.
 
-To summarise, the Bayesian HMC framework demonstrated strong financial validity and overall robustness with respect to structural regularisation. During the severe out-of-distribution coordinate expansion of June 2023, while the model could not completely overcome the extreme structural contradictions present in the raw breakout quotes, it drastically reduced absolute violations (e.g., dropping calendar violations from 450 down to 37, and completely eradicating butterfly violations from 113 down to 0 on 21 June).
+To summarise, the Bayesian HMC framework demonstrated strong financial validity and overall robustness with respect to structural regularisation. During the severe out-of-distribution coordinate expansion of June 2023, while the model could not completely overcome the extreme structural contradictions present in the extreme out-of-distribution observations, it drastically reduced absolute violations (e.g., dropping calendar violations from 450 down to 37, and completely eradicating butterfly violations from 113 down to 0 on 21 June).
 
 \section{The Accuracy-Consistency Trade-off}
 \label{sec:accuracy_consistency_tradeoff}
@@ -965,16 +965,17 @@ Ultimately, this regularisation exposes an accuracy-consistency trade-off betwee
 \section{Computational Limitations and Future Work}
 While the Bayesian Hamiltonian Monte Carlo framework decisively outperforms the deterministic point estimation approach in preserving economic admissibility, its deployment and upkeep during live trading sessions are heavily constrained by computational complexity. Although the time complexity of both algorithms is $\mathcal{O}(N^3)$, the fundamental mathematical bottleneck is the computationally expensive Cholesky decomposition of the covariance matrix. The paramount difference between them comes from the constant factor, which represents the number of times the algorithms have to execute this expensive $\mathcal{O}(N^3)$ decomposition. Based on the hyperparameter configurations used in this study, evaluating the full posterior via Hamiltonian Monte Carlo requires roughly 1,000 times more computational overhead than deterministic point estimation.
 
-It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing, risk management, and portfolio margin calculations. In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
+It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing (i. e., the official daily valuation of derivative contracts), risk management, and portfolio margin calculations (i.e., the determination of regulatory capital requirements based on aggregate portfolio risk). In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
 
 The logical progression for future quantitative research is to bridge this computational gap by exploring Variational Inference (VI) or Sparse Gaussian Processes. By framing Bayesian inference as an optimisation problem rather than a stochastic sampling problem, VI has the potential to approximate the true Bayesian posterior in a fraction of the time. Successfully implementing a Variational Gaussian Process could theoretically maintain the powerful regularising benefits of hyperparameter ensembling while achieving the near-deterministic execution speeds required for high-frequency trading floors. 
 
-\TODO{I have some more ideas on how to improve future work, like amortized inference and hardware-level acceleration. not sure if i should include it or not. basically speaking, the amortised inference takes the entire pipeline offline which could be run overnight, then we train a dnn and have complexity of $\mathcal{O}(1)$ by just passing the live bid-ask spread to the trained neural network. and the hardware-level acceleration would involve writing custom cuda kernels which would execute the cholesky decomp directly on the high end gpu which would be done in c++ as python still caries overhead.}
+Furthermore, amortised inference should be considered a logical progression from variational approximations. To avoid the bottleneck of the Cholesky decomposition, a computationally intensive Hamiltonian Monte Carlo pipeline could be executed entirely offline. A deep neural network could be trained to map live microstructural market inputs, such as asynchronous bid-ask spreads (i. e., bid and ask prices are updated at different timestamps), directly to the regularised posterior predictive surface. This fundamental shift would effectively reduce the online time complexity from $\mathcal{O}(N^3)$ down to a strictly $\mathcal{O}(1)$ deterministic forward pass. For quantitative infrastructures that require the exact analytical Gaussian Process rather than a neural surrogate, future implementations should explore direct hardware-level acceleration. By implementing the exact Cholesky factorisation directly on high-performance GPUs using C++ CUDA kernels, the operational overhead of Python abstractions could be directly circumvented. While preserving mathematical precision while drastically minimising execution latency.
 
 % ------------------------------------------------- appendices
 \appendix
 
 \chapter{Pipeline Architecture}
+To ensure full computational reproducibility, the codebase developed for this dissertation, including the Hamiltonian Monte Carlo implementation and the Arbitrage Auditor, is publicly available at: [https://github.com/mishavelial/BayesianGaussianProcessHyperparameterInference].
 \begin{itemize}[leftmargin=2em]
     \item \texttt{01\_ingest\_spx.py}: data ingestion,
     \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
@@ -1294,8 +1295,6 @@ C(K, T) = e^{-rT} \int_{K}^{\infty} (S_T - K) p(S_T) dS_T
 
 To isolate the density function $p(S_T)$, we must differentiate the integral with respect to the strike price $K$. Because the variable of differentiation $K$ appears in both the integrand and the lower limit of integration, we apply the Leibniz rule:
 
-\TODO{should i show the leibniz rule explicitly?}
-
 We evaluate the upper bound, $b(K) = \infty$, so $\frac{db}{dK} = 0$. The lower bound: $a(K) = K$, so $\frac{da}{dK} = 1$.
 And the integrand becomes $(S_T - K)p(S_T)$.
 
@@ -1346,7 +1345,7 @@ Hence, if an interpolated surface exhibits local concavity, it directly implies 
 % ------------------------- mathematical proof b.5
 
 \section{Dupire’s Equation}
-
+\label{sec:dupire_eq}
 As per the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that actually generates those prices. The Dupire equation shows that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
 
 \subsection{The Setup: The SDE and the FPK Equation}
@@ -1358,109 +1357,104 @@ dS_t = r S_t dt + \sigma_L(S_t, t) S_t dW_t
 \label{eq:sde}
 \end{equation}
 
-Conceptually, the stochastic differential equation dictates that $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time. And the diffusion term ($\sigma_L(S_t, t) S_t dW_t$), where $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, is scaled by the pure randomness term $dW_t$ (Brownian Motion) and the price $S_t$ of the asset. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), adjusted by a stochastic volatility diffusion term and amplified by the local volatility conditions ($\sigma_L S_t dW_t$).
-
-Additionally, by the definitions of stochastic calculus, the transition probability density function $p(S, T)$ of the \ref{eq:sde} process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
+Conceptually, the stochastic differential equation dictates that $dS_t$ is equal to the sum of the drift term ($r S_t dt$), where $r$ is the risk-free rate and $dt$ is an infinitesimal step forward in time, and the diffusion term ($\sigma_L(S_t, t) S_t dW_t$). Here, $\sigma_L(S_t, t)$ represents the volatility of the asset at that particular price $S_t$ and time $t$, scaled by the standard Brownian motion $dW_t$ and the asset price $S_t$. Holistically, this equation represents that the change in the stock price ($dS_t$) is equal to the predictable interest it earned ($r S_t dt$), adjusted by a stochastic volatility diffusion term and amplified by the local volatility conditions ($\sigma_L S_t dW_t$). Additionally, by the definitions of stochastic calculus, the transition probability density function $p(x, T)$ of the process must satisfy the Fokker-Planck-Kolmogorov (FPK) Forward Equation:
 
 \begin{equation}
-\frac{\partial p}{\partial T} = \frac{1}{2} \frac{\partial^2}{\partial S^2} \left( \sigma_L^2(S, T) S^2 p \right) - \frac{\partial}{\partial S} (r S p)
+\frac{\partial p}{\partial T} = \frac{1}{2} \frac{\partial^2}{\partial x^2} \left( \sigma_L^2(x, T) x^2 p \right) - \frac{\partial}{\partial x} (r x p)
 \label{eq:fpk_equation}
 \end{equation}
 
-Where $S$ serves as the dummy variable for the terminal asset price $S_T$.
+Where $x$ serves as the continuous spatial dummy variable representing the state space of the terminal asset price $S_T$.
 
 \subsection{The Derivation: Differentiating the Call Price with Respect to Time}
 
-We begin with the standard risk-neutral pricing formula for a European call, expressed as an integral over the density $p(S, T)$. This notation was previously introduced in Equation \ref{eq:expected_payoff_call}:
+We begin with the standard risk-neutral pricing formula for a European call, expressed as an integral over the transition density $p(x, T)$. This notation was previously introduced in Equation \ref{eq:expected_payoff_call}:
 
-$$C(K, T) = e^{-rT} \int_{K}^{\infty} (S - K) p(S, T) dS$$
+$$C(K, T) = e^{-rT} \int_{K}^{\infty} (x - K) p(x, T) dx$$
 
-To find the evolution of the price over time, we differentiate both sides with respect to maturity $T$ using the product rule:
+To find the evolution of the price over time, we differentiate both sides with respect to maturity $T$ using the Leibniz integral rule:
 
-$$\frac{\partial C}{\partial T} = -r e^{-rT} \int_{K}^{\infty} (S - K) p(S, T) dS + e^{-rT} \int_{K}^{\infty} (S - K) \frac{\partial p}{\partial T} dS$$
+$$\frac{\partial C}{\partial T} = -r e^{-rT} \int_{K}^{\infty} (x - K) p(x, T) dx + e^{-rT} \int_{K}^{\infty} (x - K) \frac{\partial p}{\partial T} dx$$
 
-We recognise that the first term contains the original call price definition. So the equation is simply:
+We recognise that the first term contains the original call price definition. So the equation simplifies to:
 
 \begin{equation}
-\frac{\partial C}{\partial T} = -rC + e^{-rT} \int_{K}^{\infty} (S - K) \frac{\partial p}{\partial T} dS
+\frac{\partial C}{\partial T} = -rC + e^{-rT} \int_{K}^{\infty} (x - K) \frac{\partial p}{\partial T} dx
 \label{eq:simplified_first_derivative_call}
 \end{equation}
 
 \subsection{Substituting the FPK Equation}
 
-In Equation \ref{eq:simplified_first_derivative_call}, we have $\frac{\partial p}{\partial T}$ (the rate at which the probability density changes over time) stuck inside an integral that is being evaluated with respect to the stock price ($dS$). This presents a fundamental mathematical obstacle, as integrating a time derivative with respect to a spatial variable ($S$). Because $T$ and $S$ are independent variables, we cannot evaluate this integral without knowing the explicit function $p(S,T)$ ahead of time. Hence, we make use of the FPK Equation defined in \ref{eq:fpk_equation} to convert time derivatives into spatial derivatives. By substituting the FPK Forward Equation into our $\frac{\partial p}{\partial T}$ term inside the integral, we split the integral into a diffusion term and a drift term:
+In Equation \ref{eq:simplified_first_derivative_call}, the time derivative of the density, $\frac{\partial p}{\partial T}$, is located inside an integral evaluated with respect to the spatial variable $x$. Because $T$ and $x$ are independent variables, we make use of the FPK Equation defined in \ref{eq:fpk_equation} to map the time derivative into spatial derivatives. Substituting the FPK Forward Equation splits the integral into a diffusion term and a drift term:
 
 \begin{equation}
 \frac{\partial C}{\partial T} = -rC 
-+ e^{-rT} \underbrace{\int_{K}^{\infty} (S - K) \frac{1}{2} \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS}_{\text{Diffusion Term}} 
-- e^{-rT} \underbrace{\int_{K}^{\infty} (S - K) \frac{\partial}{\partial S} (r S p) dS}_{\text{Drift Term}}
++ e^{-rT} \underbrace{\int_{K}^{\infty} (x - K) \frac{1}{2} \frac{\partial^2}{\partial x^2} \left( \sigma_L^2 x^2 p \right) dx}_{\text{Diffusion Term}} 
+- e^{-rT} \underbrace{\int_{K}^{\infty} (x - K) \frac{\partial}{\partial x} (r x p) dx}_{\text{Drift Term}}
 \label{eq:time_derivative_eq}
 \end{equation}
 
-Firstly, we begin by evaluating the diffusion term using integration by parts. For the first pass, we let $u = (S - K)$ and $dv = \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS$, so $du = dS$ and $v = \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right)$. Collecting the terms, we obtain:
+We evaluate the diffusion term using integration by parts. Let $u = (x - K)$ and $dv = \frac{\partial^2}{\partial x^2} \left( \sigma_L^2 x^2 p \right) dx$, yielding $du = dx$ and $v = \frac{\partial}{\partial x} \left( \sigma_L^2 x^2 p \right)$. Collecting the terms, we obtain:
 
-$$\int_{K}^{\infty} (S - K) \frac{\partial^2}{\partial S^2} \left( \sigma_L^2 S^2 p \right) dS = 
-\left[ (S - K) \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) \right]_{K}^{\infty} - \int_{K}^{\infty} \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) dS$$
+$$\int_{K}^{\infty} (x - K) \frac{\partial^2}{\partial x^2} \left( \sigma_L^2 x^2 p \right) dx = 
+\left[ (x - K) \frac{\partial}{\partial x} \left( \sigma_L^2 x^2 p \right) \right]_{K}^{\infty} - \int_{K}^{\infty} \frac{\partial}{\partial x} \left( \sigma_L^2 x^2 p \right) dx$$
 
-Because of the $(S-K)$ multiplier, when we set $S$ to the lower boundary term $K$ and the upper boundary term to $\infty$, the entire boundary term becomes 0 because of density decay as $S \to \infty$. Thereby, we apply the Fundamental Theorem of Calculus to the remaining simplified equation:
+Assuming the transition density $p(x,T)$ and its first derivative decay to zero sufficiently fast as $x \to \infty$, the upper boundary evaluated at infinity vanishes. At the lower boundary $x=K$, the $(x-K)$ multiplier becomes $(K-K)=0$. Thus, the entire first boundary term is zero. Applying the Fundamental Theorem of Calculus to the remaining integral:
 
 \begin{equation}
-- \int_{K}^{\infty} \frac{\partial}{\partial S} \left( \sigma_L^2 S^2 p \right) dS = - \left[ \sigma_L^2 S^2 p \right]_{K}^{\infty}
+- \int_{K}^{\infty} \frac{\partial}{\partial x} \left( \sigma_L^2 x^2 p \right) dx = - \left[ \sigma_L^2 x^2 p \right]_{K}^{\infty}
 \label{eq:diffusion_term}
 \end{equation}
 
-Evaluating at infinity yields zero, and evaluating the term at the lower bound $K$ subtracts the term, neutralising the negative sign. Intuitively, evaluating at infinity results in zero because of the $p(S, T)$ function, which represents the likelihood of an asset to land on a price level $S$ at time $T$. The probability that an asset reaches a price level of $\infty$ is 0. Hence:
+Again, evaluating at infinity yields zero due to the asymptotic decay of $p(x,T)$. Evaluating at the lower bound $K$ subtracts the term, neutralising the negative sign:
 
 $$-\left( 0 - \sigma_L^2(K, T) K^2 p(K, T) \right) = \sigma_L^2(K, T) K^2 p(K, T)$$
 
-Next, we evaluate the drift term using standard integration by parts. Let $u = (S - K)$, so $du = dS$. Let $dv = \frac{\partial}{\partial S} (rSp) dS$, yielding $v = rSp$.
+Next, we evaluate the drift term using integration by parts. Let $u = (x - K)$, so $du = dx$. Let $dv = \frac{\partial}{\partial x} (rxp) dx$, yielding $v = rxp$.
 
-$$\int_{K}^{\infty} (S - K) \frac{\partial}{\partial S} (rS p) dS = 
-\left[ (S - K) r S p \right]_{K}^{\infty} - \int_{K}^{\infty} rS p dS$$
+$$\int_{K}^{\infty} (x - K) \frac{\partial}{\partial x} (rx p) dx = 
+\left[ (x - K) r x p \right]_{K}^{\infty} - \int_{K}^{\infty} rx p dx$$
 
-Now we evaluate the boundaries. At the lower bound ($S = K$), the $(S - K)$ term becomes $(K - K)$, becoming 0, and as we set ($S \to \infty$), the probability density $p(S, T)$ decays to zero faster than the polynomial grows. We are left only with the subtracted integral:
+At the lower bound ($x = K$), the $(x - K)$ term resolves to zero. As $x \to \infty$, the probability density $p(x, T)$ decays to zero faster than the polynomial $(x-K)rx$ grows, causing the upper bound to vanish. We are left only with the subtracted integral:
 
 \begin{equation}
-- \int_{K}^{\infty}rSp dS
+- \int_{K}^{\infty}rxp dx
 \label{eq:drift_term}
 \end{equation}
 
-To express the full equation, we substitute the drift term result from \ref{eq:diffusion_term} and the diffusion term result \ref{eq:drift_term} back into the time-derivative equation from \ref{eq:time_derivative_eq}:
+Substituting the evaluated diffusion term \ref{eq:diffusion_term} and drift term \ref{eq:drift_term} back into the time-derivative Equation \ref{eq:time_derivative_eq}:
 
-$$\frac{\partial C}{\partial T} = -rC + e^{-rT} \left( \frac{1}{2} \sigma_L^2(K, T) K^2 p(K, T) \right) - e^{-rT} \left( - \int_{K}^{\infty} r S p dS \right)$$
+$$\frac{\partial C}{\partial T} = -rC + e^{-rT} \left( \frac{1}{2} \sigma_L^2(K, T) K^2 p(K, T) \right) - e^{-rT} \left( - \int_{K}^{\infty} r x p dx \right)$$
 
-$$\frac{\partial C}{\partial T} = -rC + \frac{1}{2} \sigma_L^2(K, T) K^2 \left( e^{-rT} p(K, T) \right) + r e^{-rT} \int_{K}^{\infty} S p dS$$
+$$\frac{\partial C}{\partial T} = -rC + \frac{1}{2} \sigma_L^2(K, T) K^2 \left( e^{-rT} p(K, T) \right) + r e^{-rT} \int_{K}^{\infty} x p dx$$
 
 \subsection{Connecting to Breeden-Litzenberger}
-To finally isolate the local volatility term, we must rewrite the remaining components strictly in terms of the call price derivatives. First, we apply the Breeden-Litzenberger result derived in \ref{eq:initial_b_l_result} ($e^{-rT} p(K, T) = \frac{\partial^2 C}{\partial K^2}$) to the diffusion term and expand the integral in the drift term by adding and subtracting $K$:
+To isolate the local volatility term, we rewrite the remaining components strictly in terms of call price derivatives. First, applying the Breeden-Litzenberger result derived in \ref{eq:initial_b_l_result} ($e^{-rT} p(K, T) = \frac{\partial^2 C}{\partial K^2}$) to the diffusion term, and expanding the integral in the drift term by adding and subtracting $K$:
 
-$$r e^{-rT} \int_{K}^{\infty} (S - K + K) p dS = r e^{-rT} \int_{K}^{\infty} (S - K) p dS + r K e^{-rT} \int_{K}^{\infty} p dS$$
+$$r e^{-rT} \int_{K}^{\infty} (x - K + K) p dx = r e^{-rT} \int_{K}^{\infty} (x - K) p dx + r K e^{-rT} \int_{K}^{\infty} p dx$$
 
-Notice that $e^{-rT} \int_{K}^{\infty} (S - K) p dS$ is simply the Call Price $C$ from \ref{eq:expected_payoff_call}. Also recall from the Breeden-Litzenberger derivation \ref{eq:disc_survival_function} that the first derivative of the call price is the discounted survival function $\frac{\partial C}{\partial K} = -e^{-rT} \int_{K}^{\infty} p dS$. So we substitute these identities back into the expanded drift term:
+Recognizing that $e^{-rT} \int_{K}^{\infty} (x - K) p dx$ is the Call Price $C$, and recalling from \ref{eq:disc_survival_function} that $\frac{\partial C}{\partial K} = -e^{-rT} \int_{K}^{\infty} p dx$, we substitute these identities back into the drift term:
 
 $$r \left( C - K \frac{\partial C}{\partial K} \right)$$
 
-Inserting everything back into the main equation, we obtain:
+Inserting these back into the main equation yields:
 
 $$\frac{\partial C}{\partial T} = -rC + \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partial^2 C}{\partial K^2} + rC - rK \frac{\partial C}{\partial K}$$
 
-The $-rC$ and $+rC$ perfectly cancel each other out, leaving:
+The $-rC$ and $+rC$ terms cancel, leaving:
 
 $$\frac{\partial C}{\partial T} = \frac{1}{2} \sigma_L^2(K, T) K^2 \frac{\partial^2 C}{\partial K^2} - rK \frac{\partial C}{\partial K}$$
 
 \subsection{The Result: Dupire’s Formula}
 
-Finally, by isolating the local variance $\sigma_L^2(K, T)$ we obtain Dupire’s final formula:
-
+Isolating the local variance $\sigma_L^2(K, T)$ yields Dupire’s formula:
 
 \begin{equation}
 \sigma_L^2(K, T) = \frac{\frac{\partial C}{\partial T} + rK \frac{\partial C}{\partial K}}{\frac{1}{2} K^2 \frac{\partial^2 C}{\partial K^2}}
 \label{eq:dupires_equation}
 \end{equation}
 
-This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (i.e., barrier or asian, see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}), and if the second derivative is negative, the local volatility becomes an imaginary number, yielding complex-valued outputs and destabilising the pricing framework.
-
-
+This formula is crucial for understanding how butterfly arbitrage violations directly translate to an economically inadmissible volatility surface. Additionally, Dupire's equation converts Implied Volatility to Local Volatility for pricing exotic options (e.g., Barrier or Asian options, see \hyperref[sec:glossary_arbitrage_pricing_theory]{III. Arbitrage \& Pricing Theory}). If the second derivative $\frac{\partial^2 C}{\partial K^2}$ is negative, the local variance becomes negative, rendering the local volatility an imaginary number and destabilising the pricing framework.
 \end{proof}
 
 \newpage
