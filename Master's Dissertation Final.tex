@@ -310,7 +310,7 @@ In other words, the total variance space serves as a smooth framework that allow
 \subsection{Calendar Arbitrage}
 \label{subsubsec:calendar-arbitrage}
 
-As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month $T_1$ contract overpriced, which in turn could be shorted (i. e., taking a negative position in the asset to capture the price discrepancy), and the far-month $T_2$ contract underpriced ($T_1 < T_2$). It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity $T$.\citep{gatheral2006volatility}
+As described by Gatheral, calendar arbitrage arises from the calendar spread option strategy, which involves two options with the same strike price but different maturities. An arbitrage opportunity arises when the longer-maturity option has a lower total variance than the shorter-maturity one. This makes the near-month $T_1$ contract overpriced, which in turn could be shorted (i. e., taking a negative position in the asset to capture the price discrepancy), and the far-month $T_2$ contract underpriced ($T_1 < T_2$). It goes without saying that this applies only to European options or non-dividend-paying American options, which we will assume from now on. In practical terms, the total variance should increase monotonically with respect to time maturity $T$, a foundational conclusion proved by \citet{gatheral2006volatility}. 
 
 \paragraph{Link to total variance.}
 In total variance terms, the calendar arbitrage constraint becomes a monotonicity condition in maturity:
@@ -612,7 +612,8 @@ In order for the Hamiltonian dynamics to be valid as a mechanism for a Markov ch
 	\item \textbf{Energy Conservation}
 The energy conservation rule keeps the Hamiltonian invariant, conserving energy over time. 
 
-\textit{Proof.} By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
+\begin{proof} 
+By applying the multivariate chain rule and substituting Hamilton's equations, the time derivative becomes $H$:
 
 \begin{equation}
 \frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{dq_i}{dt} + \frac{\partial H}{\partial p_i} \frac{dp_i}{dt} \right)
@@ -623,11 +624,13 @@ $$\frac{dH}{dt} = \sum_{i=1}^d \left( \frac{\partial H}{\partial q_i} \frac{\par
 
 
 Because $\frac{dH}{dt} = 0$, the particle glides along isocontours of the joint density $p(q, p)$. Hence, the trajectory does not move toward higher or lower Hamiltonian values and remains at the same probability level rather than exploring them. In practice, we cannot integrate Hamilton's equations analytically, so we approximate the continuous dynamics using the Leapfrog method reviewed in Chapter 5.4.
+\end{proof}
 
 	\item \textbf{Volume Preservation (Liouville's Theorem)}
 Another fundamental condition is that Hamiltonian dynamics must preserve volume in phase space. Mathematically, this implies that a region of phase space mapped forward in time will retain its original volume. 
 
-\textit{Proof.} Consider the vector field $\mathbf{V}$ governing the flow in phase space, defined as $\mathbf{V} = \left( \frac{dq}{dt}, \frac{dp}{dt} \right)$. The divergence of this vector field is:
+\begin{proof}
+Consider the vector field $\mathbf{V}$ governing the flow in phase space, defined as $\mathbf{V} = \left( \frac{dq}{dt}, \frac{dp}{dt} \right)$. The divergence of this vector field is:
 
 
 \begin{equation}
@@ -646,10 +649,12 @@ Substituting Hamilton's equations yields:
 
 By Clairaut's theorem, the second partial derivatives of $H$ are equal if $H$ is smooth and continuous. Thereby, the two terms cancel, and the divergence becomes zero. This symplectic property is vital because it implies that the determinant of the Jacobian of the Hamiltonian flow is strictly equal to 1, completely bypassing the need to compute complex Jacobian determinants during the Metropolis acceptance step.
 
+\end{proof}
 	\item \textbf{Time Reversibility} 
 The mapping is invariant under time reversal. If the system is simulated forward for time $t$, negating the momentum and simulating forward for time $t$ returns the system to its exact initial state. This symmetry is mandatory for ensuring detailed balance in the resulting Markov chain.
 
-\textit{Proof.} Let the state of the system be defined by the coordinates $(q, p)$ evolving under continuous time $t$. Consider the time-reversal transformation defined by mapping time $t \mapsto \tau = -t$ and simultaneously negating the auxiliary momentum $p \mapsto \tilde{p} = -p$, while position remains unchanged $q \mapsto \tilde{q} = q$. 
+\begin{proof}
+Let the state of the system be defined by the coordinates $(q, p)$ evolving under continuous time $t$. Consider the time-reversal transformation defined by mapping time $t \mapsto \tau = -t$ and simultaneously negating the auxiliary momentum $p \mapsto \tilde{p} = -p$, while position remains unchanged $q \mapsto \tilde{q} = q$. 
 
 Because the kinetic energy $K(p) = \frac{1}{2} p^\top M^{-1} p$ is a quadratic form, the Hamiltonian $H(q, p) = U(q) + K(p)$ is strictly symmetric with respect to momentum, ensuring that $H(q, p) = H(\tilde{q}, \tilde{p})$. 
 
@@ -665,7 +670,8 @@ $$ \frac{d\tilde{p}}{d\tau} = \frac{d(-p)}{d(-t)} = \frac{dp}{dt} = -\frac{\part
 Because the potential energy $U(q)$ is independent of momentum, the spatial gradient remains completely unaffected by the sign of $p$:
 $$ \frac{d\tilde{p}}{d\tau} = -\frac{\partial H(\tilde{q}, \tilde{p})}{\partial \tilde{q}} $$
 
-The transformed phase-space variables $(\tilde{q}, \tilde{p})$ perfectly satisfy the exact original Hamiltonian equations of motion with respect to reversed time $\tau$. Therefore, the continuous-time Hamiltonian dynamics are strictly reversible, allowing the Metropolis-Hastings acceptance step to maintain detailed balance. \hfill $\blacksquare$
+The transformed phase-space variables $(\tilde{q}, \tilde{p})$ perfectly satisfy the exact original Hamiltonian equations of motion with respect to reversed time $\tau$. Therefore, the continuous-time Hamiltonian dynamics are strictly reversible, allowing the Metropolis-Hastings acceptance step to maintain detailed balance. 
+\end{proof}
 
 \end{enumerate}
 \subsection{The No-U-Turn Sampler (NUTS)}
@@ -825,7 +831,7 @@ Previously, we established the theoretical foundations of deterministic point es
 \label{sec:the_global_fit}
 The primary objective of any volatility surface interpolant is to accurately generalise to new market coordinates. The out-of-sample Root Mean Square Error (RMSE) is used to gauge the performance of this generalisation. 
 
-As established in Chapter 4, the deterministic optimiser exhibits weak identifiability on flat, non-convex ridges in the LML topological landscapes. The L-BFGS-B algorithm often stops prematurely at an arbitrary coordinate, subject to its initialisation point. Thereby, constraining the predictions of the GP and leads to severe overfitting of the model. Conversely, the Bayesian HMC framework integrates over the entire weakly identifiable ridge. By drawing samples from the full posterior distribution and computing a predictive mean as an expectation over the hyperparameter space, the HMC approach acts as a structural regulariser. 
+As established in Chapter \ref{sec:map_lml_topology}  the deterministic optimiser exhibits weak identifiability on flat, non-convex ridges in the LML topological landscapes. The L-BFGS-B algorithm often stops prematurely at an arbitrary coordinate, subject to its initialisation point. Thereby, constraining the predictions of the GP and leads to severe overfitting of the model. Conversely, the Bayesian HMC framework integrates over the entire weakly identifiable ridge. By drawing samples from the full posterior distribution and computing a predictive mean as an expectation over the hyperparameter space, the HMC approach acts as a structural regulariser. 
 
 
 The observed results across different market regimes explicitly validate our hypothesis from Section \ref{sec:hypothesis}, particularly during heavy market stress and turmoil. The largest reduction in error prediction was during the High Volatility Shock of March 2020. During this period, the deterministic optimiser was unable to generalise the surface correctly, resulting in a large OOT RMSE. As detailed in Figure \ref{tab:master_comparison_all_dates}, on 25 March 2020, the Point-Estimated GP yielded a massive out-of-sample RMSE of $0.1038$ ($10.38\%$). Similarly, on 17 March 2020, the deterministic error spiked to $0.0802$ ($8.02\%$).
@@ -876,7 +882,7 @@ By using structural averaging, the framework mitigates the influence of paramete
 
 \section{Financial Consistency and the Arbitrage Trade-off}
 \label{sec:consistency_tradeoff}
-While the out-of-sample RMSE measures how well the model extrapolates across the macroscopic surface, it does not guarantee economic validity. As mentioned in Section 2.2, a mathematically smooth interpolant is financially inadmissible if it permits arbitrage. Both frameworks were evaluated for financial consistency with respect to the calendar and butterfly arbitrage constraints defined in Section 2.2.1.
+While the out-of-sample RMSE measures how well the model extrapolates across the macroscopic surface, it does not guarantee economic validity. As mentioned in Section \ref{subsec:static-arbitrage}, a mathematically smooth interpolant is financially inadmissible if it permits arbitrage. Both frameworks were evaluated for financial consistency with respect to the calendar and butterfly arbitrage constraints.
 
 The empirical results, aggregated in Appendix C, reveal the mostly consistent structural flaw in the deterministic point-estimation framework across regimes. By aggressively maximising the log-marginal likelihood, the L-BFGS-B optimiser frequently overfits the microstructural noise of the bid-ask spreads. This is especially evident during the 2024 regime, mentioned in Section \ref{sec:the_global_fit}. Additionally, the Figure \ref{fig:surface_2024-01-24} gives us an insight to how both of the algorithms fit the surface. It is evedient that although the economic structure is similar, the way both algorithm represent them is drastically different.
 
@@ -980,9 +986,7 @@ Furthermore, amortised inference should be considered a logical progression from
 \appendix
 
 \chapter{Pipeline Architecture}
-To ensure full computational reproducibility, the codebase developed for this dissertation, including the Hamiltonian Monte Carlo implementation and the Arbitrage Auditor, is publicly available at: 
-
-[https://github.com/mishavelial/BayesianGaussianProcessHyperparameterInference].
+To ensure full computational reproducibility, the codebase developed for this dissertation, including the Hamiltonian Monte Carlo implementation and the Arbitrage Auditor, is publicly available at: \href{https://github.com/mishavelial/Bayesian Gaussian Process Hyperparameter Inference Model}{\texttt{Bayesian Gaussian Process Hyperparameter Inference Model}}.
 \begin{itemize}[leftmargin=2em]
     \item \texttt{01\_ingest\_spx.py}: data ingestion,
     \item \texttt{02\_preprocess.py}: filtering, total variance construction, train/test split,
@@ -998,10 +1002,14 @@ To ensure full computational reproducibility, the codebase developed for this di
 % ------------------------- mathematical proof b.1
 
 \chapter{Mathematical Proofs and Extended Derivations}
+In this Appendix, we provide the mathematical derivations and continuous-time calculus required to make the algorithmic framework discussed in the main text rigorous. While the foundational theorems are established in standard mathematical and financial literature, the step-by-step expansions, matrix calculus, and specific applications to the Matérn kernel presented here have been manually derived and adapted for the exact structural constraints of this dissertation. 
+
+For full transparency and to demonstrate the independent execution of these mathematical mechanics, the original handwritten derivations corresponding to this appendix have been digitized and made available in the project's repository at \href{https://github.com/mishavelial/Bayesian Gaussian Process Hyperparameter Inference Model}{\texttt{Bayesian Gaussian Process Hyperparameter Inference Model}}.
+
 \section{The Schur Complement and the GP Predictive Distribution}
 \label{sec:schur_complement}
 
-This derivation provides the formal proof for how a Gaussian Process conditions its predictions based on observed market data. By applying the Schur complement to a partitioned block covariance matrix, we isolate the exact conditional mean and covariance for unseen test coordinates.
+This derivation provides the formal proof of how a Gaussian Process conditions its predictions on observed market data using a standard block-matrix inversion approach outlined by \citet{rasmussen2006gp}. By applying the Schur complement to a partitioned block covariance matrix, we isolate the exact conditional mean and covariance for unseen test coordinates.
 
 \subsection{The Setup: The Joint Multivariate Gaussian}
 \begin{proof}
@@ -1069,21 +1077,18 @@ $$f_* \mid y \sim \mathcal{N}\left(K_{*y}K_{yy}^{-1}y, \ S \right)$$
 
 By substituting our original notation back into the equation, we yield the explicit, exact formulas for the Gaussian Process predictive mean vector ($\bar{f}_*$) and predictive covariance matrix ($\Sigma_*$):
 
-\subsubsection{Predictive Mean:}
-
-
+\noindent\textbf{Predictive Mean:} 
 \begin{equation}
 \bar{f}_* = K(X_*, X) [K(X, X) + \alpha I]^{-1} y
 \label{eq:pred_mean_b1}
 \end{equation}
 
-
-\subsubsection{Predictive Covariance:}
-
+\noindent\textbf{Predictive Covariance:} 
 \begin{equation}
 \Sigma_* = K(X_*, X_*) - K(X_*, X) [K(X, X) + \alpha I]^{-1} K(X, X_*)
 \label{eq:pred_covariance_b1}
 \end{equation}
+
 \end{proof}
 
 \newpage
@@ -1093,7 +1098,7 @@ By substituting our original notation back into the equation, we yield the expli
 \section{Matrix Calculus of the Log-Marginal Likelihood Gradients}
 \label{sec:lml_gradients}
 
-This derivation provides the formal proof of how gradient-based optimisers navigate the landscape and why they stall on flat ridges by computing the analytical partial derivatives of the Log-Marginal Likelihood (LML) with respect to GP covariance kernel hyperparameters $\theta_j$ (such as length-scales $\ell_K, \ell_T$, signal variance $\sigma_f^2$, or noise variance $\sigma_n^2$).
+While the generic formulation of the log-marginal likelihood gradients is well-established in spatial statistics \citep{rasmussen2006gp}, this derivation provides the formal proof of how gradient-based optimisers navigate the landscape and why they stall on flat ridges by computing the analytical partial derivatives of the Log-Marginal Likelihood (LML) with respect to GP covariance kernel hyperparameters $\theta_j$ (such as length-scales $\ell_K, \ell_T$, signal variance $\sigma_f^2$, or noise variance $\sigma_n^2$).
 
 \subsection{The Setup: The Objective Function}
 \begin{proof}
@@ -1183,7 +1188,7 @@ $$\frac{\partial \mathcal{L}}{\partial \theta_j} = \frac{1}{2} \text{Tr} \left( 
 \section{Analytical Derivatives of the Matérn 5/2 Kernel}
 \label{sec:derivatives_matern_kernel)}
 
-This is the mathematical derivation for the analytical derivatives of the Matérn 5/2 kernel. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage), removing any reliance on finite-difference approximations.
+This is the mathematical derivation of the analytical derivatives of the Matérn 5/2 kernel, although the base equation of the Matérn class is well-documented in standard literature \cite{rasmussen2006gp}. Here we present the exact continuous calculus required to prove that the Gaussian Process natively supports the arbitrage bounds (gradient for Calendar Arbitrage, Hessian for Butterfly Arbitrage) for our two-dimensional $(K, T)$ anisotropic volatility surface, removing any reliance on finite-difference approximations. 
 
 \subsection{The GP Linear Operator Property}
 \begin{proof}
@@ -1282,7 +1287,7 @@ $$\frac{\partial^2 k_{5/2}}{\partial x_{*, i}^2} = -\frac{5}{3} \sigma_f^2 \left
 \section{The Breeden-Litzenberger Density and Static Arbitrage}
 \label{sec:breeden_litz_proof}
 
-In this derivation, we establish the relationship between the price of a European call option and the implied risk-neutral probability density function. Essentially, by isolating the convexity term, we show that the term must remain strictly positive to avoid butterfly arbitrage.
+In this derivation, we establish the relationship between the price of a European call option and the implied risk-neutral probability density function. Although the foundational logic follows the framework established by \citet{breeden1978prices}, we expand this by showing that the term must remain strictly positive to avoid butterfly arbitrage.
 
 \subsection{The Setup: Risk-Neutral Expected Payoff}
 \begin{proof}
@@ -1353,7 +1358,10 @@ Hence, if an interpolated surface exhibits local concavity, it directly implies 
 
 \section{Dupire’s Equation}
 \label{sec:dupire_eq}
-According to the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that generates those prices. The foundation of our continuous-time model is based on standard stochastic financial theory from the \citet{shreve2004stochastic} textbook. Thereby, for the Dupire equation to show that for this SDE to exist, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
+
+According to the Fundamental Theorem of Asset Pricing, for an option surface to be valid, there must exist a risk-neutral stochastic process (an SDE) that generates those prices. The foundation of our risk-neutral stochastic process model is based on standard stochastic financial theory as presented in the \citet{shreve2004stochastic} textbook. 
+
+Furthermore, for the Dupire equation to show that this SDE exists, the local variance must be strictly positive. Hence, if a butterfly arbitrage violation occurs, the local variance becomes negative, and the diffusion term $\sigma_L S_t dW_t$ becomes mathematically undefined. Consequently, rendering the option surface invalid for financial modelling. 
 
 \subsection{The Setup: The SDE and the FPK Equation}
 \begin{proof}
@@ -1472,7 +1480,7 @@ This formula is crucial for understanding how butterfly arbitrage violations dir
 \section{Mercer's Theorem and the RKHS Norm Derivation}
 \label{sec:m_theorem_b6}
 
-In this proof, we will break down a concept from pure Functional Analysis: the Reproducing Kernel Hilbert Space (RKHS) norm, which comes embedded in the \textit{scikit-learn} library. It represents the formal penalty which constrains the Gaussian Process Regression from creating an overly jagged surface. Hence, it is necessary to formally introduce it in this paper. 
+The theoretical basis for Reproducing Kernel Hilbert Spaces (RKHS) is a cornerstone of functional analysis, originating from the eigen-decomposition theorem of \citet{mercer1909functions} and formalized by \citet{aronszajn1950theory}. The following proof adapts these principles to explicitly derive the RKHS norm penalty acting upon our Gaussian Process loss functional, formalizing the structural regularization mechanism. Conceptually representing the formal penalty that constrains the Gaussian Process Regression from creating an overly jagged surface. Hence, it is necessary to formally introduce it in this paper.
 
 \subsection{Definition of the Kernel Operator}
 \begin{proof}
@@ -1554,7 +1562,7 @@ $$J(f) = \sum_{j=1}^{N} \left( y_j - \sum_{i=1}^{\infty} c_i \phi_i(x_j) \right)
 \section{Fisher Information Matrix (FIM) for a Gaussian Process}
 \label{sec:fim_gp}
 
-Because for most of the option data, the optimiser stumbles across a flat ridge in the LML surface. We need to understand how confident our model is in the hyperparameters it chose. Thus, this proof is foundational to the L-BFGS-B optimisation chapter because it quantifies our uncertainty about our model.
+While the general statistical definition of information matrices originates from the foundational work of \citet{fisher1922mathematical} and standard spatial statistics literature \citep{rasmussen2006gp}, the following proof explicitly executes the second-order matrix calculus and trace expectations to extract the exact hyperparameter covariance bounds for our volatility framework.
 
 \subsection{The Log-Marginal Likelihood}
 \begin{proof}
@@ -1794,6 +1802,21 @@ Springer Science \& Business Media.
 Kolmogorov, A. N. (1933).
 \textit{Grundbegriffe der Wahrscheinlichkeitsrechnung}.
 Springer, Berlin. (English translation: \textit{Foundations of the Theory of Probability}, Chelsea Publishing Company, New York, 1950).
+
+\bibitem[Mercer(1909)]{mercer1909functions}
+Mercer, J. (1909).
+Functions of positive and negative type, and their connection with the theory of integral equations.
+\textit{Philosophical Transactions of the Royal Society of London. Series A}, 209, 415--446.
+
+\bibitem[Aronszajn(1950)]{aronszajn1950theory}
+Aronszajn, N. (1950).
+Theory of Reproducing Kernels.
+\textit{Transactions of the American Mathematical Society}, 68(3), 337--404.
+
+\bibitem[Fisher(1922)]{fisher1922mathematical}
+Fisher, R. A. (1922).
+On the Mathematical Foundations of Theoretical Statistics.
+\textit{Philosophical Transactions of the Royal Society of London. Series A}, 222(594--604), 309--368.
 
 \bibitem[CBOE(2026)]{cboe2026datashop}
 Chicago Board Options Exchange (CBOE). (2026).
