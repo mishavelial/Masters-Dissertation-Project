@@ -1,4 +1,4 @@
-# [Bayesian Gaussian Process Inference for Implied Volatility Surfaces]
+# Bayesian Gaussian Process Inference for Implied Volatility Surfaces
 
 **Author:** [Mikhail Semenov]
 
