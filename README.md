@@ -79,13 +79,14 @@ python code/main.py --data_path data/mock/
 
 ### 3. Running with Raw CBOE Data (If Licensed Access Available)
 
-If you hold an institutional license or valid access to raw CBOE data, please reach out personally.
+If you hold an institutional license or valid access to raw CBOE data:
 
-1. Place your raw `.csv` files into the `data/raw/` folder.
-2. Run the main pipeline pointing to the raw directory:
+1. Place the data files inside 'Masters-Dissertation-Project/bayesian-gp-volatility-surface/data/' folder without changing the name. 
+2. Add the date to run_pipeline() function inside run_all.py.
+3. Run the main pipeline pointing to the raw directory:
 
 ```bash
-python code/run_all.py
+python code/main.py --data_path data/raw/
 
 ```
 
@@ -99,7 +100,7 @@ The complete text, including full empirical results, methodologies, figures, and
 
 ## 📬 Contact
 
-If you have questions or additions regarding the methodology or execution, feel free to reach out:
+If you have questions regarding the methodology or execution, feel free to reach out:
 
 * **Author:** [Mikhail Semenov]
 * **Email:** [ms624@st-andrews.ac.uk]
