@@ -22,18 +22,18 @@ The project investigates the weak identifiability of the Log-Marginal Likelihood
 
 ```text
 ├── bayesian-gp-volatility-surface/ # Source code for data processing & analysis
-│   ├── gitignore
-│   ├── 01_ingest_spx.py
-│   ├── 02_preprocess.py
-│   ├── 03_prior_model.py
-│   ├── 04_gp_point_estimation.py
-│   ├── 05_topology_scan.py
-│   ├── 06_restart_sensitivity.py
-│   ├── 07_gp_hmc.py
-│   ├── 08_compare_results.py
-│   ├── 09_plots.py
+│   ├── .gitignore
+│   ├── 01_ingest_spx.py # Data ingestor
+│   ├── 02_preprocess.py # Preprocess
+│   ├── 03_prior_model.py # Fit the parametric prior
+│   ├── 04_gp_point_estimation.py # Fit point-estimator GP
+│   ├── 05_topology_scan.py # Topological LML Surface / Visual Diagnostic
+│   ├── 06_restart_sensitivity.py # Restart module to check the best fitting Point-Estimating GP
+│   ├── 07_gp_hmc.py # Bayesian Inference model
+│   ├── 08_compare_results.py # OOS RMSE Comparison
+│   ├── 09_plots.py # Plots
 │   ├── run_all.py # Main execution script
-│   └── utils.py
+│   └── utils.py # Static Arbitrage calculations
 ├── main_text/                             # Main text directory
 │   ├── Master's Dissertation Final.pdf  # Full text of the dissertation
 │   ├── Master's Dissertation Final.tex  # Expected location for raw CBOE CSVs (Git-ignored)
