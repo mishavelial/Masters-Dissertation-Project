@@ -94,7 +94,7 @@ python code/main.py --data_path data/raw/
 
 ## 📄 Manuscript
 
-The complete text, including full empirical results, methodologies, figures, and references, is available in **[`dissertation.pdf`](https://www.google.com/search?q=./dissertation.pdf)**.
+The complete text, including full empirical results, methodologies, figures, and references, is available in **[`Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces.pdf`]()**.
 
 ---
 
