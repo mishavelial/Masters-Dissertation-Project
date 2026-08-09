@@ -73,7 +73,7 @@ To test the pipeline end-to-end using synthetic data:
 
 ```bash
 # Run the primary analysis pipeline
-python code/main.py --data_path data/mock/
+python run_all.py
 
 ```
 
