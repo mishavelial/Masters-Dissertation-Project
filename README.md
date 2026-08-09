@@ -21,25 +21,27 @@ The project investigates the weak identifiability of the Log-Marginal Likelihood
 ## 📁 Repository Structure
 
 ```text
-├── bayesian-gp-volatility-surface/ # Source code for data processing & analysis
+├── bayesian-gp-volatility-surface/         # Source code for data processing & analysis
 │   ├── .gitignore
-│   ├── 01_ingest_spx.py # Data ingestor
-│   ├── 02_preprocess.py # Preprocess
-│   ├── 03_prior_model.py # Fit the parametric prior
-│   ├── 04_gp_point_estimation.py # Fit point-estimator GP
-│   ├── 05_topology_scan.py # Topological LML Surface / Visual Diagnostic
-│   ├── 06_restart_sensitivity.py # Restart module to check the best fitting Point-Estimating GP
-│   ├── 07_gp_hmc.py # Bayesian Inference model
-│   ├── 08_compare_results.py # OOS RMSE Comparison
-│   ├── 09_plots.py # Plots
-│   ├── run_all.py # Main execution script
-│   └── utils.py # Static Arbitrage calculations
-├── main_text/                             # Main text directory
-│   ├── Master's Dissertation Final.pdf  # Full text of the dissertation
-│   ├── Master's Dissertation Final.tex  # Expected location for raw CBOE CSVs (Git-ignored)
-│   ├── ProofsForAppendixB.pdf
-│   └── Figures
-└── README.md                        # Project documentation
+│   ├── data                                  # Folder containing MOCK data
+│   ├── 01_ingest_spx.py                      # Data ingestor
+│   ├── 02_preprocess.py                      # Preprocess
+│   ├── 03_prior_model.py                     # Fit the parametric prior
+│   ├── 04_gp_point_estimation.py             # Fit point-estimator GP
+│   ├── 05_topology_scan.py                   # Topological LML Surface / Visual Diagnostic
+│   ├── 06_restart_sensitivity.py             # Restart module to check the best fitting Point-Estimating GP
+│   ├── 07_gp_hmc.py                          # Bayesian Inference model
+│   ├── 08_compare_results.py                 # OOS RMSE Comparison
+│   ├── 09_plots.py                           # Plots
+│   ├── run_all.py                            # Main execution script
+│   └── utils.py                              # Static Arbitrage calculations
+├── main_text/                              # Main text directory
+│   ├── Master's Dissertation Final.pdf       # Full text of the dissertation
+│   ├── Master's Dissertation Final.tex       # Expected location for raw CBOE CSVs (Git-ignored)
+│   ├── ProofsForAppendixB.pdf                # Manually derived proofs for Appendix B
+│   └── Figures                               # Figures used in the main text
+├── requirements.txt                        # Python packages requirements
+└── README.md                               # Project documentation
 
 ```
 
@@ -70,9 +72,6 @@ pip install -r code/requirements.txt
 To test the pipeline end-to-end using synthetic data:
 
 ```bash
-# Generate synthetic mock data matching CBOE schema
-python code/scripts/generate_mock_data.py
-
 # Run the primary analysis pipeline
 python code/main.py --data_path data/mock/
 
@@ -80,7 +79,7 @@ python code/main.py --data_path data/mock/
 
 ### 3. Running with Raw CBOE Data (If Licensed Access Available)
 
-If you hold an institutional license or valid access to raw CBOE data:
+If you hold an institutional license or valid access to raw CBOE data, please reach out personally.
 
 1. Place your raw `.csv` files into the `data/raw/` folder.
 2. Run the main pipeline pointing to the raw directory:
@@ -94,7 +93,7 @@ python code/main.py --data_path data/raw/
 
 ## 📄 Manuscript
 
-The complete text, including full empirical results, methodologies, figures, and references, is available in **[`Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces.pdf`]()**.
+The complete text, including full empirical results, methodologies, figures, and references, is available in **[`Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces.pdf`](https://github.com/mishavelial/Masters-Dissertation-Project/blob/main/main_text/Master's%20Dissertation%20Final.pdf)**.
 
 ---
 
