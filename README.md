@@ -1,0 +1,106 @@
+# [Bayesian Gaussian Process Inference for Implied Volatility Surfaces]
+
+**Author:** [Mikhail Semenov]
+
+**Degree:** [M.Sc. in Mathematics]
+
+**Institution:** [University of St. Andrews]
+
+**Date:** [11 August 2026]
+
+---
+
+## 📌 Overview
+
+This repository contains the full codebase and primary manuscript for my dissertation titled **"[Bayesian Gaussian Process Inference for Implied Volatility Surfaces]"**.
+
+The project investigates the weak identifiability of the Log-Marginal Likelihood hyperparameter space. .
+
+---
+
+## 📁 Repository Structure
+
+```text
+├── bayesian-gp-volatility-surface/ # Source code for data processing & analysis
+│   ├── gitignore
+│   ├── 01_ingest_spx.py
+│   ├── 02_preprocess.py
+│   ├── 03_prior_model.py
+│   ├── 04_gp_point_estimation.py
+│   ├── 05_topology_scan.py
+│   ├── 06_restart_sensitivity.py
+│   ├── 07_gp_hmc.py
+│   ├── 08_compare_results.py
+│   ├── 09_plots.py
+│   ├── run_all.py # Main execution script
+│   └── utils.py
+├── main_text/                             # Main text directory
+│   ├── Master's Dissertation Final.pdf  # Full text of the dissertation
+│   ├── Master's Dissertation Final.tex  # Expected location for raw CBOE CSVs (Git-ignored)
+│   ├── ProofsForAppendixB.pdf
+│   └── Figures
+└── README.md                        # Project documentation
+
+```
+
+---
+
+## 🔒 Data Availability & Licensing Notice
+
+> **Note on Proprietary Data:**
+> The raw option datasets used in this study are proprietary to the **Chicago Board Options Exchange (CBOE)** and cannot be redistributed under licensing restrictions.
+
+To ensure code reproducibility, a **mock dataset generator** is included. This generates synthetic data adhering to the exact schema, data types, and column structures required by the pipeline.
+
+---
+
+## 🚀 Getting Started & Execution
+
+### 1. Prerequisites
+
+Ensure you have **Python 3.x** installed. Install the required packages via:
+
+```bash
+pip install -r code/requirements.txt
+
+```
+
+### 2. Running with Mock Data (For Pipeline Verification)
+
+To test the pipeline end-to-end using synthetic data:
+
+```bash
+# Generate synthetic mock data matching CBOE schema
+python code/scripts/generate_mock_data.py
+
+# Run the primary analysis pipeline
+python code/main.py --data_path data/mock/
+
+```
+
+### 3. Running with Raw CBOE Data (If Licensed Access Available)
+
+If you hold an institutional license or valid access to raw CBOE data:
+
+1. Place your raw `.csv` files into the `data/raw/` folder.
+2. Run the main pipeline pointing to the raw directory:
+
+```bash
+python code/main.py --data_path data/raw/
+
+```
+
+---
+
+## 📄 Manuscript
+
+The complete text, including full empirical results, methodologies, figures, and references, is available in **[`dissertation.pdf`](https://www.google.com/search?q=./dissertation.pdf)**.
+
+---
+
+## 📬 Contact
+
+If you have questions regarding the methodology or execution, feel free to reach out:
+
+* **Author:** [Mikhail Semenov]
+* **Email:** [ms624@st-andrews.ac.uk]
