@@ -85,7 +85,7 @@ If you hold an institutional license or valid access to raw CBOE data, please re
 2. Run the main pipeline pointing to the raw directory:
 
 ```bash
-python code/main.py --data_path data/raw/
+python code/run_all.py
 
 ```
 
@@ -99,7 +99,7 @@ The complete text, including full empirical results, methodologies, figures, and
 
 ## 📬 Contact
 
-If you have questions regarding the methodology or execution, feel free to reach out:
+If you have questions or additions regarding the methodology or execution, feel free to reach out:
 
 * **Author:** [Mikhail Semenov]
 * **Email:** [ms624@st-andrews.ac.uk]
