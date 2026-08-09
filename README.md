@@ -52,7 +52,7 @@ The project investigates the weak identifiability of the Log-Marginal Likelihood
 > **Note on Proprietary Data:**
 > The raw option datasets used in this study are proprietary to the **Chicago Board Options Exchange (CBOE)** and cannot be redistributed under licensing restrictions.
 
-To ensure code reproducibility, a **mock dataset generator** is included. This generates synthetic data adhering to the exact schema, data types, and column structures required by the pipeline.
+To ensure code reproducibility, a **mock dataset** is included. This synthetic data adheres to the exact schema, data types, and column structures required by the pipeline.
 
 ---
 
