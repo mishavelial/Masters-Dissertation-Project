@@ -1,18 +1,18 @@
 # Bayesian Gaussian Process Inference for Implied Volatility Surfaces
 
-**Author:** [Mikhail Semenov]
+**Author:** Mikhail Semenov
 
-**Degree:** [M.Sc. in Mathematics]
+**Degree:** M.Sc. in Mathematics
 
-**Institution:** [University of St. Andrews]
+**Institution:** University of St. Andrews
 
-**Date:** [11 August 2026]
+**Date:** 11 August 2026
 
 ---
 
 ## 📌 Overview
 
-This repository contains the full codebase and primary manuscript for my dissertation titled **"[Bayesian Gaussian Process Inference for Implied Volatility Surfaces]"**.
+This repository contains the full codebase and primary manuscript for my dissertation titled **"Bayesian Gaussian Process Inference for Implied Volatility Surfaces"**.
 
 The project investigates the weak identifiability of the Log-Marginal Likelihood hyperparameter space. .
 
