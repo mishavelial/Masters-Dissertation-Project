@@ -14,7 +14,7 @@
 
 This repository contains the full codebase and primary manuscript for my dissertation titled **"Bayesian Gaussian Process Inference for Implied Volatility Surfaces"**.
 
-The project investigates the weak identifiability of the Log-Marginal Likelihood hyperparameter space. .
+The project investigates the weak identifiability of the Log-Marginal Likelihood hyperparameter space of financial data using Point-Estimation and Bayesian Hamiltonian Monte Carlo models. The financial data is inherently noisy, thus proposing a challenge for deterministic models that optimise hyperparameters. On the other hand, the Bayesian approach seeks to resolve this instability by acting as a structural regulariser. Empirically, this framework has proved to be reliable during expansion and turmoil regimes (i. e., 2020 and 2024 respectively). Resulting in the elimination of 61.9% arbitrage failure rates seen in deterministic optimisation, yielding economically valid, arbitrage-free surfaces with a negligible trade-off in out-of-sample accuracy.
 
 ---
 
