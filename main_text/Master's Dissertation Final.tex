@@ -95,7 +95,6 @@
 \newcommand{\TODO}[1]{\textcolor{red}{[TODO: #1]}}
 \newcommand{\Revised}[1]{\textcolor{red}{[Revised up to here]}}
 
-
 \title{Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces}
 \author{Mikhail Semenov}
 \date{August 2026}
@@ -105,16 +104,25 @@
 %title
 \begin{titlepage}
     \centering
-    \vspace*{2cm}
-    {\Large University of St Andrews\par}
+    {\Huge \bfseries Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces \par}
     \vspace{1.5cm}
-    {\Huge \bfseries Bayesian Gaussian Process Hyperparameter Inference for Implied Volatility Surfaces\par}
+    {\large School of Mathematics and Statistics \par}
     \vspace{1.5cm}
+    \includegraphics[width=0.25\textwidth]{Figures/stacrest.png}
     \vspace{2cm}
-    {\Large Mikhail Semenov\par}
-    \vfill
-    {\large School of Mathematics and Statistics\par}
-    {\large August 2026\par}
+    
+    This dissertation is submitted in partial fulfillment for the degree of \par
+    \vspace{0.5cm}
+    Master of Science in Mathematics at the University of St Andrews \par
+    \vspace{1cm}
+    
+    250033865
+
+    \vspace{1cm}
+    Supervised by Michail Papathomas \par
+    \vspace{2.5cm}
+    {\large 11 August 2026 \par}
+
 \end{titlepage}
 
 \pagenumbering{roman}
@@ -136,7 +144,6 @@ I declare that this dissertation is my own work and that it has not been submitt
 \addcontentsline{toc}{chapter}{Acknowledgements}
 I would like to thank my supervisor for his guidance and the experience he has provided during the development of this research.
 Additionally, I would like to extend my gratitude to my family and friends for their unconditional support throughout this period.
-Lastly, I would like to acknowledge the use of Grammarly to proofread this dissertation for spelling, grammar, and punctuation.
 
 \newpage
 \tableofcontents
@@ -366,11 +373,11 @@ In Bayesian nonparametric machine learning models like Gaussian Processes, setti
 We define the prior distribution as:
 
 \begin{equation}
-w(K,T) = T\left(|a| + |b|(\log K)^2 + c \log K\right).
+w(K,T) = T\left(|a| + |b|k^2 + c k\right).
 \label{parametric_prior}
 \end{equation}
 
-The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation (\citet{gatheral2014arbitrage}). By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $(\log K)^2$ provides the characteristic convex smile, $\log K$ is the volatility skew, and $T$ scales it across maturities.
+The mean function uses a quadratic polynomial in log-moneyness, which is heavily based on the Stochastic Volatility-Inspired (SVI) parametrisation (\citet{gatheral2014arbitrage}). By avoiding the full five-parameter SVI, which is difficult to optimise, the resulting model is essentially a parabolic curve in log-moneyness. Where $k^2$ (i. e., log-moneyness) provides the characteristic convex smile, $k$ is the volatility skew, and $T$ scales it across maturities.
 
 Originally, the standard Gatheral's raw SVI formula is indifferent to the definition of variance, which can never be negative. Hence, the inclusion of absolute values for $a$ and $b$. Alternatively, a standard unconstrained optimiser (e.g., Nelder-Mead or L-BFGS-B) might blindly test for negative values, causing the total variance to become negative and rendering the pricing algorithm mathematically undefined. By incorporating $|a|$ and $|b|$, a differentiable barrier is created where the optimizer can search anywhere from $-\infty$ to $\infty$ freely while mathematically guaranteeing a positive total variance.
 
@@ -992,6 +999,8 @@ Ultimately, this regularisation exposes an accuracy-consistency trade-off betwee
 
 \section{Computational Limitations and Future Work}
 While the Bayesian Hamiltonian Monte Carlo framework decisively outperforms the deterministic point estimation approach in preserving economic admissibility, its deployment and upkeep during live trading sessions are heavily constrained by computational complexity. Although the time complexity of both algorithms is $\mathcal{O}(N^3)$, the fundamental mathematical bottleneck is the computationally expensive Cholesky decomposition of the covariance matrix. The paramount difference between them comes from the constant factor, which represents the number of times the algorithms have to execute this expensive $\mathcal{O}(N^3)$ decomposition. Based on the hyperparameter configurations used in this study, evaluating the full posterior via Hamiltonian Monte Carlo requires roughly 1,000 times more computational overhead than deterministic point estimation.
+
+Additionally, due to the time constraints of this research, thorough MCMC diagnostics, such as trace plots to assess mixing, autocorrelation functions (ACF), and Effective Sample Size (ESS), are omitted from this text. However, preliminary $\hat{R}$ metrics indicated stable convergence.
 
 It is reasonable to assert that the current HMC implementation is most optimally suited for end-of-day settlement pricing (i. e., the official daily valuation of derivative contracts), risk management, and portfolio margin calculations (i.e., the determination of regulatory capital requirements based on aggregate portfolio risk). In this scenario, the extreme accuracy and strictly arbitrage-free surfaces are important, but execution latency is a secondary concern. Furthermore, the current computational complexity of the NUTS sampler \cite{hoffman2014nuts} is expensive and impractical for High Frequency Trading (HFT), where volatility surfaces must be updated on sub-millisecond timescales.
 
