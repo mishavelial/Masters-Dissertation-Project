@@ -18,6 +18,26 @@ The project investigates the weak identifiability of the Log-Marginal Likelihood
 
 ---
 
+### 📈 Deterministic Optimization Breakdown vs. Bayesian HMC Regularization
+
+Under stressed market regimes, the competition between GP data fit and complexity penalty collapses into an ill-conditioned LML plateau. Point estimation yields severely warped, non-convex local surfaces (left), whereas Bayesian HMC posterior integration restores global regularity and eliminates arbitrage pathologies (right):
+
+<p align="center">
+  <img src="main_text/Figures/3D_surface_comparison_2024-01-24.png" width="95%" alt="3D Surface Comparison">
+</p>
+
+### 📊 Key Empirical Findings: Resolving Optimization Instabilities
+
+| Metric | Point-Estimated GP (L-BFGS-B) | Bayesian HMC GP (NUTS) |
+| :--- | :---: | :---: |
+| **Clean Calendar Days** | **85.7% (18/21)** | 71.4% (15/21) |
+| **Clean Butterfly Days** | 38.1% (8/21) | **61.9% (13/21)** |
+| **Dual-Violation Days** | 14.3% (3/21) | **9.5% (2/21)** |
+
+> **Key Takeaway:** Posterior integration resolves the flat log-marginal likelihood (LML) ridge pathology where gradient-based optimizers stall. By averaging over plausible hyperparameter configurations, HMC eliminates 61.9% of butterfly arbitrage violations and restores convexity in the strike dimension without compromising predictive accuracy.
+
+---
+
 ## 📁 Repository Structure
 
 ```text
